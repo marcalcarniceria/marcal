@@ -1,0 +1,11 @@
+{
+  "name": "carniceria-valotto",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "dev": "npm --prefix carniceria-app run dev",
+    "build": "npm --prefix carniceria-app run build",
+    "lint": "npm --prefix carniceria-app run lint",
+    "preview": "npm --prefix carniceria-app run preview"
+  }
+}

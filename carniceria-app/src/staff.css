@@ -1,0 +1,614 @@
+.staff {
+  --color-bg: #f5f2ec;
+  --color-surface: #ffffff;
+  --color-dark: #1c1714;
+  --color-dark-alt: #2a211c;
+  --color-accent: #b0431f;
+  --color-accent-hover: #8f3517;
+  --color-gold: #b3862f;
+  --color-text: #241c17;
+  --color-text-muted: #7a6b5d;
+  --color-border: #e2dccf;
+  --color-success: #3f7d4f;
+  --color-error: #b0341f;
+  --shadow-sm: 0 1px 3px rgba(28, 23, 20, 0.07);
+  --shadow-md: 0 6px 18px rgba(28, 23, 20, 0.1);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --font-display: 'Oswald', sans-serif;
+  --font-body: 'Work Sans', sans-serif;
+
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+  min-height: 100vh;
+}
+
+.staff * {
+  box-sizing: border-box;
+}
+
+.staff h1,
+.staff h2,
+.staff h3 {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-dark);
+  margin: 0 0 0.75rem;
+}
+
+.staff h1 {
+  font-size: 1.5rem;
+}
+
+.staff h2 {
+  font-size: 1.05rem;
+  color: var(--color-text-muted);
+}
+
+@keyframes staff-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .staff * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Shell */
+.staff-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.staff-sidebar {
+  width: 230px;
+  flex-shrink: 0;
+  background: var(--color-dark);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem 1rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.staff-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: #fff;
+  padding: 0 0.4rem 1.25rem;
+  margin-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.staff-logo-marca {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: linear-gradient(145deg, var(--color-gold), #8a6423);
+  color: var(--color-dark);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.staff-logo-texto {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+  display: flex;
+  flex-direction: column;
+}
+
+.staff-logo-texto small {
+  font-family: var(--font-body);
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 400;
+}
+
+.staff-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  overflow-y: auto;
+}
+
+.staff-nav-link {
+  padding: 0.55rem 0.7rem;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  transition: background 0.18s var(--ease), color 0.18s var(--ease), padding-left 0.18s var(--ease);
+}
+
+.staff-nav-link:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding-left: 0.9rem;
+}
+
+.staff-nav-link.activo {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+.staff-nav-separador {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+  margin: 0.6rem 0.4rem;
+}
+
+.staff-user-box {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 0.9rem;
+  margin-top: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.staff-user-nombre {
+  color: #fff;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.staff-user-rol {
+  color: rgba(255, 255, 255, 0.55);
+  text-transform: capitalize;
+  margin-bottom: 0.6rem;
+}
+
+.staff-logout {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: background 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+
+.staff-logout:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.staff-main {
+  flex: 1;
+  padding: 2rem 2.25rem;
+  min-width: 0;
+  animation: staff-fade-up 0.35s var(--ease) both;
+}
+
+/* Componentes */
+.staff-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.staff-btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 0.95rem;
+  cursor: pointer;
+  background: var(--color-accent);
+  color: #fff;
+  transition: background 0.18s var(--ease), transform 0.15s var(--ease), box-shadow 0.18s var(--ease);
+  box-shadow: var(--shadow-sm);
+}
+
+.staff-btn:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.staff-btn:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.staff-btn:disabled {
+  background: var(--color-border);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.staff-btn-secundario {
+  background: transparent;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: none;
+}
+
+.staff-btn-secundario:hover {
+  background: var(--color-bg);
+  box-shadow: none;
+}
+
+.staff input,
+.staff select,
+.staff textarea {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  background: #fff;
+  color: var(--color-text);
+  transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
+}
+
+.staff input:focus,
+.staff select:focus,
+.staff textarea:focus {
+  outline: none;
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(179, 134, 47, 0.16);
+}
+
+.staff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.staff-table th {
+  text-align: left;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  letter-spacing: 0.03em;
+  color: var(--color-text-muted);
+  border-bottom: 2px solid var(--color-border);
+  padding: 0 0.5rem 0.5rem 0;
+}
+
+.staff-table td {
+  padding: 0.55rem 0.5rem 0.55rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.staff-table tbody tr {
+  transition: background 0.15s ease;
+}
+
+.staff-table tbody tr:hover {
+  background: rgba(179, 134, 47, 0.05);
+}
+
+.staff-total {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  color: var(--color-dark);
+}
+
+.staff-mensaje-error {
+  color: var(--color-error);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.staff-mensaje-exito {
+  color: var(--color-success);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.staff-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.staff-badge-pendiente { background: #f4e2ce; color: #8a5a1f; }
+.staff-badge-pagado,
+.staff-badge-activa,
+.staff-badge-exito { background: #dcefe0; color: var(--color-success); }
+.staff-badge-cancelado,
+.staff-badge-anulada { background: #f6dcd6; color: var(--color-error); }
+.staff-badge-camino,
+.staff-badge-preparacion { background: #dbe6f4; color: #34588a; }
+
+/* Cajero: grilla de productos + numpad */
+.cajero-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.6rem;
+}
+
+.cajero-grid-chica {
+  grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+}
+
+.cajero-producto-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  min-height: 92px;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font-body);
+  transition: border-color 0.15s var(--ease), transform 0.12s var(--ease), box-shadow 0.15s var(--ease);
+  box-shadow: var(--shadow-sm);
+}
+
+.cajero-producto-btn:hover {
+  border-color: var(--color-gold);
+  box-shadow: var(--shadow-md);
+}
+
+.cajero-producto-btn:active {
+  transform: scale(0.96);
+}
+
+.cajero-producto-btn-chico {
+  min-height: 72px;
+  padding: 0.5rem 0.6rem;
+}
+
+.cajero-producto-nombre {
+  font-weight: 700;
+  font-size: 0.92rem;
+  line-height: 1.15;
+}
+
+.cajero-producto-unidad {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.cajero-producto-precio {
+  margin-top: auto;
+  font-family: var(--font-display);
+  color: var(--color-accent);
+  font-size: 0.95rem;
+}
+
+.cajero-numpad-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 23, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.cajero-numpad {
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: var(--shadow-md);
+  animation: staff-fade-up 0.2s var(--ease) both;
+}
+
+.cajero-numpad-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.75rem;
+}
+
+.cajero-numpad-header strong {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  font-size: 1.05rem;
+  color: var(--color-dark);
+}
+
+.cajero-numpad-header span {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.cajero-numpad-modos {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.cajero-numpad-modo {
+  flex: 1;
+  padding: 0.45rem;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.cajero-numpad-modo.activo {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.cajero-numpad-pantalla {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  text-align: right;
+  padding: 0.5rem 0.2rem;
+  color: var(--color-dark);
+  border-bottom: 2px solid var(--color-border);
+  margin-bottom: 0.3rem;
+}
+
+.cajero-numpad-preview {
+  text-align: right;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  margin-bottom: 0.75rem;
+}
+
+.cajero-numpad-teclas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.cajero-numpad-tecla {
+  padding: 0.85rem 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.cajero-numpad-tecla:active {
+  background: var(--color-border);
+}
+
+.cajero-numpad-acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cajero-numpad-acciones .staff-btn,
+.cajero-numpad-acciones .staff-btn-secundario {
+  flex: 1;
+}
+
+/* Login */
+.staff-login-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 20% 20%, #382a20, var(--color-dark) 65%);
+  padding: 1.5rem;
+}
+
+.staff-login-card {
+  background: var(--color-surface);
+  border-radius: 10px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: var(--shadow-md);
+  animation: staff-fade-up 0.4s var(--ease) both;
+}
+
+.staff-login-card .staff-logo {
+  border-bottom: none;
+  justify-content: center;
+  color: var(--color-dark);
+  margin-bottom: 1.5rem;
+  padding-bottom: 0;
+}
+
+.staff-login-card .staff-logo-texto {
+  color: var(--color-dark);
+}
+
+.staff-login-card .staff-logo-texto small {
+  color: var(--color-text-muted);
+}
+
+.staff-login-card label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  margin-bottom: 0.3rem;
+}
+
+.staff-login-card input {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.staff-login-card .staff-btn {
+  width: 100%;
+}
+
+/* Responsive: sidebar colapsa arriba en pantallas chicas */
+@media (max-width: 760px) {
+  .staff-shell {
+    flex-direction: column;
+  }
+
+  .staff-sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    padding: 0.75rem 1rem;
+  }
+
+  .staff-logo {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 0;
+  }
+
+  .staff-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    overflow-x: auto;
+  }
+
+  .staff-user-box {
+    display: none;
+  }
+
+  .staff-main {
+    padding: 1.25rem;
+  }
+}
