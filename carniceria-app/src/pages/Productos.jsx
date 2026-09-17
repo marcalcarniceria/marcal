@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
-import { useAuth } from '../context/AuthContext'
+import { SUCURSAL_ID } from '../config/sucursal'
 
 const UNIDADES_COMUNES = ['Kilo', 'Unidad', 'Docena', 'Bandeja', 'Atado', 'Bolsa']
 const OTRA_UNIDAD = '__otra__'
@@ -10,14 +10,9 @@ function filaVacia() {
 }
 
 export function Productos() {
-  const { usuario } = useAuth()
-
   const [productos, setProductos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-
-  const [sucursales, setSucursales] = useState([])
-  const [sucursalId, setSucursalId] = useState('')
 
   const [mostrarForm, setMostrarForm] = useState(false)
   const [editandoId, setEditandoId] = useState(null)
@@ -58,18 +53,7 @@ export function Productos() {
 
   useEffect(() => {
     fetchProductos()
-    supabase
-      .from('sucursales')
-      .select('*')
-      .then(({ data, error }) => {
-        if (!error) setSucursales(data)
-      })
   }, [])
-
-  useEffect(() => {
-    if (usuario?.sucursal_id && !editandoId) setSucursalId(usuario.sucursal_id)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [usuario])
 
   function resetForm() {
     setEditandoId(null)
@@ -79,7 +63,6 @@ export function Productos() {
     setUnidades([filaVacia()])
     setUnidadesEliminadas([])
     setMensaje(null)
-    if (usuario?.sucursal_id) setSucursalId(usuario.sucursal_id)
   }
 
   function abrirNuevo() {
@@ -89,7 +72,6 @@ export function Productos() {
 
   function editarProducto(producto) {
     setEditandoId(producto.id)
-    setSucursalId(producto.sucursal_id)
     setNombre(producto.nombre)
     setStockInicial(String(producto.stock_actual_unidad_base ?? ''))
     setStockMinimo(String(producto.stock_minimo ?? ''))
@@ -128,10 +110,6 @@ export function Productos() {
   async function guardarProducto() {
     setMensaje(null)
 
-    if (!sucursalId) {
-      setMensaje({ tipo: 'error', texto: 'Seleccioná la sucursal.' })
-      return
-    }
     if (!nombre.trim()) {
       setMensaje({ tipo: 'error', texto: 'Falta el nombre del producto.' })
       return
@@ -216,7 +194,7 @@ export function Productos() {
       .from('productos')
       .insert({
         nombre: nombre.trim(),
-        sucursal_id: sucursalId,
+        sucursal_id: SUCURSAL_ID,
         stock_actual_unidad_base: Number(stockInicial) || 0,
         stock_minimo: Number(stockMinimo) || 0,
       })
@@ -280,16 +258,6 @@ export function Productos() {
             {editandoId && <p className="staff-badge staff-badge-pendiente">Editando producto existente</p>}
 
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
-              {!usuario?.sucursal_id && (
-                <select value={sucursalId} onChange={(e) => setSucursalId(e.target.value)} disabled={!!editandoId}>
-                  <option value="">Sucursal...</option>
-                  {sucursales.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.nombre}
-                    </option>
-                  ))}
-                </select>
-              )}
               <input
                 type="text"
                 placeholder="Nombre del producto"

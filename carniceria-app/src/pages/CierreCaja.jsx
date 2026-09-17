@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
+import { SUCURSAL_ID } from '../config/sucursal'
 
 const METODO_EFECTIVO = 'Efectivo'
 
@@ -13,8 +14,6 @@ function hoyLocal() {
 export function CierreCaja() {
   const { usuario } = useAuth()
 
-  const [sucursales, setSucursales] = useState([])
-  const [sucursalId, setSucursalId] = useState('')
   const [fecha, setFecha] = useState(hoyLocal())
 
   const [loading, setLoading] = useState(true)
@@ -33,21 +32,7 @@ export function CierreCaja() {
   const [mensaje, setMensaje] = useState(null)
 
   useEffect(() => {
-    supabase
-      .from('sucursales')
-      .select('*')
-      .then(({ data, error }) => {
-        if (error) setError(error)
-        else setSucursales(data)
-      })
-  }, [])
-
-  useEffect(() => {
-    if (usuario?.sucursal_id) setSucursalId(usuario.sucursal_id)
-  }, [usuario])
-
-  useEffect(() => {
-    if (!sucursalId || !fecha) return
+    if (!fecha) return
 
     async function fetchDia() {
       setLoading(true)
@@ -62,32 +47,32 @@ export function CierreCaja() {
         supabase
           .from('ventas')
           .select('id, total_neto, pagos_venta(monto, metodos_pago(nombre, porcentaje_comision))')
-          .eq('sucursal_id', sucursalId)
+          .eq('sucursal_id', SUCURSAL_ID)
           .eq('estado', 'activa')
           .gte('fecha_hora', inicio.toISOString())
           .lt('fecha_hora', fin.toISOString()),
         supabase
           .from('gastos')
           .select('monto, metodos_pago(nombre)')
-          .eq('sucursal_id', sucursalId)
+          .eq('sucursal_id', SUCURSAL_ID)
           .gte('fecha', inicio.toISOString())
           .lt('fecha', fin.toISOString()),
         supabase
           .from('pagos_fiados')
           .select('monto, metodos_pago(nombre)')
-          .eq('sucursal_id', sucursalId)
+          .eq('sucursal_id', SUCURSAL_ID)
           .gte('fecha', inicio.toISOString())
           .lt('fecha', fin.toISOString()),
         supabase
           .from('pagos_proveedor')
           .select('monto, metodos_pago(nombre)')
-          .eq('sucursal_id', sucursalId)
+          .eq('sucursal_id', SUCURSAL_ID)
           .gte('fecha', inicio.toISOString())
           .lt('fecha', fin.toISOString()),
         supabase
           .from('cierres_caja')
           .select('*')
-          .eq('sucursal_id', sucursalId)
+          .eq('sucursal_id', SUCURSAL_ID)
           .eq('fecha', fecha)
           .maybeSingle(),
       ])
@@ -120,7 +105,7 @@ export function CierreCaja() {
     }
 
     fetchDia()
-  }, [sucursalId, fecha])
+  }, [fecha])
 
   const porMetodo = useMemo(() => {
     const acc = {}
@@ -167,10 +152,6 @@ export function CierreCaja() {
   async function confirmarCierre() {
     setMensaje(null)
 
-    if (!sucursalId) {
-      setMensaje({ tipo: 'error', texto: 'Seleccioná la sucursal.' })
-      return
-    }
     if (montoApertura === '' || montoCierreDeclarado === '') {
       setMensaje({ tipo: 'error', texto: 'Completá monto de apertura y monto de cierre declarado.' })
       return
@@ -179,7 +160,7 @@ export function CierreCaja() {
     setGuardando(true)
 
     const { error } = await supabase.from('cierres_caja').insert({
-      sucursal_id: sucursalId,
+      sucursal_id: SUCURSAL_ID,
       usuario_id: usuario.id,
       fecha,
       monto_apertura: Number(montoApertura),
@@ -196,7 +177,7 @@ export function CierreCaja() {
 
     setMensaje({ tipo: 'exito', texto: 'Cierre de caja registrado.' })
     setCierreExistente({
-      sucursal_id: sucursalId,
+      sucursal_id: SUCURSAL_ID,
       fecha,
       monto_apertura: montoApertura,
       monto_cierre_declarado: montoCierreDeclarado,
@@ -208,19 +189,6 @@ export function CierreCaja() {
       <h1>Cierre de caja</h1>
 
       <div className="staff-card" style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-        {!usuario?.sucursal_id && (
-          <label>
-            Sucursal:{' '}
-            <select value={sucursalId} onChange={(e) => setSucursalId(e.target.value)}>
-              <option value="">Seleccionar...</option>
-              {sucursales.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
         <label>
           Fecha:{' '}
           <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} />
@@ -236,7 +204,7 @@ export function CierreCaja() {
         </div>
       )}
 
-      {!loading && !error && sucursalId && (
+      {!loading && !error && (
         <>
           {cierreExistente && (
             <p className="staff-badge staff-badge-pendiente" style={{ marginBottom: '0.75rem' }}>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
+import { SUCURSAL_ID } from '../config/sucursal'
 
 function hoyLocal() {
   const d = new Date()
@@ -11,8 +12,6 @@ function hoyLocal() {
 export function Gastos() {
   const { usuario } = useAuth()
 
-  const [sucursales, setSucursales] = useState([])
-  const [sucursalId, setSucursalId] = useState('')
   const [metodosPago, setMetodosPago] = useState([])
 
   const [gastos, setGastos] = useState([])
@@ -27,25 +26,16 @@ export function Gastos() {
   const [mensaje, setMensaje] = useState(null)
 
   useEffect(() => {
-    if (usuario?.sucursal_id) setSucursalId(usuario.sucursal_id)
-  }, [usuario])
-
-  useEffect(() => {
-    Promise.all([
-      supabase.from('sucursales').select('*'),
-      supabase.from('metodos_pago').select('*'),
-    ]).then(([sucursalesRes, metodosRes]) => {
-      if (sucursalesRes.error) setError(sucursalesRes.error)
-      else if (metodosRes.error) setError(metodosRes.error)
-      else {
-        setSucursales(sucursalesRes.data)
-        setMetodosPago(metodosRes.data)
-      }
-    })
+    supabase
+      .from('metodos_pago')
+      .select('*')
+      .then(({ data, error }) => {
+        if (error) setError(error)
+        else setMetodosPago(data)
+      })
   }, [])
 
   async function fetchGastos() {
-    if (!sucursalId) return
     setLoading(true)
     const inicio = new Date(`${hoyLocal()}T00:00:00`)
     const fin = new Date(inicio)
@@ -54,7 +44,7 @@ export function Gastos() {
     const { data, error } = await supabase
       .from('gastos')
       .select('*, metodos_pago(nombre)')
-      .eq('sucursal_id', sucursalId)
+      .eq('sucursal_id', SUCURSAL_ID)
       .gte('fecha', inicio.toISOString())
       .lt('fecha', fin.toISOString())
       .order('fecha', { ascending: false })
@@ -66,15 +56,11 @@ export function Gastos() {
 
   useEffect(() => {
     fetchGastos()
-  }, [sucursalId])
+  }, [])
 
   async function agregarGasto() {
     setMensaje(null)
 
-    if (!sucursalId) {
-      setMensaje({ tipo: 'error', texto: 'Seleccioná la sucursal.' })
-      return
-    }
     if (!concepto.trim() || !monto || Number(monto) <= 0 || !metodoPagoId) {
       setMensaje({ tipo: 'error', texto: 'Completá concepto, monto y método de pago.' })
       return
@@ -83,7 +69,7 @@ export function Gastos() {
     setGuardando(true)
 
     const { error } = await supabase.from('gastos').insert({
-      sucursal_id: sucursalId,
+      sucursal_id: SUCURSAL_ID,
       usuario_id: usuario.id,
       concepto: concepto.trim(),
       monto: Number(monto),
@@ -110,22 +96,6 @@ export function Gastos() {
   return (
     <div style={{ maxWidth: 680 }}>
       <h1>Gastos</h1>
-
-      {!usuario?.sucursal_id && (
-        <div className="staff-card">
-          <label>
-            Sucursal:{' '}
-            <select value={sucursalId} onChange={(e) => setSucursalId(e.target.value)}>
-              <option value="">Seleccionar...</option>
-              {sucursales.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
 
       <div className="staff-card">
         <h2>Nuevo gasto</h2>

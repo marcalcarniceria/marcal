@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
-import { useAuth } from '../context/AuthContext'
+import { SUCURSAL_ID } from '../config/sucursal'
 
 export function Fiados() {
-  const { usuario } = useAuth()
-
-  const [sucursales, setSucursales] = useState([])
-  const [sucursalId, setSucursalId] = useState('')
   const [metodosPago, setMetodosPago] = useState([])
 
   const [clientes, setClientes] = useState([])
@@ -23,17 +19,6 @@ export function Fiados() {
   const [mensaje, setMensaje] = useState(null)
 
   useEffect(() => {
-    if (usuario?.sucursal_id) setSucursalId(usuario.sucursal_id)
-  }, [usuario])
-
-  useEffect(() => {
-    supabase
-      .from('sucursales')
-      .select('*')
-      .then(({ data, error }) => {
-        if (error) setError(error)
-        else setSucursales(data)
-      })
     supabase
       .from('metodos_pago')
       .select('*')
@@ -43,19 +28,18 @@ export function Fiados() {
   }, [])
 
   async function fetchClientesConSaldo() {
-    if (!sucursalId) return
     setLoading(true)
     setError(null)
 
     const [clientesRes, ventasRes, pagosRes] = await Promise.all([
-      supabase.from('clientes_fiados').select('*').eq('sucursal_id', sucursalId),
+      supabase.from('clientes_fiados').select('*').eq('sucursal_id', SUCURSAL_ID),
       supabase
         .from('ventas')
         .select('cliente_fiado_id, total_neto')
-        .eq('sucursal_id', sucursalId)
+        .eq('sucursal_id', SUCURSAL_ID)
         .eq('estado', 'activa')
         .not('cliente_fiado_id', 'is', null),
-      supabase.from('pagos_fiados').select('cliente_fiado_id, monto').eq('sucursal_id', sucursalId),
+      supabase.from('pagos_fiados').select('cliente_fiado_id, monto').eq('sucursal_id', SUCURSAL_ID),
     ])
 
     if (clientesRes.error) setError(clientesRes.error)
@@ -81,7 +65,7 @@ export function Fiados() {
 
   useEffect(() => {
     fetchClientesConSaldo()
-  }, [sucursalId])
+  }, [])
 
   async function crearCliente() {
     setMensaje(null)
@@ -93,7 +77,7 @@ export function Fiados() {
     const { error } = await supabase.from('clientes_fiados').insert({
       nombre: nuevoNombre.trim(),
       telefono: nuevoTelefono.trim() || null,
-      sucursal_id: sucursalId,
+      sucursal_id: SUCURSAL_ID,
     })
 
     if (error) {
@@ -120,7 +104,7 @@ export function Fiados() {
     }
 
     const { error } = await supabase.from('pagos_fiados').insert({
-      sucursal_id: sucursalId,
+      sucursal_id: SUCURSAL_ID,
       cliente_fiado_id: clienteSeleccionadoId,
       monto: Number(montoPago),
       fecha: new Date().toISOString(),
@@ -141,22 +125,6 @@ export function Fiados() {
   return (
     <div style={{ maxWidth: 680 }}>
       <h1>Clientes fiados</h1>
-
-      {!usuario?.sucursal_id && (
-        <div className="staff-card">
-          <label>
-            Sucursal:{' '}
-            <select value={sucursalId} onChange={(e) => setSucursalId(e.target.value)}>
-              <option value="">Seleccionar...</option>
-              {sucursales.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
 
       {error && <pre>{JSON.stringify(error, null, 2)}</pre>}
       {loading && <p>Cargando...</p>}

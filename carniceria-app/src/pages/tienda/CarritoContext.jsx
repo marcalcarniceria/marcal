@@ -7,28 +7,20 @@ const STORAGE_KEY = 'carniceria_carrito'
 function cargarInicial() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { sucursalId: '', items: [] }
+    if (!raw) return { items: [] }
     return JSON.parse(raw)
   } catch {
-    return { sucursalId: '', items: [] }
+    return { items: [] }
   }
 }
 
 export function CarritoProvider({ children }) {
   const inicial = cargarInicial()
-  const [sucursalId, setSucursalIdState] = useState(inicial.sucursalId)
   const [items, setItems] = useState(inicial.items)
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ sucursalId, items }))
-  }, [sucursalId, items])
-
-  function setSucursalId(nuevaSucursalId) {
-    if (nuevaSucursalId !== sucursalId) {
-      setItems([])
-    }
-    setSucursalIdState(nuevaSucursalId)
-  }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ items }))
+  }, [items])
 
   function agregarItem(item) {
     setItems((prev) => {
@@ -63,8 +55,6 @@ export function CarritoProvider({ children }) {
   )
 
   const value = {
-    sucursalId,
-    setSucursalId,
     items,
     agregarItem,
     actualizarCantidad,

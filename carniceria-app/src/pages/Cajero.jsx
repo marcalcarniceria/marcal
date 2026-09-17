@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
+import { SUCURSAL_ID } from '../config/sucursal'
 
 const TOP_N_MAS_VENDIDOS = 18
 
@@ -9,8 +10,6 @@ export function Cajero() {
 
   const [catalogoVenta, setCatalogoVenta] = useState([])
   const [metodosPago, setMetodosPago] = useState([])
-  const [sucursales, setSucursales] = useState([])
-  const [sucursalId, setSucursalId] = useState('')
   const [loadingBase, setLoadingBase] = useState(true)
   const [loadingCatalogo, setLoadingCatalogo] = useState(false)
   const [catalogoError, setCatalogoError] = useState(null)
@@ -36,17 +35,10 @@ export function Cajero() {
 
   useEffect(() => {
     async function fetchBase() {
-      const [metodosRes, sucursalesRes] = await Promise.all([
-        supabase.from('metodos_pago').select('*'),
-        supabase.from('sucursales').select('*'),
-      ])
+      const { data, error } = await supabase.from('metodos_pago').select('*')
 
-      if (metodosRes.error) setCatalogoError(metodosRes.error)
-      else if (sucursalesRes.error) setCatalogoError(sucursalesRes.error)
-      else {
-        setMetodosPago(metodosRes.data)
-        setSucursales(sucursalesRes.data)
-      }
+      if (error) setCatalogoError(error)
+      else setMetodosPago(data)
       setLoadingBase(false)
     }
 
@@ -54,20 +46,9 @@ export function Cajero() {
   }, [])
 
   useEffect(() => {
-    if (usuario?.sucursal_id) {
-      setSucursalId(usuario.sucursal_id)
-    }
-  }, [usuario])
-
-  useEffect(() => {
-    if (!sucursalId) {
-      setCatalogoVenta([])
-      return
-    }
-
     setLoadingCatalogo(true)
     supabase
-      .rpc('productos_mas_vendidos', { p_sucursal_id: sucursalId })
+      .rpc('productos_mas_vendidos', { p_sucursal_id: SUCURSAL_ID })
       .then(({ data, error }) => {
         if (error) {
           setCatalogoError(error)
@@ -86,20 +67,19 @@ export function Cajero() {
         }
         setLoadingCatalogo(false)
       })
-  }, [sucursalId])
+  }, [])
 
-  async function fetchClientesFiados(sucursal) {
+  async function fetchClientesFiados() {
     const { data, error } = await supabase
       .from('clientes_fiados')
       .select('*')
-      .eq('sucursal_id', sucursal)
+      .eq('sucursal_id', SUCURSAL_ID)
     if (!error) setClientesFiados(data)
   }
 
   useEffect(() => {
-    if (sucursalId) fetchClientesFiados(sucursalId)
-    else setClientesFiados([])
-  }, [sucursalId])
+    fetchClientesFiados()
+  }, [])
 
   async function crearClienteFiado() {
     if (!nuevoClienteNombre.trim()) {
@@ -112,7 +92,7 @@ export function Cajero() {
       .insert({
         nombre: nuevoClienteNombre.trim(),
         telefono: nuevoClienteTelefono.trim() || null,
-        sucursal_id: sucursalId,
+        sucursal_id: SUCURSAL_ID,
       })
       .select()
       .single()
@@ -257,15 +237,10 @@ export function Cajero() {
       }
     }
 
-    if (!sucursalId) {
-      setMensaje({ tipo: 'error', texto: 'Seleccioná la sucursal en la que estás vendiendo.' })
-      return
-    }
-
     setEnviando(true)
 
     const { data, error } = await supabase.rpc('registrar_venta', {
-      p_sucursal_id: sucursalId,
+      p_sucursal_id: SUCURSAL_ID,
       p_descuento_general: Number(descuentoGeneral) || 0,
       p_items: carrito.map((item) => ({
         producto_id: item.producto_id,
@@ -314,30 +289,13 @@ export function Cajero() {
     <div style={{ maxWidth: 1100 }}>
       <h1>Caja — {usuario?.nombre}</h1>
 
-      {!usuario?.sucursal_id && (
-        <div className="staff-card">
-          <label>
-            Sucursal:{' '}
-            <select value={sucursalId} onChange={(e) => setSucursalId(e.target.value)}>
-              <option value="">Seleccionar sucursal...</option>
-              {sucursales.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
-      )}
-
       <div className="staff-card">
         <h2>Más vendidos</h2>
-        {!sucursalId && <p>Elegí la sucursal para ver el catálogo.</p>}
-        {sucursalId && loadingCatalogo && <p>Cargando catálogo...</p>}
-        {sucursalId && !loadingCatalogo && masVendidos.length === 0 && (
-          <p>No hay productos activos en esta sucursal.</p>
+        {loadingCatalogo && <p>Cargando catálogo...</p>}
+        {!loadingCatalogo && masVendidos.length === 0 && (
+          <p>No hay productos activos.</p>
         )}
-        {sucursalId && !loadingCatalogo && masVendidos.length > 0 && (
+        {!loadingCatalogo && masVendidos.length > 0 && (
           <div className="cajero-grid">
             {masVendidos.map((item) => (
               <button
@@ -355,7 +313,7 @@ export function Cajero() {
         )}
       </div>
 
-      {sucursalId && !loadingCatalogo && otrosProductos.length > 0 && (
+      {!loadingCatalogo && otrosProductos.length > 0 && (
         <div className="staff-card">
           <h2>Otros productos</h2>
           <div className="cajero-grid cajero-grid-chica">

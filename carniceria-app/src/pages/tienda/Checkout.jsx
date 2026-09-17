@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
+import { SUCURSAL_ID } from '../../config/sucursal'
 import { useCarrito } from './CarritoContext'
 import { TiendaHeader } from './TiendaHeader'
 
 export function Checkout() {
-  const { sucursalId, items, totalCarrito, vaciarCarrito } = useCarrito()
+  const { items, totalCarrito, vaciarCarrito } = useCarrito()
   const navigate = useNavigate()
 
   const [zonas, setZonas] = useState([])
@@ -20,15 +21,14 @@ export function Checkout() {
   const [error, setError] = useState(null)
 
   useEffect(() => {
-    if (!sucursalId) return
     supabase
       .from('zonas_envio')
       .select('*')
-      .eq('sucursal_id', sucursalId)
+      .eq('sucursal_id', SUCURSAL_ID)
       .then(({ data, error }) => {
         if (!error) setZonas(data)
       })
-  }, [sucursalId])
+  }, [])
 
   const zonaSeleccionada = zonas.find((z) => z.id === zonaId)
   const costoEnvio = zonaSeleccionada ? Number(zonaSeleccionada.costo_envio) : 0
@@ -49,7 +49,7 @@ export function Checkout() {
     setEnviando(true)
 
     const { data, error } = await supabase.rpc('crear_pedido_online', {
-      p_sucursal_id: sucursalId,
+      p_sucursal_id: SUCURSAL_ID,
       p_zona_envio_id: zonaId,
       p_cliente_nombre: nombre,
       p_cliente_telefono: telefono,

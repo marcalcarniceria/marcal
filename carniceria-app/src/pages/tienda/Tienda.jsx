@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient'
+import { SUCURSAL_ID } from '../../config/sucursal'
 import { useCarrito } from './CarritoContext'
 import { TiendaHeader } from './TiendaHeader'
 import { IconBalanza, IconCamion, IconCarne, IconVerdura } from './iconos'
@@ -24,41 +25,24 @@ const RESENAS = [
 ]
 
 export function Tienda() {
-  const { sucursalId, setSucursalId, agregarItem } = useCarrito()
+  const { agregarItem } = useCarrito()
 
-  const [sucursales, setSucursales] = useState([])
   const [productos, setProductos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
   useEffect(() => {
     supabase
-      .from('sucursales')
-      .select('*')
-      .then(({ data, error }) => {
-        if (error) setError(error)
-        else {
-          setSucursales(data)
-          if (!sucursalId && data.length > 0) setSucursalId(data[0].id)
-        }
-      })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  useEffect(() => {
-    if (!sucursalId) return
-    setLoading(true)
-    supabase
       .from('productos')
       .select('*, unidades_venta_producto(*)')
-      .eq('sucursal_id', sucursalId)
+      .eq('sucursal_id', SUCURSAL_ID)
       .eq('activo', true)
       .then(({ data, error }) => {
         if (error) setError(error)
         else setProductos(data)
         setLoading(false)
       })
-  }, [sucursalId])
+  }, [])
 
   return (
     <>
@@ -138,24 +122,6 @@ export function Tienda() {
           </a>
         </div>
 
-        {sucursales.length > 1 && (
-          <label style={{ display: 'block', marginBottom: '1rem' }}>
-            Sucursal:{' '}
-            <select
-              className="tienda-sucursal-select"
-              value={sucursalId}
-              onChange={(e) => setSucursalId(e.target.value)}
-              style={{ color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
-            >
-              {sucursales.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-
         {error && <p className="tienda-error">{JSON.stringify(error)}</p>}
         {loading && <p>Cargando productos...</p>}
 
@@ -189,7 +155,7 @@ export function Tienda() {
                 ))}
               </div>
             ))}
-            {productos.length === 0 && <p>No hay productos disponibles en esta sucursal.</p>}
+            {productos.length === 0 && <p>No hay productos disponibles.</p>}
           </div>
         )}
       </div>

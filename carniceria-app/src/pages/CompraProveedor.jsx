@@ -1,13 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
-import { useAuth } from '../context/AuthContext'
+import { SUCURSAL_ID } from '../config/sucursal'
 
 export function CompraProveedor() {
-  const { usuario } = useAuth()
-
-  const [sucursales, setSucursales] = useState([])
-  const [sucursalId, setSucursalId] = useState('')
-
   const [productos, setProductos] = useState([])
   const [proveedores, setProveedores] = useState([])
   const [proveedorId, setProveedorId] = useState('')
@@ -26,43 +21,24 @@ export function CompraProveedor() {
   const [mensaje, setMensaje] = useState(null)
 
   useEffect(() => {
-    if (usuario?.sucursal_id) setSucursalId(usuario.sucursal_id)
-  }, [usuario])
-
-  useEffect(() => {
     async function fetchCatalogo() {
       setLoadingCatalogo(true)
-      const [productosRes, sucursalesRes] = await Promise.all([
+      const [productosRes, proveedoresRes] = await Promise.all([
         supabase.from('productos').select('*, unidades_venta_producto(*)').eq('activo', true),
-        supabase.from('sucursales').select('*'),
+        supabase.from('proveedores').select('*').eq('sucursal_id', SUCURSAL_ID),
       ])
 
       if (productosRes.error) setCatalogoError(productosRes.error)
-      else if (sucursalesRes.error) setCatalogoError(sucursalesRes.error)
+      else if (proveedoresRes.error) setCatalogoError(proveedoresRes.error)
       else {
         setProductos(productosRes.data)
-        setSucursales(sucursalesRes.data)
+        setProveedores(proveedoresRes.data)
       }
       setLoadingCatalogo(false)
     }
 
     fetchCatalogo()
   }, [])
-
-  useEffect(() => {
-    if (!sucursalId) {
-      setProveedores([])
-      return
-    }
-    supabase
-      .from('proveedores')
-      .select('*')
-      .eq('sucursal_id', sucursalId)
-      .then(({ data, error }) => {
-        if (error) setCatalogoError(error)
-        else setProveedores(data)
-      })
-  }, [sucursalId])
 
   const productoSeleccionado = productos.find((p) => p.id === productoSeleccionadoId)
   const unidadesDisponibles = productoSeleccionado?.unidades_venta_producto ?? []
@@ -112,10 +88,6 @@ export function CompraProveedor() {
   async function confirmarCompra() {
     setMensaje(null)
 
-    if (!sucursalId) {
-      setMensaje({ tipo: 'error', texto: 'Seleccioná la sucursal.' })
-      return
-    }
     if (!proveedorId) {
       setMensaje({ tipo: 'error', texto: 'Seleccioná el proveedor.' })
       return
@@ -128,7 +100,7 @@ export function CompraProveedor() {
     setEnviando(true)
 
     const { data, error } = await supabase.rpc('registrar_compra', {
-      p_sucursal_id: sucursalId,
+      p_sucursal_id: SUCURSAL_ID,
       p_proveedor_id: proveedorId,
       p_items: carrito.map((item) => ({
         producto_id: item.producto_id,
@@ -165,26 +137,6 @@ export function CompraProveedor() {
       <h1>Compra a proveedor</h1>
 
       <div className="staff-card" style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem' }}>
-        {!usuario?.sucursal_id && (
-          <label>
-            Sucursal:{' '}
-            <select
-              value={sucursalId}
-              onChange={(e) => {
-                setSucursalId(e.target.value)
-                setProveedorId('')
-              }}
-            >
-              <option value="">Seleccionar...</option>
-              {sucursales.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-
         <label>
           Proveedor:{' '}
           <select value={proveedorId} onChange={(e) => setProveedorId(e.target.value)}>
