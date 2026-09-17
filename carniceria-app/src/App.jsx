@@ -6,6 +6,8 @@ import { Productos } from './pages/Productos'
 import { Cajero } from './pages/Cajero'
 import { CierreCaja } from './pages/CierreCaja'
 import { CompraProveedor } from './pages/CompraProveedor'
+import { Proveedores } from './pages/Proveedores'
+import { PlantillasDespiece } from './pages/PlantillasDespiece'
 import { Gastos } from './pages/Gastos'
 import { Fiados } from './pages/Fiados'
 import { PedidosOnline } from './pages/PedidosOnline'
@@ -31,6 +33,8 @@ function App() {
         <Route path="/cajero" element={<Cajero />} />
         <Route path="/cierre-caja" element={<CierreCaja />} />
         <Route path="/compras" element={<CompraProveedor />} />
+        <Route path="/proveedores" element={<Proveedores />} />
+        <Route path="/plantillas-despiece" element={<PlantillasDespiece />} />
         <Route path="/gastos" element={<Gastos />} />
         <Route path="/fiados" element={<Fiados />} />
         <Route path="/pedidos-online" element={<PedidosOnline />} />

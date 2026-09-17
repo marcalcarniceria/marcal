@@ -7,6 +7,8 @@ const NAV_ITEMS = [
   { to: '/cajero', label: 'Caja' },
   { to: '/cierre-caja', label: 'Cierre de caja' },
   { to: '/compras', label: 'Compras' },
+  { to: '/proveedores', label: 'Proveedores' },
+  { to: '/plantillas-despiece', label: 'Plantillas de despiece' },
   { to: '/gastos', label: 'Gastos' },
   { to: '/fiados', label: 'Fiados' },
   { to: '/pedidos-online', label: 'Pedidos online' },
