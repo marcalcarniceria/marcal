@@ -248,6 +248,26 @@
   background: var(--color-bg);
 }
 
+/* Badges de estado (mismos colores que .staff-badge-* del panel interno,
+   para consistencia visual entre las dos áreas del sistema) */
+.tienda-badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  background: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.tienda-badge-pendiente { background: #f4e2ce; color: #8a5a1f; }
+.tienda-badge-pagado { background: #dcefe0; color: #3f7d4f; }
+.tienda-badge-cancelado { background: #f6dcd6; color: var(--color-accent-hover); }
+.tienda-badge-camino,
+.tienda-badge-preparacion { background: #dbe6f4; color: #34588a; }
+
 /* Modal de acceso (login / crear cuenta) */
 .tienda-modal-overlay {
   position: fixed;
@@ -269,6 +289,11 @@
   max-width: 400px;
   box-shadow: var(--shadow-lg);
   animation: tienda-fade-up 0.2s var(--ease) both;
+  /* El modal se monta como hijo del <header>, que define color:#fff
+     para su logo -- sin esto, el texto sin color propio (fecha, total,
+     detalle de productos en MisPedidos.jsx) hereda ese blanco y queda
+     invisible sobre el fondo claro del modal. */
+  color: var(--color-text);
 }
 
 .tienda-modal-cerrar {

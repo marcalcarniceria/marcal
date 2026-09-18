@@ -71,6 +71,7 @@ export function Checkout() {
       p_cliente_telefono: telefono,
       p_direccion_envio: direccion,
       p_notas: notas,
+      p_cliente_web_id: cliente?.id ?? null,
       p_items: items.map((i) => ({
         producto_id: i.producto_id,
         unidad_venta_id: i.unidad_venta_id,

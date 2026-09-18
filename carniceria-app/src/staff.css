@@ -334,6 +334,12 @@
   font-size: 0.9rem;
 }
 
+.staff-mensaje-alerta {
+  color: var(--color-gold);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
 .staff-badge {
   display: inline-block;
   padding: 0.2rem 0.6rem;

@@ -4,9 +4,17 @@ import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
 
 const METODO_EFECTIVO = 'Efectivo'
+const FILAS_POR_PAGINA = 20
 
 function hoyLocal() {
   const d = new Date()
+  const tz = d.getTimezoneOffset() * 60000
+  return new Date(d - tz).toISOString().slice(0, 10)
+}
+
+function haceDiasLocal(dias) {
+  const d = new Date()
+  d.setDate(d.getDate() - dias)
   const tz = d.getTimezoneOffset() * 60000
   return new Date(d - tz).toISOString().slice(0, 10)
 }
@@ -30,6 +38,58 @@ export function CierreCaja() {
 
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
+
+  // ---------- Historial de cierres (columna derecha) ----------
+  const [histDesde, setHistDesde] = useState(haceDiasLocal(30))
+  const [histHasta, setHistHasta] = useState(hoyLocal())
+  const [histPagina, setHistPagina] = useState(0)
+  const [historial, setHistorial] = useState([])
+  const [histTotalFilas, setHistTotalFilas] = useState(0)
+  const [histLoading, setHistLoading] = useState(true)
+  const [histError, setHistError] = useState(null)
+
+  function cambiarHistDesde(valor) {
+    setHistDesde(valor)
+    setHistPagina(0)
+  }
+
+  function cambiarHistHasta(valor) {
+    setHistHasta(valor)
+    setHistPagina(0)
+  }
+
+  async function fetchHistorial() {
+    setHistLoading(true)
+    setHistError(null)
+
+    let query = supabase
+      .from('historial_cierres_caja')
+      .select('*', { count: 'exact' })
+      .eq('sucursal_id', SUCURSAL_ID)
+      .order('fecha', { ascending: false })
+
+    if (histDesde) query = query.gte('fecha', histDesde)
+    if (histHasta) query = query.lte('fecha', histHasta)
+
+    const desdeFila = histPagina * FILAS_POR_PAGINA
+    query = query.range(desdeFila, desdeFila + FILAS_POR_PAGINA - 1)
+
+    const { data, error, count } = await query
+
+    if (error) setHistError(error)
+    else {
+      setHistorial(data)
+      setHistTotalFilas(count ?? 0)
+    }
+    setHistLoading(false)
+  }
+
+  useEffect(() => {
+    fetchHistorial()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [histDesde, histHasta, histPagina])
+
+  const histHaySiguiente = (histPagina + 1) * FILAS_POR_PAGINA < histTotalFilas
 
   useEffect(() => {
     if (!fecha) return
@@ -176,6 +236,7 @@ export function CierreCaja() {
     }
 
     setMensaje({ tipo: 'exito', texto: 'Cierre de caja registrado.' })
+    fetchHistorial()
     setCierreExistente({
       sucursal_id: SUCURSAL_ID,
       fecha,
@@ -185,9 +246,11 @@ export function CierreCaja() {
   }
 
   return (
-    <div style={{ maxWidth: 680 }}>
+    <div style={{ maxWidth: 1200 }}>
       <h1>Cierre de caja</h1>
 
+      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <div style={{ flex: '1 1 480px', minWidth: 340 }}>
       <div className="staff-card" style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
         <label>
           Fecha:{' '}
@@ -299,6 +362,94 @@ export function CierreCaja() {
           )}
         </>
       )}
+        </div>
+
+        <div style={{ flex: '1 1 480px', minWidth: 340 }}>
+          <h2 style={{ marginTop: 0 }}>Historial de cierres</h2>
+
+          <div className="staff-card" style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+            <label>
+              Desde:{' '}
+              <input type="date" value={histDesde} onChange={(e) => cambiarHistDesde(e.target.value)} />
+            </label>
+            <label>
+              Hasta:{' '}
+              <input type="date" value={histHasta} onChange={(e) => cambiarHistHasta(e.target.value)} />
+            </label>
+          </div>
+
+          {histError && (
+            <div className="staff-card">
+              <h2>Error</h2>
+              <pre>{JSON.stringify(histError, null, 2)}</pre>
+            </div>
+          )}
+
+          {histLoading && <p>Cargando...</p>}
+
+          {!histLoading && !histError && (
+            <div className="staff-card">
+              {historial.length === 0 && <p>No hay cierres registrados en este rango.</p>}
+              {historial.length > 0 && (
+                <>
+                  <table className="staff-table">
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Apertura</th>
+                        <th>Cierre declarado</th>
+                        <th>Diferencia</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {historial.map((c) => {
+                        const dif = Math.round(Number(c.diferencia) * 100) / 100
+                        const clase =
+                          Math.abs(dif) < 0.01
+                            ? 'staff-mensaje-exito'
+                            : dif > 0
+                              ? 'staff-mensaje-alerta'
+                              : 'staff-mensaje-error'
+                        return (
+                          <tr key={c.id}>
+                            <td>{new Date(`${c.fecha}T00:00:00`).toLocaleDateString('es-AR')}</td>
+                            <td>${Number(c.monto_apertura).toFixed(2)}</td>
+                            <td>${Number(c.monto_cierre_declarado).toFixed(2)}</td>
+                            <td className={clase}>
+                              ${dif.toFixed(2)}
+                              {Math.abs(dif) < 0.01 ? ' (exacta)' : dif > 0 ? ' (sobrante)' : ' (faltante)'}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.75rem' }}>
+                    <button
+                      type="button"
+                      className="staff-btn staff-btn-secundario"
+                      onClick={() => setHistPagina((p) => p - 1)}
+                      disabled={histPagina === 0}
+                    >
+                      ← Anterior
+                    </button>
+                    <span>Página {histPagina + 1}</span>
+                    <button
+                      type="button"
+                      className="staff-btn staff-btn-secundario"
+                      onClick={() => setHistPagina((p) => p + 1)}
+                      disabled={!histHaySiguiente}
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   )
 }

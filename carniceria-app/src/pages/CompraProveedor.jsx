@@ -22,6 +22,8 @@ function resumenDetalle(detalle) {
   return texto.length > 70 ? `${texto.slice(0, 70)}…` : texto
 }
 
+const FILAS_POR_PAGINA = 20
+
 export function CompraProveedor() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -50,6 +52,8 @@ export function CompraProveedor() {
   const [compras, setCompras] = useState([])
   const [loadingCompras, setLoadingCompras] = useState(true)
   const [errorCompras, setErrorCompras] = useState(null)
+  const [compraPagina, setCompraPagina] = useState(0)
+  const [compraTotalFilas, setCompraTotalFilas] = useState(0)
 
   // ---------- Sidebar de confirmación ----------
   const [sidebarAbierto, setSidebarAbierto] = useState(false)
@@ -91,20 +95,30 @@ export function CompraProveedor() {
 
   async function fetchCompras() {
     setLoadingCompras(true)
-    const { data, error } = await supabase
+
+    const desdeFila = compraPagina * FILAS_POR_PAGINA
+
+    const { data, error, count } = await supabase
       .from('compras_proveedor')
-      .select('id, fecha, estado, proveedores(nombre), detalle_compras(cantidad, productos(nombre))')
+      .select('id, fecha, estado, proveedores(nombre), detalle_compras(cantidad, productos(nombre))', { count: 'exact' })
       .eq('sucursal_id', SUCURSAL_ID)
       .order('fecha', { ascending: false })
+      .range(desdeFila, desdeFila + FILAS_POR_PAGINA - 1)
 
     if (error) setErrorCompras(error)
-    else setCompras(data)
+    else {
+      setCompras(data)
+      setCompraTotalFilas(count ?? 0)
+    }
     setLoadingCompras(false)
   }
 
   useEffect(() => {
     fetchCompras()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [compraPagina])
+
+  const compraHaySiguiente = (compraPagina + 1) * FILAS_POR_PAGINA < compraTotalFilas
 
   // Precarga desde "Repetir última compra" (Proveedores.jsx): llega por
   // location.state para no depender de una tabla/ruta nueva. Se limpia
@@ -639,43 +653,65 @@ export function CompraProveedor() {
             <div className="staff-card">
               {compras.length === 0 && <p>No hay compras registradas.</p>}
               {compras.length > 0 && (
-                <table className="staff-table">
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Proveedor</th>
-                      <th>Estado</th>
-                      <th>Detalle</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {compras.map((c) => (
-                      <tr key={c.id}>
-                        <td>{new Date(c.fecha).toLocaleDateString('es-AR')}</td>
-                        <td>{c.proveedores?.nombre ?? '—'}</td>
-                        <td>
-                          <span className={`staff-badge ${c.estado === 'confirmada' ? 'staff-badge-pagado' : 'staff-badge-pendiente'}`}>
-                            {c.estado === 'confirmada' ? 'Confirmada' : 'Pedido'}
-                          </span>
-                        </td>
-                        <td style={{ fontSize: '0.85rem' }}>{resumenDetalle(c.detalle_compras)}</td>
-                        <td>
-                          {c.estado === 'pedido' && (
-                            <div style={{ display: 'flex', gap: '0.4rem' }}>
-                              <button type="button" className="staff-btn staff-btn-secundario" onClick={() => abrirSidebar(c)}>
-                                Editar
-                              </button>
-                              <button type="button" className="staff-btn" onClick={() => abrirSidebar(c)}>
-                                Confirmar
-                              </button>
-                            </div>
-                          )}
-                        </td>
+                <>
+                  <table className="staff-table">
+                    <thead>
+                      <tr>
+                        <th>Fecha</th>
+                        <th>Proveedor</th>
+                        <th>Estado</th>
+                        <th>Detalle</th>
+                        <th></th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {compras.map((c) => (
+                        <tr key={c.id}>
+                          <td>{new Date(c.fecha).toLocaleDateString('es-AR')}</td>
+                          <td>{c.proveedores?.nombre ?? '—'}</td>
+                          <td>
+                            <span className={`staff-badge ${c.estado === 'confirmada' ? 'staff-badge-pagado' : 'staff-badge-pendiente'}`}>
+                              {c.estado === 'confirmada' ? 'Confirmada' : 'Pedido'}
+                            </span>
+                          </td>
+                          <td style={{ fontSize: '0.85rem' }}>{resumenDetalle(c.detalle_compras)}</td>
+                          <td>
+                            {c.estado === 'pedido' && (
+                              <div style={{ display: 'flex', gap: '0.4rem' }}>
+                                <button type="button" className="staff-btn staff-btn-secundario" onClick={() => abrirSidebar(c)}>
+                                  Editar
+                                </button>
+                                <button type="button" className="staff-btn" onClick={() => abrirSidebar(c)}>
+                                  Confirmar
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.75rem' }}>
+                    <button
+                      type="button"
+                      className="staff-btn staff-btn-secundario"
+                      onClick={() => setCompraPagina((p) => p - 1)}
+                      disabled={compraPagina === 0}
+                    >
+                      ← Anterior
+                    </button>
+                    <span>Página {compraPagina + 1}</span>
+                    <button
+                      type="button"
+                      className="staff-btn staff-btn-secundario"
+                      onClick={() => setCompraPagina((p) => p + 1)}
+                      disabled={!compraHaySiguiente}
+                    >
+                      Siguiente →
+                    </button>
+                  </div>
+                </>
               )}
             </div>
           )}

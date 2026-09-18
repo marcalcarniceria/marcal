@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useCarrito } from './CarritoContext'
 import { AccesoModal } from './AccesoModal'
+import { MisPedidosModal } from './MisPedidos'
 import { IconUsuario } from './iconos'
 
 export function TiendaHeader() {
@@ -10,6 +11,7 @@ export function TiendaHeader() {
   const { cliente, loading, signOut } = useAuth()
   const [modalAbierto, setModalAbierto] = useState(false)
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [misPedidosAbierto, setMisPedidosAbierto] = useState(false)
   const cuentaRef = useRef(null)
 
   // Cerrar el dropdown al clickear afuera (comportamiento estándar de
@@ -33,6 +35,11 @@ export function TiendaHeader() {
     } else {
       setModalAbierto(true)
     }
+  }
+
+  function abrirMisPedidos() {
+    setMenuAbierto(false)
+    setMisPedidosAbierto(true)
   }
 
   function cerrarSesion() {
@@ -59,6 +66,9 @@ export function TiendaHeader() {
 
             {menuAbierto && (
               <div className="tienda-cuenta-menu">
+                <button type="button" className="tienda-cuenta-menu-item" onClick={abrirMisPedidos}>
+                  Mis pedidos
+                </button>
                 <button type="button" className="tienda-cuenta-menu-item" onClick={cerrarSesion}>
                   Cerrar sesión
                 </button>
@@ -72,6 +82,9 @@ export function TiendaHeader() {
       </nav>
 
       {modalAbierto && <AccesoModal onClose={() => setModalAbierto(false)} />}
+      {misPedidosAbierto && cliente && (
+        <MisPedidosModal clienteId={cliente.id} onClose={() => setMisPedidosAbierto(false)} />
+      )}
     </header>
   )
 }
