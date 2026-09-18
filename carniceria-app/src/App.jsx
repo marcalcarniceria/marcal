@@ -1,7 +1,6 @@
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/AppLayout'
-import { Login } from './pages/Login'
 import { Productos } from './pages/Productos'
 import { Cajero } from './pages/Cajero'
 import { CierreCaja } from './pages/CierreCaja'
@@ -9,6 +8,7 @@ import { CompraProveedor } from './pages/CompraProveedor'
 import { Proveedores } from './pages/Proveedores'
 import { PlantillasDespiece } from './pages/PlantillasDespiece'
 import { Gastos } from './pages/Gastos'
+import { MovimientosDinero } from './pages/MovimientosDinero'
 import { Fiados } from './pages/Fiados'
 import { PedidosOnline } from './pages/PedidosOnline'
 import { TiendaLayout } from './pages/tienda/TiendaLayout'
@@ -16,12 +16,11 @@ import { Tienda } from './pages/tienda/Tienda'
 import { Carrito } from './pages/tienda/Carrito'
 import { Checkout } from './pages/tienda/Checkout'
 import { Confirmacion } from './pages/tienda/Confirmacion'
+import { CrearCuenta } from './pages/tienda/CrearCuenta'
 
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
-
       <Route
         element={
           <ProtectedRoute>
@@ -36,6 +35,7 @@ function App() {
         <Route path="/proveedores" element={<Proveedores />} />
         <Route path="/plantillas-despiece" element={<PlantillasDespiece />} />
         <Route path="/gastos" element={<Gastos />} />
+        <Route path="/movimientos-dinero" element={<MovimientosDinero />} />
         <Route path="/fiados" element={<Fiados />} />
         <Route path="/pedidos-online" element={<PedidosOnline />} />
       </Route>
@@ -46,6 +46,7 @@ function App() {
         <Route path="carrito" element={<Carrito />} />
         <Route path="checkout" element={<Checkout />} />
         <Route path="confirmacion/:pedidoId" element={<Confirmacion />} />
+        <Route path="crear-cuenta" element={<CrearCuenta />} />
       </Route>
     </Routes>
   )

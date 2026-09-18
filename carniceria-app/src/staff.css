@@ -355,6 +355,26 @@
 .staff-badge-camino,
 .staff-badge-preparacion { background: #dbe6f4; color: #34588a; }
 
+/* Movimientos de dinero */
+.movimientos-resumen {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.movimientos-resumen-card {
+  flex: 1 1 200px;
+}
+
+.movimientos-resumen-monto {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  margin: 0.25rem 0 0;
+}
+
+.movimientos-ingreso { color: var(--color-success); }
+.movimientos-egreso { color: var(--color-error); }
+
 /* Cajero: grilla de productos + numpad */
 .cajero-grid {
   display: grid;
@@ -548,59 +568,6 @@
 .cajero-numpad-acciones .staff-btn,
 .cajero-numpad-acciones .staff-btn-secundario {
   flex: 1;
-}
-
-/* Login */
-.staff-login-shell {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at 20% 20%, #382a20, var(--color-dark) 65%);
-  padding: 1.5rem;
-}
-
-.staff-login-card {
-  background: var(--color-surface);
-  border-radius: 10px;
-  padding: 2.5rem 2rem;
-  width: 100%;
-  max-width: 340px;
-  box-shadow: var(--shadow-md);
-  animation: staff-fade-up 0.4s var(--ease) both;
-}
-
-.staff-login-card .staff-logo {
-  border-bottom: none;
-  justify-content: center;
-  color: var(--color-dark);
-  margin-bottom: 1.5rem;
-  padding-bottom: 0;
-}
-
-.staff-login-card .staff-logo-texto {
-  color: var(--color-dark);
-}
-
-.staff-login-card .staff-logo-texto small {
-  color: var(--color-text-muted);
-}
-
-.staff-login-card label {
-  display: block;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  font-weight: 500;
-  margin-bottom: 0.3rem;
-}
-
-.staff-login-card input {
-  width: 100%;
-  margin-bottom: 1rem;
-}
-
-.staff-login-card .staff-btn {
-  width: 100%;
 }
 
 /* Responsive: sidebar colapsa arriba en pantallas chicas */

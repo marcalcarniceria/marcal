@@ -191,6 +191,125 @@
   transform: translateY(0) scale(0.97);
 }
 
+.tienda-cuenta {
+  position: relative;
+}
+
+.tienda-cuenta-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s var(--ease), border-color 0.2s var(--ease);
+}
+
+.tienda-cuenta-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.tienda-cuenta-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  padding: 0.35rem;
+  min-width: 160px;
+  z-index: 20;
+  animation: tienda-fade-up 0.15s var(--ease) both;
+}
+
+.tienda-cuenta-menu-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  padding: 0.55rem 0.65rem;
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.tienda-cuenta-menu-item:hover {
+  background: var(--color-bg);
+}
+
+/* Modal de acceso (login / crear cuenta) */
+.tienda-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 23, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 1rem;
+}
+
+.tienda-modal {
+  position: relative;
+  background: var(--color-surface);
+  border-radius: 12px;
+  padding: 1.75rem 1.5rem 1.5rem;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: var(--shadow-lg);
+  animation: tienda-fade-up 0.2s var(--ease) both;
+}
+
+.tienda-modal-cerrar {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: transparent;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+
+.tienda-modal-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tienda-modal-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.6rem 0.25rem;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tienda-modal-tab.activo {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
 /* Contenido */
 .tienda-contenido {
   max-width: 960px;
@@ -557,6 +676,11 @@
 
 .tienda-error {
   color: var(--color-accent-hover);
+  font-weight: 600;
+}
+
+.tienda-mensaje-exito {
+  color: #3f7d4f;
   font-weight: 600;
 }
 

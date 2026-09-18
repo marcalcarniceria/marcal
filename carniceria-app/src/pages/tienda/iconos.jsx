@@ -41,3 +41,12 @@ export function IconCamion(props) {
     </svg>
   )
 }
+
+export function IconUsuario(props) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <circle cx="32" cy="22" r="10" />
+      <path d="M12 54c2-12 10-18 20-18s18 6 20 18" />
+    </svg>
+  )
+}

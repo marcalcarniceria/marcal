@@ -2,11 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 import { SUCURSAL_ID } from '../../config/sucursal'
+import { useAuth } from '../../context/AuthContext'
 import { useCarrito } from './CarritoContext'
 import { TiendaHeader } from './TiendaHeader'
 
 export function Checkout() {
   const { items, totalCarrito, vaciarCarrito } = useCarrito()
+  const { cliente } = useAuth()
   const navigate = useNavigate()
 
   const [zonas, setZonas] = useState([])
@@ -29,6 +31,20 @@ export function Checkout() {
         if (!error) setZonas(data)
       })
   }, [])
+
+  // AuthContext resuelve la sesión de forma asíncrona -- `cliente` puede
+  // seguir en null en el primer render aunque haya una sesión de cliente
+  // real, y recién pasar a tener datos un instante después. Reaccionar al
+  // cambio (en vez de leerlo una sola vez al montar) evita que el
+  // formulario quede vacío por ese timing. Sigue siendo editable: esto
+  // solo precarga, no vuelve a pisar lo que el usuario ya haya tipeado.
+  useEffect(() => {
+    if (cliente) {
+      setNombre(cliente.nombre ?? '')
+      setTelefono(cliente.telefono ?? '')
+      setDireccion(cliente.direccion ?? '')
+    }
+  }, [cliente])
 
   const zonaSeleccionada = zonas.find((z) => z.id === zonaId)
   const costoEnvio = zonaSeleccionada ? Number(zonaSeleccionada.costo_envio) : 0
