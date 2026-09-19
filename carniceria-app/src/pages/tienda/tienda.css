@@ -140,6 +140,16 @@
   box-shadow: var(--shadow-sm);
 }
 
+.tienda-logo-marca-img {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: #fff;
+  object-fit: cover;
+  box-shadow: var(--shadow-sm);
+}
+
 .tienda-logo-texto {
   font-family: var(--font-display);
   font-size: 1.25rem;
@@ -337,17 +347,31 @@
 
 /* Contenido */
 .tienda-contenido {
-  max-width: 960px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 1.5rem 1.25rem 4rem;
+  padding: 1.5rem 1rem 4rem;
 }
 
 .tienda-hero-full {
   position: relative;
   width: 100%;
-  min-height: 340px;
+  /* aspect-ratio (sin max-height) hace que el contenedor SIEMPRE
+     tenga la misma proporción que banner-marcal.png (1983x793) en
+     cualquier ancho de escritorio -- con background-size: cover,
+     "cover" y "contain" dan el mismo resultado cuando la proporción
+     coincide exactamente, así que nunca recorta arriba/abajo y el
+     logo (centrado en la imagen) queda siempre completo. Antes había
+     un max-height fijo que, en pantallas anchas, hacía que el
+     contenedor quedara más "achatado" que la imagen real y por eso
+     recortaba el logo por arriba y por abajo.
+     min-height es solo para mobile: ahí la proporción real daría un
+     banner demasiado bajo (~150px), así que se lo deja más alto a
+     propósito -- en ese caso sí recorta, pero de los COSTADOS de la
+     foto (paisaje ancho), nunca del centro donde está el logo. */
+  aspect-ratio: 1983 / 793;
+  min-height: 280px;
   background-size: cover;
-  background-position: center 35%;
+  background-position: center;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -357,7 +381,11 @@
 .tienda-hero-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, rgba(28, 23, 20, 0.82), rgba(28, 23, 20, 0.72) 55%, var(--color-bg));
+  /* El banner ya trae su propio texto y buen contraste -- esto solo
+     lo funde suavemente con el fondo de la página en el borde
+     inferior, no lo oscurece entero como antes (esa oscurecida era
+     para que el texto superpuesto se leyera sobre una foto genérica). */
+  background: linear-gradient(180deg, rgba(28, 23, 20, 0) 75%, var(--color-bg));
 }
 
 .tienda-hero-inner {
@@ -424,36 +452,6 @@
   --rot: 10deg;
   transform: rotate(var(--rot));
   animation-delay: 0.6s;
-}
-
-/* Fila de ventajas */
-.tienda-ventajas {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.tienda-ventaja {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 0.85rem 1rem;
-  font-size: 0.85rem;
-  color: var(--color-text-muted);
-  font-weight: 500;
-  box-shadow: var(--shadow-sm);
-  animation: tienda-fade-up 0.5s var(--ease) both;
-}
-
-.tienda-ventaja svg {
-  width: 30px;
-  height: 30px;
-  color: var(--color-accent);
-  flex-shrink: 0;
 }
 
 .tienda-volver {
@@ -709,47 +707,79 @@
   font-weight: 600;
 }
 
-/* Sobre nosotros */
+/* Sobre nosotros -- ahora a pantalla completa como el hero (2.png de
+   borde a borde): la sección es full-bleed, pero el texto vive adentro
+   de .tienda-nosotros-inner, que tiene el mismo max-width/padding que
+   .tienda-contenido para alinearse con el resto de la página, y
+   .tienda-nosotros-card repite el max-width angosto (420px) que ya
+   usábamos acá para que el párrafo no se estire de punta a punta. */
 .tienda-nosotros {
-  display: grid;
-  grid-template-columns: minmax(0, 320px) 1fr;
-  gap: 2rem;
+  position: relative;
+  display: flex;
   align-items: center;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: var(--shadow-sm);
+  width: 100%;
+  min-height: 380px;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
   animation: tienda-fade-up 0.5s var(--ease) both;
 }
 
-.tienda-nosotros img {
-  width: 100%;
-  height: 220px;
-  object-fit: cover;
-  border-radius: 8px;
-  box-shadow: var(--shadow-md);
+.tienda-nosotros-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(28, 23, 20, 0.92) 0%,
+    rgba(28, 23, 20, 0.75) 42%,
+    rgba(28, 23, 20, 0.25) 100%
+  );
 }
 
-.tienda-nosotros h2 {
+.tienda-nosotros-inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2.5rem 1rem;
+}
+
+.tienda-nosotros-card {
+  max-width: 420px;
+}
+
+.tienda-nosotros-card h2 {
+  color: #fff;
   margin-bottom: 0.6rem;
 }
 
-.tienda-nosotros p {
-  color: var(--color-text-muted);
+.tienda-nosotros-card p {
+  color: rgba(255, 255, 255, 0.82);
   font-size: 0.92rem;
-  line-height: 1.5;
+  line-height: 1.55;
   margin: 0 0 0.6rem;
 }
 
-.tienda-nosotros p:last-child {
+.tienda-nosotros-card p:last-child {
   margin-bottom: 0;
 }
 
 @media (max-width: 640px) {
   .tienda-nosotros {
-    grid-template-columns: 1fr;
+    min-height: 280px;
+  }
+
+  .tienda-nosotros-inner {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .tienda-nosotros-overlay {
+    background: linear-gradient(180deg, rgba(28, 23, 20, 0.35), rgba(28, 23, 20, 0.88) 65%);
+  }
+
+  .tienda-nosotros-card {
+    max-width: 100%;
   }
 }
 

@@ -1,5 +1,8 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { PedidosNuevosProvider } from '../context/PedidosNuevosContext'
+import { PedidosStockInsuficienteProvider } from '../context/PedidosStockInsuficienteContext'
+import { NotificacionesFlotantes } from './NotificacionesFlotantes'
 import '../staff.css'
 
 const NAV_ITEMS = [
@@ -16,10 +19,21 @@ const NAV_ITEMS = [
 ]
 
 export function AppLayout() {
+  return (
+    <PedidosNuevosProvider>
+      <PedidosStockInsuficienteProvider>
+        <AppLayoutInner />
+      </PedidosStockInsuficienteProvider>
+    </PedidosNuevosProvider>
+  )
+}
+
+function AppLayoutInner() {
   const { usuario, signOut } = useAuth()
 
   return (
     <div className="staff">
+      <NotificacionesFlotantes />
       <div className="staff-shell">
         <aside className="staff-sidebar">
           <div className="staff-logo">

@@ -50,7 +50,7 @@ export function TiendaHeader() {
   return (
     <header className="tienda-header">
       <Link to="/tienda" className="tienda-logo">
-        <span className="tienda-logo-marca">M</span>
+        <img src="/images/logo-marcal.png" alt="Mar-Cal" className="tienda-logo-marca-img" />
         <span className="tienda-logo-texto">
           Mar-Cal
           <small>Carnicería y Verdulería</small>

@@ -21,12 +21,13 @@ export function PedidosOnline() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [mensaje, setMensaje] = useState(null)
+  const [erroresPorPedido, setErroresPorPedido] = useState({})
 
   async function fetchPedidos() {
     setLoading(true)
     const { data, error } = await supabase
       .from('pedidos_online')
-      .select('*, detalle_pedidos(*, productos(nombre))')
+      .select('*, detalle_pedidos(*, productos(nombre), unidades_venta_producto(nombre_unidad))')
       .order('fecha_creacion', { ascending: false })
 
     if (error) setError(error)
@@ -54,19 +55,24 @@ export function PedidosOnline() {
       setMensaje({ tipo: 'error', texto: error.message })
       return
     }
-    setMensaje({ tipo: 'exito', texto: 'Pedido marcado como pagado y stock descontado.' })
+    setMensaje({ tipo: 'exito', texto: 'Pedido marcado como pagado.' })
     fetchPedidos()
   }
 
   async function cambiarEstado(pedidoId, nuevoEstado) {
     setMensaje(null)
-    const { error } = await supabase
-      .from('pedidos_online')
-      .update({ estado: nuevoEstado })
-      .eq('id', pedidoId)
+    setErroresPorPedido((actual) => ({ ...actual, [pedidoId]: null }))
+
+    // "en_preparacion" es la transición que descuenta stock (y puede
+    // rechazarse si algún producto sigue sin stock) -- pasa por el RPC
+    // en vez del update directo que usan los demás estados.
+    const { error } =
+      nuevoEstado === 'en_preparacion'
+        ? await supabase.rpc('avanzar_pedido_preparacion', { p_pedido_id: pedidoId })
+        : await supabase.from('pedidos_online').update({ estado: nuevoEstado }).eq('id', pedidoId)
 
     if (error) {
-      setMensaje({ tipo: 'error', texto: error.message })
+      setErroresPorPedido((actual) => ({ ...actual, [pedidoId]: error.message }))
       return
     }
     fetchPedidos()
@@ -101,7 +107,10 @@ export function PedidosOnline() {
 
       {pedidos.length === 0 && <p>No hay pedidos.</p>}
 
-      {pedidos.map((p) => (
+      {pedidos.map((p) => {
+        const tieneStockInsuficiente = p.detalle_pedidos.some((d) => d.stock_insuficiente)
+
+        return (
         <div key={p.id} className="staff-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div>
@@ -112,11 +121,20 @@ export function PedidosOnline() {
             <span className={`staff-badge ${BADGE_POR_ESTADO[p.estado] ?? ''}`}>{p.estado}</span>
           </div>
 
+          {tieneStockInsuficiente && <div className="staff-alerta-stock">⚠ Stock insuficiente</div>}
+
           <table className="staff-table" style={{ margin: '0.75rem 0' }}>
             <tbody>
               {p.detalle_pedidos.map((d) => (
                 <tr key={d.id}>
-                  <td>{d.cantidad} x {d.productos?.nombre}</td>
+                  <td>
+                    {d.cantidad} x {d.productos?.nombre}
+                    {d.stock_insuficiente && (
+                      <span className="staff-detalle-faltante">
+                        {' '}— Faltan {Number(d.faltante).toFixed(2)} {d.unidades_venta_producto?.nombre_unidad ?? ''}
+                      </span>
+                    )}
+                  </td>
                   <td>${Number(d.subtotal).toFixed(2)}</td>
                 </tr>
               ))}
@@ -141,16 +159,23 @@ export function PedidosOnline() {
               </button>
             </div>
           ) : (
-            <label style={{ display: 'block', marginTop: '0.75rem' }}>
-              Estado:{' '}
-              <select value={p.estado} onChange={(e) => cambiarEstado(p.id, e.target.value)}>
-                {ESTADOS_POST_PAGO.map((e) => (
-                  <option key={e} value={e}>
-                    {e}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div style={{ marginTop: '0.75rem' }}>
+              <label style={{ display: 'block' }}>
+                Estado:{' '}
+                <select value={p.estado} onChange={(e) => cambiarEstado(p.id, e.target.value)}>
+                  {ESTADOS_POST_PAGO.map((e) => (
+                    <option key={e} value={e}>
+                      {e}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {erroresPorPedido[p.id] && (
+                <p className="staff-mensaje-error" style={{ margin: '0.35rem 0 0' }}>
+                  {erroresPorPedido[p.id]}
+                </p>
+              )}
+            </div>
           )}
 
           {usuario?.rol === 'dueño' && (
@@ -170,7 +195,8 @@ export function PedidosOnline() {
             </label>
           )}
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }

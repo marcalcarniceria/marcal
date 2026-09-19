@@ -3,7 +3,6 @@ import { supabase } from '../../supabaseClient'
 import { SUCURSAL_ID } from '../../config/sucursal'
 import { useCarrito } from './CarritoContext'
 import { TiendaHeader } from './TiendaHeader'
-import { IconBalanza, IconCamion, IconCarne, IconVerdura } from './iconos'
 
 const GOOGLE_MAPS_URL = 'https://maps.app.goo.gl/VT52EVQrtpZ2KUWJ8'
 
@@ -50,44 +49,15 @@ export function Tienda() {
 
       <div
         className="tienda-hero-full"
-        style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1781934909002-e2df1f0caf76?w=1600&q=80&auto=format&fit=crop')",
-        }}
+        style={{ backgroundImage: "url('/images/banner-marcal.png')" }}
       >
         <div className="tienda-hero-overlay" />
-        <div className="tienda-hero-inner">
-          <IconCarne className="tienda-hero-icono tienda-hero-icono-1" />
-          <IconVerdura className="tienda-hero-icono tienda-hero-icono-2" />
-          <span className="tienda-badge-calidad">Todo de primera calidad</span>
-          <h1>Carne, frutas y verduras de calidad</h1>
-          <p>Hacenos tu pedido y coordinamos la entrega por tu zona.</p>
-        </div>
       </div>
 
-      <div className="tienda-contenido">
-        <div className="tienda-ventajas">
-          <div className="tienda-ventaja">
-            <IconBalanza />
-            <span>Primera calidad, pesado al momento</span>
-          </div>
-          <div className="tienda-ventaja">
-            <IconCamion />
-            <span>Envío a domicilio por zona</span>
-          </div>
-          <div className="tienda-ventaja">
-            <IconVerdura />
-            <span>Frutas y verduras frescas</span>
-          </div>
-        </div>
-
-        <div className="tienda-nosotros">
-          <img
-            src="https://images.unsplash.com/photo-1489450278009-822e9be04dff?w=800&q=80&auto=format&fit=crop"
-            alt="Puesto de frutas y verduras frescas"
-            loading="lazy"
-          />
-          <div>
+      <div className="tienda-nosotros" style={{ backgroundImage: "url('/images/2.png')" }}>
+        <div className="tienda-nosotros-overlay" />
+        <div className="tienda-nosotros-inner">
+          <div className="tienda-nosotros-card">
             <h2>Sobre Mar-Cal</h2>
             <p>
               Somos una carnicería y verdulería de barrio en Arenales 345, Barrio Juniors.
@@ -100,7 +70,9 @@ export function Tienda() {
             </p>
           </div>
         </div>
+      </div>
 
+      <div className="tienda-contenido">
         <div className="tienda-resenas">
           <h2>Lo que dicen nuestros clientes</h2>
           <div className="tienda-resenas-grid">
