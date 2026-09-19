@@ -707,58 +707,48 @@
   font-weight: 600;
 }
 
-/* Sobre nosotros -- ahora a pantalla completa como el hero (2.png de
-   borde a borde): la sección es full-bleed, pero el texto vive adentro
-   de .tienda-nosotros-inner, que tiene el mismo max-width/padding que
-   .tienda-contenido para alinearse con el resto de la página, y
-   .tienda-nosotros-card repite el max-width angosto (420px) que ya
-   usábamos acá para que el párrafo no se estire de punta a punta. */
+/* Sobre nosotros -- texto suelto (sin tarjeta) sobre el fondo claro de
+   la página: título grande con un divisor dorado y párrafos en tamaño
+   cómodo de lectura, centrados. El ancho de los párrafos está limitado
+   (max-width) para que no se estiren de borde a borde. */
 .tienda-nosotros {
-  position: relative;
-  display: flex;
-  align-items: center;
   width: 100%;
-  min-height: 380px;
-  background-size: cover;
-  background-position: center;
-  overflow: hidden;
   animation: tienda-fade-up 0.5s var(--ease) both;
 }
 
-.tienda-nosotros-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    100deg,
-    rgba(28, 23, 20, 0.92) 0%,
-    rgba(28, 23, 20, 0.75) 42%,
-    rgba(28, 23, 20, 0.25) 100%
-  );
-}
-
 .tienda-nosotros-inner {
-  position: relative;
-  z-index: 1;
   width: 100%;
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2.5rem 1rem;
+  padding: 4rem 1rem;
 }
 
 .tienda-nosotros-card {
-  max-width: 420px;
+  text-align: center;
 }
 
 .tienda-nosotros-card h2 {
-  color: #fff;
-  margin-bottom: 0.6rem;
+  color: var(--color-dark);
+  font-size: clamp(2rem, 4.2vw, 3rem);
+  line-height: 1.1;
+}
+
+.tienda-nosotros-card h2::after {
+  content: '';
+  display: block;
+  width: 72px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-gold);
+  margin: 1rem auto 1.75rem;
 }
 
 .tienda-nosotros-card p {
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.92rem;
-  line-height: 1.55;
-  margin: 0 0 0.6rem;
+  color: var(--color-text);
+  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  line-height: 1.75;
+  max-width: 980px;
+  margin: 0 auto 1.1rem;
 }
 
 .tienda-nosotros-card p:last-child {
@@ -766,41 +756,63 @@
 }
 
 @media (max-width: 640px) {
-  .tienda-nosotros {
-    min-height: 280px;
-  }
-
   .tienda-nosotros-inner {
-    padding: 1.5rem 1.25rem;
-  }
-
-  .tienda-nosotros-overlay {
-    background: linear-gradient(180deg, rgba(28, 23, 20, 0.35), rgba(28, 23, 20, 0.88) 65%);
-  }
-
-  .tienda-nosotros-card {
-    max-width: 100%;
+    padding: 2.25rem 1rem;
   }
 }
 
-/* Reseñas de Google */
+/* Reseñas de Google -- foto de fondo (2.png) a pantalla completa con un
+   overlay oscuro; el contenido vive en .tienda-resenas-inner (mismo
+   max-width que .tienda-contenido) y las tarjetas son casi opacas para
+   que el texto se lea bien contra la foto. */
 .tienda-resenas {
-  margin-bottom: 2rem;
+  position: relative;
+  width: 100%;
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+}
+
+.tienda-resenas-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(28, 23, 20, 0.62);
+}
+
+.tienda-resenas-inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 3.5rem 1rem;
+}
+
+.tienda-resenas-inner h2 {
+  color: #fff;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  text-align: center;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 640px) {
+  .tienda-resenas-inner {
+    padding: 2.25rem 1rem;
+  }
 }
 
 .tienda-resenas-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.75rem;
 }
 
 .tienda-resena-card {
-  background: var(--color-surface);
+  background: rgba(255, 253, 250, 0.99);
   border: 1px solid var(--color-border);
-  border-radius: 8px;
-  padding: 1.1rem;
-  box-shadow: var(--shadow-sm);
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: var(--shadow-md);
   transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
   animation: tienda-fade-up 0.5s var(--ease) both;
 }
@@ -816,35 +828,37 @@
 
 .tienda-resena-estrellas {
   color: var(--color-gold);
-  letter-spacing: 0.1em;
-  font-size: 0.9rem;
+  letter-spacing: 0.12em;
+  font-size: 1.2rem;
 }
 
 .tienda-resena-texto {
-  font-size: 0.88rem;
+  font-size: 1.08rem;
   color: var(--color-text);
-  margin: 0.5rem 0;
-  line-height: 1.5;
+  margin: 0.75rem 0 1rem;
+  line-height: 1.65;
 }
 
 .tienda-resena-autor {
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   color: var(--color-text-muted);
   font-weight: 600;
 }
 
-.tienda-google-link {
-  display: inline-flex;
+.tienda-resenas-inner .tienda-google-link {
+  display: flex;
+  justify-content: center;
   align-items: center;
   gap: 0.4rem;
-  margin-top: 1rem;
-  color: var(--color-accent);
+  margin-top: 1.75rem;
+  color: #fff;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.55);
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: 1.05rem;
   text-decoration: none;
 }
 
-.tienda-google-link:hover {
+.tienda-resenas-inner .tienda-google-link:hover {
   text-decoration: underline;
 }
 

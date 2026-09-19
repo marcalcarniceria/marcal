@@ -54,8 +54,7 @@ export function Tienda() {
         <div className="tienda-hero-overlay" />
       </div>
 
-      <div className="tienda-nosotros" style={{ backgroundImage: "url('/images/2.png')" }}>
-        <div className="tienda-nosotros-overlay" />
+      <div className="tienda-nosotros">
         <div className="tienda-nosotros-inner">
           <div className="tienda-nosotros-card">
             <h2>Sobre Mar-Cal</h2>
@@ -72,8 +71,9 @@ export function Tienda() {
         </div>
       </div>
 
-      <div className="tienda-contenido">
-        <div className="tienda-resenas">
+      <div className="tienda-resenas" style={{ backgroundImage: "url('/images/2.png')" }}>
+        <div className="tienda-resenas-overlay" />
+        <div className="tienda-resenas-inner">
           <h2>Lo que dicen nuestros clientes</h2>
           <div className="tienda-resenas-grid">
             {RESENAS.map((r) => (
@@ -93,8 +93,10 @@ export function Tienda() {
             Ver todas las reseñas en Google →
           </a>
         </div>
+      </div>
 
-        {error && <p className="tienda-error">{JSON.stringify(error)}</p>}
+      <div className="tienda-contenido">
+        {error &&<p className="tienda-error">{JSON.stringify(error)}</p>}
         {loading && <p>Cargando productos...</p>}
 
         {!loading && !error && (
