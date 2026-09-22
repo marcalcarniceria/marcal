@@ -3,19 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
 
-// Para armar líneas de pedido a partir de una plantilla de despiece (sin
-// costo todavía) hace falta elegir alguna unidad de venta del producto
-// destino para mostrar/guardar la cantidad — se usa la más cercana a
-// factor 1 ("un kilo"), mismo criterio que usa registrar_compra_por_plantilla
-// en el servidor.
-function unidadKiloDe(producto) {
-  const unidades = producto?.unidades_venta_producto ?? []
-  if (unidades.length === 0) return null
-  return [...unidades].sort(
-    (a, b) => Math.abs(a.factor_conversion_base - 1) - Math.abs(b.factor_conversion_base - 1),
-  )[0]
-}
-
 function resumenDetalle(detalle) {
   if (!detalle || detalle.length === 0) return '—'
   const texto = detalle.map((d) => `${d.productos?.nombre ?? '—'} x${d.cantidad}`).join(', ')
@@ -32,12 +19,17 @@ export function CompraProveedor() {
   const [proveedores, setProveedores] = useState([])
   const [proveedorId, setProveedorId] = useState('')
   const [plantillas, setPlantillas] = useState([])
+  const [metodosPago, setMetodosPago] = useState([])
 
   const [loadingCatalogo, setLoadingCatalogo] = useState(true)
   const [catalogoError, setCatalogoError] = useState(null)
 
   // ---------- Columna izquierda: Pedido (sin precio) ----------
   const [pedidoItems, setPedidoItems] = useState([])
+  // Cada plantilla aplicada al pedido (ej. "media vaca") queda acá como UN
+  // grupo, separado de pedidoItems (que son los productos sueltos cargados
+  // a mano) -- ver comentario largo en agregarPlantillaAlPedido.
+  const [pedidoGrupos, setPedidoGrupos] = useState([])
   const [modoPedido, setModoPedido] = useState('manual')
   const [pedidoProductoId, setPedidoProductoId] = useState('')
   const [pedidoUnidadId, setPedidoUnidadId] = useState('')
@@ -60,32 +52,40 @@ export function CompraProveedor() {
   const [sidebarCompraId, setSidebarCompraId] = useState(null)
   const [sidebarProveedorNombre, setSidebarProveedorNombre] = useState('')
   const [sidebarItems, setSidebarItems] = useState([])
+  // Grupos (plantillas) de la compra que se está confirmando: uno por
+  // aplicación de plantilla, con sus líneas (ya fijas) y un solo campo de
+  // costo_total para todo el grupo -- ver confirmar_pedido_compra.
+  const [sidebarGrupos, setSidebarGrupos] = useState([])
   const [sidebarCargando, setSidebarCargando] = useState(false)
   const [sidebarProductoId, setSidebarProductoId] = useState('')
   const [sidebarUnidadId, setSidebarUnidadId] = useState('')
   const [sidebarCantidad, setSidebarCantidad] = useState('')
+  const [sidebarMetodoPagoId, setSidebarMetodoPagoId] = useState('')
   const [sidebarEnviando, setSidebarEnviando] = useState(false)
   const [sidebarMensaje, setSidebarMensaje] = useState(null)
 
   useEffect(() => {
     async function fetchCatalogo() {
       setLoadingCatalogo(true)
-      const [productosRes, proveedoresRes, plantillasRes] = await Promise.all([
+      const [productosRes, proveedoresRes, plantillasRes, metodosPagoRes] = await Promise.all([
         supabase.from('productos').select('*, unidades_venta_producto(*)').eq('activo', true),
         supabase.from('proveedores').select('*').eq('sucursal_id', SUCURSAL_ID),
         supabase
           .from('plantillas_despiece')
           .select('id, nombre, plantillas_despiece_detalle(porcentaje_rendimiento, producto_destino_id, productos(nombre))')
           .order('nombre'),
+        supabase.from('metodos_pago').select('*'),
       ])
 
       if (productosRes.error) setCatalogoError(productosRes.error)
       else if (proveedoresRes.error) setCatalogoError(proveedoresRes.error)
       else if (plantillasRes.error) setCatalogoError(plantillasRes.error)
+      else if (metodosPagoRes.error) setCatalogoError(metodosPagoRes.error)
       else {
         setProductos(productosRes.data)
         setProveedores(proveedoresRes.data)
         setPlantillas(plantillasRes.data)
+        setMetodosPago(metodosPagoRes.data)
       }
       setLoadingCatalogo(false)
     }
@@ -190,29 +190,39 @@ export function CompraProveedor() {
         }))
       : []
 
+  // Una plantilla aplicada (ej. "media vaca") queda como UN grupo, no como
+  // N líneas sueltas -- así en la pantalla de Confirmar aparece como un
+  // solo renglón con un solo precio (lo que salió la media vaca entera),
+  // en vez de pedir un precio por cada corte por separado (que no existe:
+  // el proveedor no cobra cada corte suelto). Las cantidades por corte que
+  // se ven acá son las mismas que se van a guardar -- se recalculan en el
+  // servidor con el mismo criterio al crear el pedido (crear_pedido_compra).
   function agregarPlantillaAlPedido() {
     if (previewPedidoPlantilla.length === 0) {
       setMensajePedido({ tipo: 'error', texto: 'Elegí una plantilla e ingresá el peso total.' })
       return
     }
 
-    const nuevasLineas = previewPedidoPlantilla.map((linea, i) => {
-      const producto = productos.find((p) => p.id === linea.producto_destino_id)
-      const unidad = unidadKiloDe(producto)
-      return {
-        key: `${linea.producto_destino_id}-${unidad?.id ?? 'sin-unidad'}-${Date.now()}-${i}`,
-        producto_id: linea.producto_destino_id,
-        producto_nombre: linea.producto_nombre,
-        unidad_venta_id: unidad?.id ?? '',
-        unidad_nombre: unidad?.nombre_unidad ?? 'Kilo',
-        cantidad: Math.round(linea.cantidad * 1000) / 1000,
-      }
-    })
-
-    setPedidoItems((prev) => [...prev, ...nuevasLineas])
+    setPedidoGrupos((prev) => [
+      ...prev,
+      {
+        key: `${plantillaPedidoId}-${Date.now()}`,
+        plantilla_id: plantillaPedidoId,
+        nombre: plantillaPedidoSeleccionada.nombre,
+        peso_total: Number(pesoTotalPedido),
+        lineas: previewPedidoPlantilla.map((l) => ({
+          producto_nombre: l.producto_nombre,
+          cantidad: Math.round(l.cantidad * 1000) / 1000,
+        })),
+      },
+    ])
     setPlantillaPedidoId('')
     setPesoTotalPedido('')
     setMensajePedido(null)
+  }
+
+  function quitarGrupoPedido(key) {
+    setPedidoGrupos((prev) => prev.filter((g) => g.key !== key))
   }
 
   async function repetirCompraAnteriorPedido() {
@@ -242,28 +252,53 @@ export function CompraProveedor() {
       return
     }
 
-    const { data: detalle, error: errorDetalle } = await supabase
-      .from('detalle_compras')
-      .select('producto_id, unidad_venta_id, cantidad, productos(nombre), unidades_venta_producto(nombre_unidad)')
-      .eq('compra_id', ultimaCompra.id)
+    const [{ data: detalle, error: errorDetalle }, { data: grupos, error: errorGrupos }] = await Promise.all([
+      supabase
+        .from('detalle_compras')
+        .select('producto_id, unidad_venta_id, cantidad, grupo_id, productos(nombre), unidades_venta_producto(nombre_unidad)')
+        .eq('compra_id', ultimaCompra.id),
+      supabase
+        .from('detalle_compras_grupos')
+        .select('id, plantilla_id, nombre, peso_total')
+        .eq('compra_id', ultimaCompra.id),
+    ])
 
     setCargandoRepetir(false)
 
-    if (errorDetalle) {
-      setMensajePedido({ tipo: 'error', texto: errorDetalle.message })
+    if (errorDetalle || errorGrupos) {
+      setMensajePedido({ tipo: 'error', texto: (errorDetalle ?? errorGrupos).message })
       return
     }
 
+    // Las líneas sueltas (sin grupo) van a pedidoItems como siempre. Las que
+    // vienen de una plantilla (grupo_id no nulo) se reconstruyen como
+    // grupos, no como líneas sueltas -- si se aplanaran acá, se perdería la
+    // agrupación al confirmar el pedido nuevo.
     setPedidoItems(
-      detalle.map((d, i) => ({
-        key: `${d.producto_id}-${d.unidad_venta_id}-${i}-${Date.now()}`,
-        producto_id: d.producto_id,
-        producto_nombre: d.productos?.nombre ?? '—',
-        unidad_venta_id: d.unidad_venta_id,
-        unidad_nombre: d.unidades_venta_producto?.nombre_unidad ?? '—',
-        cantidad: Number(d.cantidad),
+      detalle
+        .filter((d) => !d.grupo_id)
+        .map((d, i) => ({
+          key: `${d.producto_id}-${d.unidad_venta_id}-${i}-${Date.now()}`,
+          producto_id: d.producto_id,
+          producto_nombre: d.productos?.nombre ?? '—',
+          unidad_venta_id: d.unidad_venta_id,
+          unidad_nombre: d.unidades_venta_producto?.nombre_unidad ?? '—',
+          cantidad: Number(d.cantidad),
+        })),
+    )
+
+    setPedidoGrupos(
+      grupos.map((g) => ({
+        key: `${g.id}-${Date.now()}`,
+        plantilla_id: g.plantilla_id,
+        nombre: g.nombre,
+        peso_total: Number(g.peso_total),
+        lineas: detalle
+          .filter((d) => d.grupo_id === g.id)
+          .map((d) => ({ producto_nombre: d.productos?.nombre ?? '—', cantidad: Number(d.cantidad) })),
       })),
     )
+
     setMensajePedido({ tipo: 'exito', texto: 'Se precargó la última compra a este proveedor como base del pedido.' })
   }
 
@@ -274,8 +309,8 @@ export function CompraProveedor() {
       setMensajePedido({ tipo: 'error', texto: 'Seleccioná el proveedor.' })
       return
     }
-    if (pedidoItems.length === 0) {
-      setMensajePedido({ tipo: 'error', texto: 'Agregá al menos un producto al pedido.' })
+    if (pedidoItems.length === 0 && pedidoGrupos.length === 0) {
+      setMensajePedido({ tipo: 'error', texto: 'Agregá al menos un producto o una plantilla al pedido.' })
       return
     }
 
@@ -289,6 +324,10 @@ export function CompraProveedor() {
         unidad_venta_id: item.unidad_venta_id,
         cantidad: item.cantidad,
       })),
+      p_grupos: pedidoGrupos.map((g) => ({
+        plantilla_id: g.plantilla_id,
+        peso_total: g.peso_total,
+      })),
     })
 
     setEnviandoPedido(false)
@@ -300,6 +339,7 @@ export function CompraProveedor() {
 
     setMensajePedido({ tipo: 'exito', texto: `Pedido registrado (id ${data}).` })
     setPedidoItems([])
+    setPedidoGrupos([])
     fetchCompras()
   }
 
@@ -315,29 +355,55 @@ export function CompraProveedor() {
     setSidebarProductoId('')
     setSidebarUnidadId('')
     setSidebarCantidad('')
+    setSidebarMetodoPagoId('')
     setSidebarCargando(true)
 
-    const { data, error } = await supabase
-      .from('detalle_compras')
-      .select('id, producto_id, unidad_venta_id, cantidad, costo_unitario, productos(nombre), unidades_venta_producto(nombre_unidad)')
-      .eq('compra_id', compra.id)
+    const [{ data, error }, { data: grupos, error: errorGrupos }] = await Promise.all([
+      supabase
+        .from('detalle_compras')
+        .select('id, producto_id, unidad_venta_id, cantidad, costo_unitario, grupo_id, productos(nombre), unidades_venta_producto(nombre_unidad)')
+        .eq('compra_id', compra.id),
+      supabase
+        .from('detalle_compras_grupos')
+        .select('id, nombre, peso_total, costo_total')
+        .eq('compra_id', compra.id),
+    ])
 
     setSidebarCargando(false)
 
-    if (error) {
-      setSidebarMensaje({ tipo: 'error', texto: error.message })
+    if (error || errorGrupos) {
+      setSidebarMensaje({ tipo: 'error', texto: (error ?? errorGrupos).message })
       return
     }
 
     setSidebarItems(
-      data.map((d) => ({
-        key: `${d.id}`,
-        producto_id: d.producto_id,
-        producto_nombre: d.productos?.nombre ?? '—',
-        unidad_venta_id: d.unidad_venta_id,
-        unidad_nombre: d.unidades_venta_producto?.nombre_unidad ?? '—',
-        cantidad: Number(d.cantidad),
-        costo_unitario: d.costo_unitario !== null ? Number(d.costo_unitario) : '',
+      data
+        .filter((d) => !d.grupo_id)
+        .map((d) => ({
+          key: `${d.id}`,
+          producto_id: d.producto_id,
+          producto_nombre: d.productos?.nombre ?? '—',
+          unidad_venta_id: d.unidad_venta_id,
+          unidad_nombre: d.unidades_venta_producto?.nombre_unidad ?? '—',
+          cantidad: Number(d.cantidad),
+          costo_unitario: d.costo_unitario !== null ? Number(d.costo_unitario) : '',
+        })),
+    )
+
+    setSidebarGrupos(
+      grupos.map((g) => ({
+        grupo_id: g.id,
+        nombre: g.nombre,
+        peso_total: Number(g.peso_total),
+        costo_total: g.costo_total !== null ? Number(g.costo_total) : '',
+        detallesAbiertos: false,
+        lineas: data
+          .filter((d) => d.grupo_id === g.id)
+          .map((d) => ({
+            producto_nombre: d.productos?.nombre ?? '—',
+            unidad_nombre: d.unidades_venta_producto?.nombre_unidad ?? '—',
+            cantidad: Number(d.cantidad),
+          })),
       })),
     )
   }
@@ -346,7 +412,20 @@ export function CompraProveedor() {
     setSidebarAbierto(false)
     setSidebarCompraId(null)
     setSidebarItems([])
+    setSidebarGrupos([])
     setSidebarMensaje(null)
+  }
+
+  function actualizarCostoGrupo(grupoId, valor) {
+    setSidebarGrupos((prev) =>
+      prev.map((g) => (g.grupo_id === grupoId ? { ...g, costo_total: valor } : g)),
+    )
+  }
+
+  function toggleDetallesGrupo(grupoId) {
+    setSidebarGrupos((prev) =>
+      prev.map((g) => (g.grupo_id === grupoId ? { ...g, detallesAbiertos: !g.detallesAbiertos } : g)),
+    )
   }
 
   function actualizarLineaSidebar(key, campo, valor) {
@@ -390,12 +469,20 @@ export function CompraProveedor() {
   async function confirmarDesdeSidebar() {
     setSidebarMensaje(null)
 
-    if (sidebarItems.length === 0) {
+    if (sidebarItems.length === 0 && sidebarGrupos.length === 0) {
       setSidebarMensaje({ tipo: 'error', texto: 'Agregá al menos un producto.' })
       return
     }
     if (sidebarItems.some((item) => !item.costo_unitario || Number(item.costo_unitario) <= 0)) {
       setSidebarMensaje({ tipo: 'error', texto: 'Todas las líneas necesitan un precio mayor a cero.' })
+      return
+    }
+    if (sidebarGrupos.some((g) => !g.costo_total || Number(g.costo_total) <= 0)) {
+      setSidebarMensaje({ tipo: 'error', texto: 'Todas las plantillas necesitan un precio total mayor a cero.' })
+      return
+    }
+    if (!sidebarMetodoPagoId) {
+      setSidebarMensaje({ tipo: 'error', texto: 'Elegí el método de pago de la compra.' })
       return
     }
 
@@ -409,6 +496,11 @@ export function CompraProveedor() {
         cantidad: item.cantidad,
         costo_unitario: Number(item.costo_unitario),
       })),
+      p_grupos: sidebarGrupos.map((g) => ({
+        grupo_id: g.grupo_id,
+        costo_total: Number(g.costo_total),
+      })),
+      p_metodo_pago_id: sidebarMetodoPagoId,
     })
 
     setSidebarEnviando(false)
@@ -423,8 +515,10 @@ export function CompraProveedor() {
   }
 
   const sidebarMontoTotal = useMemo(
-    () => sidebarItems.reduce((acc, item) => acc + item.cantidad * (Number(item.costo_unitario) || 0), 0),
-    [sidebarItems],
+    () =>
+      sidebarItems.reduce((acc, item) => acc + item.cantidad * (Number(item.costo_unitario) || 0), 0) +
+      sidebarGrupos.reduce((acc, g) => acc + (Number(g.costo_total) || 0), 0),
+    [sidebarItems, sidebarGrupos],
   )
 
   if (loadingCatalogo) return <p>Cargando catálogo...</p>
@@ -581,7 +675,40 @@ export function CompraProveedor() {
 
               <div className="staff-card">
                 <h2>Desglose del pedido</h2>
-                {pedidoItems.length === 0 && <p>Sin ítems todavía.</p>}
+                {pedidoItems.length === 0 && pedidoGrupos.length === 0 && <p>Sin ítems todavía.</p>}
+
+                {pedidoGrupos.length > 0 && (
+                  <div style={{ marginBottom: pedidoItems.length > 0 ? '1rem' : 0 }}>
+                    {pedidoGrupos.map((g) => (
+                      <div
+                        key={g.key}
+                        className="staff-card"
+                        style={{ marginBottom: '0.5rem', background: 'var(--color-bg-suave, #f4f4f4)' }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <strong>
+                            {g.nombre} — {g.peso_total} kg
+                          </strong>
+                          <button
+                            type="button"
+                            className="staff-btn staff-btn-secundario"
+                            onClick={() => quitarGrupoPedido(g.key)}
+                          >
+                            Quitar
+                          </button>
+                        </div>
+                        <ul style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
+                          {g.lineas.map((l) => (
+                            <li key={l.producto_nombre}>
+                              {l.producto_nombre}: {l.cantidad} kg
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 {pedidoItems.length > 0 && (
                   <table className="staff-table">
                     <thead>
@@ -738,6 +865,46 @@ export function CompraProveedor() {
                     </tr>
                   </thead>
                   <tbody>
+                    {sidebarGrupos.map((g) => (
+                      <tr key={g.grupo_id}>
+                        <td>
+                          {g.nombre}
+                          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{g.peso_total} kg</div>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className="staff-btn"
+                            style={{ background: 'var(--color-exito, #2e7d32)', borderColor: 'var(--color-exito, #2e7d32)' }}
+                            onClick={() => toggleDetallesGrupo(g.grupo_id)}
+                          >
+                            {g.detallesAbiertos ? 'Ocultar' : 'Detalles'}
+                          </button>
+                          {g.detallesAbiertos && (
+                            <ul style={{ marginTop: '0.4rem', fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                              {g.lineas.map((l) => (
+                                <li key={l.producto_nombre}>
+                                  {l.producto_nombre}: {l.cantidad} {l.unidad_nombre}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </td>
+                        <td>
+                          $
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            placeholder="Precio total"
+                            value={g.costo_total}
+                            onChange={(e) => actualizarCostoGrupo(g.grupo_id, e.target.value)}
+                            style={{ width: 100 }}
+                          />
+                        </td>
+                        <td></td>
+                      </tr>
+                    ))}
                     {sidebarItems.map((item) => (
                       <tr key={item.key}>
                         <td>
@@ -779,6 +946,18 @@ export function CompraProveedor() {
                 <p className="staff-total" style={{ marginTop: '0.5rem' }}>
                   Monto total: ${sidebarMontoTotal.toFixed(2)}
                 </p>
+
+                <label style={{ display: 'block', marginTop: '0.5rem' }}>
+                  Método de pago:{' '}
+                  <select value={sidebarMetodoPagoId} onChange={(e) => setSidebarMetodoPagoId(e.target.value)}>
+                    <option value="">Seleccionar...</option>
+                    {metodosPago.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
                 <h3>Agregar producto no pedido</h3>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>

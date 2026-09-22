@@ -2,9 +2,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
 
-const UNIDADES_COMUNES = ['Kilo', 'Unidad', 'Docena', 'Bandeja', 'Atado', 'Bolsa']
-const OTRA_UNIDAD = '__otra__'
+const UNIDADES_COMUNES = ['Kilo', 'Unidad', 'Docena', 'Bandeja', 'Atado', 'Bolsa', 'Cajón']
 
+// costo_vigente queda en 0 acá: el formulario (tanto al crear un producto
+// como al editarlo) no tiene ningún campo de costo -- se actualiza solo al
+// confirmar una compra a proveedor (ver confirmar_pedido_compra / Compras.jsx).
+// Toda unidad de venta nueva arranca en costo 0 hasta la primera compra que
+// la incluya.
 function filaVacia() {
   return { id: null, nombre_unidad: '', factor_conversion_base: 1, costo_vigente: 0, precio_venta: 0 }
 }
@@ -18,7 +22,6 @@ export function Productos() {
   const [editandoId, setEditandoId] = useState(null)
   const [nombre, setNombre] = useState('')
   const [stockInicial, setStockInicial] = useState('')
-  const [stockMinimo, setStockMinimo] = useState('')
   const [unidades, setUnidades] = useState([filaVacia()])
   const [unidadesEliminadas, setUnidadesEliminadas] = useState([])
 
@@ -59,7 +62,6 @@ export function Productos() {
     setEditandoId(null)
     setNombre('')
     setStockInicial('')
-    setStockMinimo('')
     setUnidades([filaVacia()])
     setUnidadesEliminadas([])
     setMensaje(null)
@@ -74,7 +76,6 @@ export function Productos() {
     setEditandoId(producto.id)
     setNombre(producto.nombre)
     setStockInicial(String(producto.stock_actual_unidad_base ?? ''))
-    setStockMinimo(String(producto.stock_minimo ?? ''))
     setUnidades(
       producto.unidades_venta_producto.map((u) => ({
         id: u.id,
@@ -130,7 +131,6 @@ export function Productos() {
         .update({
           nombre: nombre.trim(),
           stock_actual_unidad_base: Number(stockInicial) || 0,
-          stock_minimo: Number(stockMinimo) || 0,
         })
         .eq('id', editandoId)
 
@@ -196,7 +196,6 @@ export function Productos() {
         nombre: nombre.trim(),
         sucursal_id: SUCURSAL_ID,
         stock_actual_unidad_base: Number(stockInicial) || 0,
-        stock_minimo: Number(stockMinimo) || 0,
       })
       .select()
       .single()
@@ -257,117 +256,95 @@ export function Productos() {
           <div style={{ marginTop: '1rem' }}>
             {editandoId && <p className="staff-badge staff-badge-pendiente">Editando producto existente</p>}
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.75rem' }}>
-              <input
-                type="text"
-                placeholder="Nombre del producto"
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-              />
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Stock"
-                value={stockInicial}
-                onChange={(e) => setStockInicial(e.target.value)}
-                style={{ width: 100 }}
-              />
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="Stock mínimo"
-                value={stockMinimo}
-                onChange={(e) => setStockMinimo(e.target.value)}
-                style={{ width: 120 }}
-              />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '0.75rem', maxWidth: 360 }}>
+              <label>
+                <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>Nombre del producto</div>
+                <input
+                  type="text"
+                  placeholder="Ej: Carne picada"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  style={{ width: '100%' }}
+                />
+              </label>
+              <label>
+                <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>Stock</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>
+                  Acá va la cantidad de stock que tenés ahora mismo (cuánto hay hoy, no un mínimo ni una meta).
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Cantidad de stock"
+                  value={stockInicial}
+                  onChange={(e) => setStockInicial(e.target.value)}
+                  style={{ width: 160 }}
+                />
+              </label>
             </div>
 
             <h2>Unidades de venta</h2>
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+              El costo no se carga acá — arranca en 0 y se actualiza solo cuando confirmás una
+              compra a proveedor (pantalla Compras).
+            </p>
             <table className="staff-table">
               <thead>
                 <tr>
                   <th>Unidad</th>
                   <th>Factor</th>
-                  <th>Costo</th>
                   <th>Precio</th>
                   <th></th>
                 </tr>
               </thead>
               <tbody>
-                {unidades.map((u, i) => {
-                  const esOtra = u.nombre_unidad && !UNIDADES_COMUNES.includes(u.nombre_unidad)
-                  return (
-                    <tr key={i}>
-                      <td>
-                        <select
-                          value={esOtra ? OTRA_UNIDAD : u.nombre_unidad}
-                          onChange={(e) => {
-                            const valor = e.target.value
-                            actualizarFilaUnidad(i, 'nombre_unidad', valor === OTRA_UNIDAD ? '' : valor)
-                          }}
-                        >
-                          <option value="">Unidad...</option>
-                          {UNIDADES_COMUNES.map((nombreUnidad) => (
-                            <option key={nombreUnidad} value={nombreUnidad}>
-                              {nombreUnidad}
-                            </option>
-                          ))}
-                          <option value={OTRA_UNIDAD}>Otra...</option>
-                        </select>
-                        {esOtra && (
-                          <input
-                            type="text"
-                            placeholder="Nombre"
-                            value={u.nombre_unidad}
-                            onChange={(e) => actualizarFilaUnidad(i, 'nombre_unidad', e.target.value)}
-                            style={{ width: 100, marginLeft: '0.4rem' }}
-                          />
-                        )}
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.0001"
-                          value={u.factor_conversion_base}
-                          onChange={(e) => actualizarFilaUnidad(i, 'factor_conversion_base', e.target.value)}
-                          style={{ width: 80 }}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={u.costo_vigente}
-                          onChange={(e) => actualizarFilaUnidad(i, 'costo_vigente', e.target.value)}
-                          style={{ width: 90 }}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={u.precio_venta}
-                          onChange={(e) => actualizarFilaUnidad(i, 'precio_venta', e.target.value)}
-                          style={{ width: 90 }}
-                        />
-                      </td>
-                      <td>
-                        <button
-                          type="button"
-                          className="staff-btn staff-btn-secundario"
-                          onClick={() => quitarFilaUnidad(i)}
-                        >
-                          Quitar
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
+                {unidades.map((u, i) => (
+                  <tr key={i}>
+                    <td>
+                      <select
+                        value={u.nombre_unidad}
+                        onChange={(e) => actualizarFilaUnidad(i, 'nombre_unidad', e.target.value)}
+                      >
+                        <option value="">Unidad...</option>
+                        {UNIDADES_COMUNES.map((nombreUnidad) => (
+                          <option key={nombreUnidad} value={nombreUnidad}>
+                            {nombreUnidad}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.0001"
+                        value={u.factor_conversion_base}
+                        onChange={(e) => actualizarFilaUnidad(i, 'factor_conversion_base', e.target.value)}
+                        style={{ width: 80 }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={u.precio_venta}
+                        onChange={(e) => actualizarFilaUnidad(i, 'precio_venta', e.target.value)}
+                        style={{ width: 90 }}
+                      />
+                    </td>
+                    <td>
+                      <button
+                        type="button"
+                        className="staff-btn staff-btn-secundario"
+                        onClick={() => quitarFilaUnidad(i)}
+                      >
+                        Quitar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
             <button type="button" className="staff-btn staff-btn-secundario" onClick={agregarFilaUnidad} style={{ marginTop: '0.5rem' }}>
