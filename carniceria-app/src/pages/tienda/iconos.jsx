@@ -50,3 +50,79 @@ export function IconUsuario(props) {
     </svg>
   )
 }
+
+export function IconEtiqueta(props) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M8 10h22l26 26-18 18L12 28Z" />
+      <circle cx="22" cy="22" r="3" />
+    </svg>
+  )
+}
+
+export function IconCaja(props) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M8 22 32 10l24 12v22L32 56 8 44Z" />
+      <path d="M8 22l24 12 24-12" />
+      <path d="M32 34v22" />
+    </svg>
+  )
+}
+
+export function IconGrilla(props) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="10" y="10" width="18" height="18" rx="3" />
+      <rect x="36" y="10" width="18" height="18" rx="3" />
+      <rect x="10" y="36" width="18" height="18" rx="3" />
+      <rect x="36" y="36" width="18" height="18" rx="3" />
+    </svg>
+  )
+}
+
+export function IconCalendario(props) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <rect x="8" y="14" width="48" height="42" rx="5" />
+      <path d="M8 26h48" />
+      <path d="M20 8v12" />
+      <path d="M44 8v12" />
+      <circle cx="32" cy="41" r="7" />
+      <path d="M32 37v4l3 2" />
+    </svg>
+  )
+}
+
+export function IconEstrella(props) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M32 8l7.4 15.1 16.6 2.4-12 11.7 2.8 16.5L32 45.9 17.2 53.7 20 37.2 8 25.5l16.6-2.4Z" />
+    </svg>
+  )
+}
+
+// Ícono de envío pensado junto con IconCalendario / IconEstrella / IconLocal
+// (misma grilla de 64, mismo peso visual): las ruedas cortan la línea de la
+// carrocería en vez de superponerse.
+export function IconEnvio(props) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M11 44H6V16h32v28" />
+      <path d="M21 44h20" />
+      <path d="M38 26h10l10 10v8h-5" />
+      <circle cx="16" cy="48" r="5" />
+      <circle cx="48" cy="48" r="5" />
+    </svg>
+  )
+}
+
+export function IconLocal(props) {
+  return (
+    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M12 10h40l5 15a7.5 7.5 0 0 1-13.3 4.5 7.5 7.5 0 0 1-11.4 0A7.5 7.5 0 0 1 20.3 29.5 7.5 7.5 0 0 1 7 25Z" />
+      <path d="M11 35v19h42V35" />
+      <path d="M26 54V42h12v12" />
+    </svg>
+  )
+}

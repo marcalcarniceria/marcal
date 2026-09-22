@@ -3,8 +3,43 @@ import { supabase } from '../../supabaseClient'
 import { SUCURSAL_ID } from '../../config/sucursal'
 import { useCarrito } from './CarritoContext'
 import { TiendaHeader } from './TiendaHeader'
+import { ProductoCard } from './ProductoCard'
+import { CategoriaBloque } from './CategoriaBloque'
+import {
+  IconCarne,
+  IconVerdura,
+  IconEtiqueta,
+  IconCaja,
+  IconGrilla,
+  IconCalendario,
+  IconEstrella,
+  IconEnvio,
+  IconLocal,
+} from './iconos'
 
 const GOOGLE_MAPS_URL = 'https://maps.app.goo.gl/VT52EVQrtpZ2KUWJ8'
+
+const FILTROS_CATEGORIA = [
+  { nombre: 'Carnicería', Icono: IconCarne },
+  { nombre: 'Verdulería', Icono: IconVerdura },
+  { nombre: 'Promociones', Icono: IconEtiqueta },
+  { nombre: 'Combos', Icono: IconCaja },
+  { nombre: 'Más productos', Icono: IconGrilla },
+]
+
+const ANIO_INICIO = 1998
+const ANIOS_EN_EL_BARRIO = new Date().getFullYear() - ANIO_INICIO
+
+const CONFIANZA = [
+  {
+    Icono: IconCalendario,
+    dato: `${ANIOS_EN_EL_BARRIO} años`,
+    frase: `En el barrio, desde ${ANIO_INICIO}`,
+  },
+  { Icono: IconEstrella, dato: '5 estrellas', frase: 'En reseñas de Google' },
+  { Icono: IconEnvio, dato: 'Envíos', frase: 'A domicilio por tu zona' },
+  { Icono: IconLocal, dato: 'Todo en un lugar', frase: 'Carnicería y verdulería' },
+]
 
 const RESENAS = [
   {
@@ -42,6 +77,14 @@ export function Tienda() {
         setLoading(false)
       })
   }, [])
+
+  // Los que ya tienen categoría se muestran dentro de su bloque
+  // (Carnicería/Verdulería); acá abajo quedan solo los que todavía no.
+  const sinCategoria = productos.filter((p) => !p.categoria)
+
+  function irAProductos() {
+    document.getElementById('vidriera-productos')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
     <>
@@ -95,43 +138,85 @@ export function Tienda() {
         </div>
       </div>
 
+      <section className="tienda-confianza">
+        <div className="tienda-confianza-inner">
+          {CONFIANZA.map(({ Icono, dato, frase }) => (
+            <div key={dato} className="tienda-confianza-item">
+              <div className="tienda-confianza-icono">
+                <Icono aria-hidden="true" />
+              </div>
+              <div className="tienda-confianza-texto">
+                <div className="tienda-confianza-dato">{dato}</div>
+                <p className="tienda-confianza-frase">{frase}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="tienda-vidriera">
+        <div
+          className="tienda-vidriera-banner"
+          style={{ backgroundImage: "url('/images/tienda-banner.png')" }}
+        >
+          <div className="tienda-vidriera-banner-contenido">
+            <h2>
+              Calidad y frescura
+              <span>en un solo lugar</span>
+            </h2>
+            <p>Las mejores carnes y verduras, todos los días.</p>
+            <button type="button" className="tienda-vidriera-cta" onClick={irAProductos}>
+              Ver productos
+            </button>
+          </div>
+        </div>
+
+        <div className="tienda-vidriera-inner">
+          <div className="tienda-filtros">
+            {FILTROS_CATEGORIA.map(({ nombre, Icono }) => (
+              <button key={nombre} type="button" className="tienda-filtro">
+                <Icono aria-hidden="true" />
+                {nombre}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div id="vidriera-productos" className="tienda-vidriera-categorias">
+          {loading && <p>Cargando productos...</p>}
+          {!loading && !error && (
+            <>
+              <CategoriaBloque
+                tono="carniceria"
+                imagen="/images/carniceria.png"
+                alt="Carnicería: carne fresca, de primera calidad"
+                productos={productos.filter((p) => p.categoria === 'carniceria')}
+                agregarItem={agregarItem}
+              />
+              <CategoriaBloque
+                tono="verduleria"
+                imagen="/images/verduelria.png"
+                alt="Verdulería: frutas y verduras frescas, directo del campo"
+                productos={productos.filter((p) => p.categoria === 'verduleria')}
+                agregarItem={agregarItem}
+              />
+            </>
+          )}
+        </div>
+      </section>
+
       <div className="tienda-contenido">
-        {error &&<p className="tienda-error">{JSON.stringify(error)}</p>}
+        {error && <p className="tienda-error">{JSON.stringify(error)}</p>}
         {loading && <p>Cargando productos...</p>}
 
-        {!loading && !error && (
+        {!loading && !error && sinCategoria.length > 0 && (
           <div className="tienda-grid">
-            {productos.map((producto) => (
-              <div key={producto.id} className="tienda-card">
-                <h3>{producto.nombre}</h3>
-                {producto.unidades_venta_producto?.map((unidad) => (
-                  <div key={unidad.id} className="tienda-card-unidad">
-                    <div>
-                      <div className="tienda-card-unidad-nombre">{unidad.nombre_unidad}</div>
-                      <div className="tienda-card-precio">${Number(unidad.precio_venta).toFixed(2)}</div>
-                    </div>
-                    <button
-                      type="button"
-                      className="tienda-btn"
-                      onClick={() =>
-                        agregarItem({
-                          producto_id: producto.id,
-                          producto_nombre: producto.nombre,
-                          unidad_venta_id: unidad.id,
-                          unidad_nombre: unidad.nombre_unidad,
-                          precio_venta: Number(unidad.precio_venta),
-                        })
-                      }
-                    >
-                      Agregar
-                    </button>
-                  </div>
-                ))}
-              </div>
+            {sinCategoria.map((producto) => (
+              <ProductoCard key={producto.id} producto={producto} agregarItem={agregarItem} />
             ))}
-            {productos.length === 0 && <p>No hay productos disponibles.</p>}
           </div>
         )}
+        {!loading && !error && productos.length === 0 && <p>No hay productos disponibles.</p>}
       </div>
     </>
   )
