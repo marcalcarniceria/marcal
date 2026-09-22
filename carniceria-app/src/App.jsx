@@ -7,6 +7,7 @@ import { CierreCaja } from './pages/CierreCaja'
 import { CompraProveedor } from './pages/CompraProveedor'
 import { Proveedores } from './pages/Proveedores'
 import { PlantillasDespiece } from './pages/PlantillasDespiece'
+import { MovimientosStock } from './pages/MovimientosStock'
 import { Gastos } from './pages/Gastos'
 import { MovimientosDinero } from './pages/MovimientosDinero'
 import { Fiados } from './pages/Fiados'
@@ -34,6 +35,7 @@ function App() {
         <Route path="/compras" element={<CompraProveedor />} />
         <Route path="/proveedores" element={<Proveedores />} />
         <Route path="/plantillas-despiece" element={<PlantillasDespiece />} />
+        <Route path="/movimientos-stock" element={<MovimientosStock />} />
         <Route path="/gastos" element={<Gastos />} />
         <Route path="/movimientos-dinero" element={<MovimientosDinero />} />
         <Route path="/fiados" element={<Fiados />} />

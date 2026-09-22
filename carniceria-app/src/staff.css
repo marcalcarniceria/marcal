@@ -265,6 +265,33 @@
   box-shadow: none;
 }
 
+/* Botones de ajuste manual de stock (Movimientos): mismo estilo outline que
+   staff-btn-secundario pero con el color que anticipa la acción, para que
+   ingreso/egreso se distingan de un vistazo sin depender del texto. */
+.staff-btn-ingreso {
+  background: transparent;
+  color: var(--color-success);
+  border: 1px solid var(--color-success);
+  box-shadow: none;
+}
+
+.staff-btn-ingreso:hover {
+  background: #dcefe0;
+  box-shadow: none;
+}
+
+.staff-btn-egreso {
+  background: transparent;
+  color: var(--color-error);
+  border: 1px solid var(--color-error);
+  box-shadow: none;
+}
+
+.staff-btn-egreso:hover {
+  background: #f6dcd6;
+  box-shadow: none;
+}
+
 /* Pila de notificaciones flotantes del panel (pedidos nuevos, stock
    insuficiente, y las que se sumen después) -- un solo contenedor fijo
    para que no se superpongan: cada toast se apila abajo del anterior. */
@@ -295,6 +322,14 @@
 
 .staff-toast-alerta {
   border-left-color: var(--color-gold);
+}
+
+.staff-toast-exito {
+  border-left-color: var(--color-success);
+}
+
+.staff-toast-error {
+  border-left-color: var(--color-error);
 }
 
 .staff-toast-texto {
@@ -391,6 +426,20 @@
 
 .staff-table tbody tr:hover {
   background: rgba(179, 134, 47, 0.05);
+}
+
+/* Movimientos de stock: agrupa visualmente las filas que salieron de una
+   misma transacción (misma venta/pedido/compra descontando varios productos
+   a la vez) -- se mantiene una fila por producto, pero el bloque se lee como
+   una sola operación. Sin bordes: solo un fondo apenas perceptible y el
+   borde horizontal se oculta entre filas del mismo grupo, quedando
+   únicamente al cierre de cada bloque. */
+.mov-stock-fila-agrupada td {
+  background: rgba(179, 134, 47, 0.035);
+}
+
+.mov-stock-sin-separador td {
+  border-bottom: none;
 }
 
 .staff-total {

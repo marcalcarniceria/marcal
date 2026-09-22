@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { to: '/compras', label: 'Compras' },
   { to: '/proveedores', label: 'Proveedores' },
   { to: '/plantillas-despiece', label: 'Plantillas de despiece' },
+  { to: '/movimientos-stock', label: 'Movimientos de stock' },
   { to: '/gastos', label: 'Gastos' },
   { to: '/movimientos-dinero', label: 'Movimientos de dinero' },
   { to: '/fiados', label: 'Fiados' },
