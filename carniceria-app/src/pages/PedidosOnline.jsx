@@ -2,7 +2,24 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 
-const ESTADOS_POST_PAGO = ['pagado', 'en_preparacion', 'en_camino', 'entregado', 'cancelado']
+// 'pagado' YA NO es una opción seleccionable -- el estado ahora refleja
+// solo la etapa física del proceso (preparación/entrega), separado de si
+// está cobrado (eso lo dice fecha_pago, ver botón "Marcar cobrado" más
+// abajo). Sigue existiendo como valor válido en la base por compatibilidad
+// con pedidos históricos que ya quedaron marcados así -- por eso
+// BADGE_POR_ESTADO todavía lo contempla, para que esos pedidos viejos se
+// sigan viendo bien.
+const ESTADOS_SELECCIONABLES = ['en_preparacion', 'en_camino', 'entregado', 'cancelado']
+
+// El <select> necesita que el estado ACTUAL del pedido esté entre sus
+// opciones para mostrarse bien (si no, HTML lo deja sin nada seleccionado)
+// -- pendiente_pago (y 'pagado' en pedidos viejos) no están en la lista de
+// seleccionables, así que se agregan al principio solo cuando hace falta.
+function opcionesEstado(estadoActual) {
+  return ESTADOS_SELECCIONABLES.includes(estadoActual)
+    ? ESTADOS_SELECCIONABLES
+    : [estadoActual, ...ESTADOS_SELECCIONABLES]
+}
 
 const BADGE_POR_ESTADO = {
   pendiente_pago: 'staff-badge-pendiente',
@@ -48,14 +65,14 @@ export function PedidosOnline() {
     }
   }, [usuario])
 
-  async function marcarPagado(pedidoId) {
+  async function marcarCobrado(pedidoId) {
     setMensaje(null)
-    const { error } = await supabase.rpc('marcar_pedido_pagado', { p_pedido_id: pedidoId })
+    const { error } = await supabase.rpc('marcar_pedido_cobrado', { p_pedido_id: pedidoId })
     if (error) {
       setMensaje({ tipo: 'error', texto: error.message })
       return
     }
-    setMensaje({ tipo: 'exito', texto: 'Pedido marcado como pagado.' })
+    setMensaje({ tipo: 'exito', texto: 'Pedido marcado como cobrado.' })
     fetchPedidos()
   }
 
@@ -115,10 +132,20 @@ export function PedidosOnline() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
             <div>
               <strong>{p.cliente_nombre}</strong> — {p.cliente_telefono}
-              <p style={{ margin: '0.2rem 0', color: 'var(--color-text-muted)' }}>{p.direccion_envio}</p>
+              <p style={{ margin: '0.2rem 0', color: 'var(--color-text-muted)' }}>
+                {p.metodo_entrega === 'retiro' ? 'Retira en el local' : p.direccion_envio}
+              </p>
               {p.notas && <p style={{ margin: '0.2rem 0', color: 'var(--color-text-muted)' }}>Notas: {p.notas}</p>}
             </div>
-            <span className={`staff-badge ${BADGE_POR_ESTADO[p.estado] ?? ''}`}>{p.estado}</span>
+            <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+              <span className={`staff-badge ${BADGE_POR_ESTADO[p.estado] ?? ''}`}>{p.estado}</span>
+              <span className="staff-badge staff-badge-camino">
+                {p.metodo_pago === 'efectivo' ? 'Efectivo' : 'Mercado Pago'}
+              </span>
+              <span className="staff-badge staff-badge-camino">
+                {p.metodo_entrega === 'retiro' ? 'Retiro' : 'Envío'}
+              </span>
+            </div>
           </div>
 
           {tieneStockInsuficiente && <div className="staff-alerta-stock">⚠ Stock insuficiente</div>}
@@ -145,40 +172,39 @@ export function PedidosOnline() {
             {Number(p.costo_envio).toFixed(2)} = Total: ${Number(p.total).toFixed(2)}
           </p>
 
-          {p.estado === 'pendiente_pago' ? (
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.75rem' }}>
-              <button type="button" className="staff-btn" onClick={() => marcarPagado(p.id)}>
-                Marcar pagado (manual — sin Mercado Pago todavía)
+          {/* Estado (etapa física) y cobro (fecha_pago) son independientes
+              -- conviven en la misma fila, ninguno bloquea al otro. Un
+              pedido en efectivo puede estar en 'en_camino' y sin cobrar
+              todavía; uno de Mercado Pago puede estar cobrado desde el
+              principio y recién empezar a prepararse después. */}
+          <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.75rem' }}>
+            <label>
+              Estado:{' '}
+              <select value={p.estado} onChange={(e) => cambiarEstado(p.id, e.target.value)}>
+                {opcionesEstado(p.estado).map((e) => (
+                  <option key={e} value={e}>
+                    {e}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            {p.fecha_pago ? (
+              <span className="staff-badge staff-badge-pagado">✓ Cobrado</span>
+            ) : (
+              <button type="button" className="staff-btn" onClick={() => marcarCobrado(p.id)}>
+                Marcar cobrado
               </button>
-              <button
-                type="button"
-                className="staff-btn staff-btn-secundario"
-                onClick={() => cambiarEstado(p.id, 'cancelado')}
-              >
-                Cancelar pedido
-              </button>
-            </div>
-          ) : (
-            <div style={{ marginTop: '0.75rem' }}>
-              <label style={{ display: 'block' }}>
-                Estado:{' '}
-                <select value={p.estado} onChange={(e) => cambiarEstado(p.id, e.target.value)}>
-                  {ESTADOS_POST_PAGO.map((e) => (
-                    <option key={e} value={e}>
-                      {e}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {erroresPorPedido[p.id] && (
-                <p className="staff-mensaje-error" style={{ margin: '0.35rem 0 0' }}>
-                  {erroresPorPedido[p.id]}
-                </p>
-              )}
-            </div>
+            )}
+          </div>
+
+          {erroresPorPedido[p.id] && (
+            <p className="staff-mensaje-error" style={{ margin: '0.35rem 0 0' }}>
+              {erroresPorPedido[p.id]}
+            </p>
           )}
 
-          {usuario?.rol === 'dueño' && (
+          {usuario?.rol === 'dueño' && p.metodo_entrega === 'envio' && (
             <label style={{ display: 'block', marginTop: '0.5rem' }}>
               Repartidor:{' '}
               <select

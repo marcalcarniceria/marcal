@@ -703,11 +703,12 @@
 }
 
 .tienda-aviso {
-  background: #fbeee7;
-  border: 1px solid #eac9b8;
-  color: var(--color-accent-hover);
-  border-radius: 6px;
-  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0.75rem 0;
+  color: var(--color-accent);
+  font-weight: 600;
   font-size: 0.85rem;
 }
 
@@ -1452,4 +1453,92 @@
     margin-top: 0.25rem;
     font-size: 1rem;
   }
+}
+
+/* =====================================================================
+   Checkout: toggle de entrega + tarjetas de método de pago
+   ===================================================================== */
+
+.checkout-toggle-entrega {
+  display: flex;
+  gap: 0.75rem;
+  margin: 1.25rem 0;
+}
+
+.checkout-toggle-btn {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.9rem 1rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-align: center;
+  background: #fff;
+  color: var(--color-text-muted);
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.checkout-toggle-btn:hover {
+  border-color: var(--color-accent);
+}
+
+.checkout-toggle-btn.activo {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgba(176, 67, 31, 0.06);
+}
+
+.checkout-retiro-info {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.checkout-metodo-pago {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 1.25rem 0;
+}
+
+.checkout-pago-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.9rem 1rem;
+  background: #fff;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--color-dark);
+  cursor: pointer;
+  transition: border-color 0.2s var(--ease), background 0.2s var(--ease), color 0.2s var(--ease);
+}
+
+.checkout-pago-card:hover {
+  border-color: var(--color-accent);
+}
+
+.checkout-pago-card input[type="radio"] {
+  width: auto;
+  margin: 0;
+  accent-color: var(--color-accent);
+}
+
+.checkout-pago-card.activo {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: rgba(176, 67, 31, 0.06);
 }
