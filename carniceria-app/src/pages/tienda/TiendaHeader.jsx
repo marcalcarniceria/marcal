@@ -12,6 +12,10 @@ export function TiendaHeader() {
   const [modalAbierto, setModalAbierto] = useState(false)
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [misPedidosAbierto, setMisPedidosAbierto] = useState(false)
+  // Puramente visual: solo controla si el <nav> se ve desplegado en
+  // mobile (no existía menú hamburguesa hasta ahora). No reemplaza ni
+  // toca menuAbierto (el dropdown de cuenta), que sigue igual.
+  const [menuMobileAbierto, setMenuMobileAbierto] = useState(false)
   const cuentaRef = useRef(null)
 
   // Cerrar el dropdown al clickear afuera (comportamiento estándar de
@@ -34,16 +38,19 @@ export function TiendaHeader() {
       setMenuAbierto((abierto) => !abierto)
     } else {
       setModalAbierto(true)
+      setMenuMobileAbierto(false)
     }
   }
 
   function abrirMisPedidos() {
     setMenuAbierto(false)
+    setMenuMobileAbierto(false)
     setMisPedidosAbierto(true)
   }
 
   function cerrarSesion() {
     setMenuAbierto(false)
+    setMenuMobileAbierto(false)
     signOut()
   }
 
@@ -56,7 +63,22 @@ export function TiendaHeader() {
           <small>Carnicería y Verdulería</small>
         </span>
       </Link>
-      <nav>
+
+      {/* Solo visible en mobile (CSS) -- despliega el mismo <nav> de
+          siempre, no cambia qué opciones hay adentro. */}
+      <button
+        type="button"
+        className="tienda-menu-toggle"
+        onClick={() => setMenuMobileAbierto((abierto) => !abierto)}
+        aria-label={menuMobileAbierto ? 'Cerrar menú' : 'Abrir menú'}
+        aria-expanded={menuMobileAbierto}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      <nav className={menuMobileAbierto ? 'abierto' : ''}>
         {!loading && (
           <div className="tienda-cuenta" ref={cuentaRef}>
             <button type="button" className="tienda-cuenta-btn" onClick={clickCuenta}>
@@ -76,7 +98,12 @@ export function TiendaHeader() {
             )}
           </div>
         )}
-        <Link to="/tienda/carrito" className="tienda-carrito-link" data-cantidad={cantidadTotal}>
+        <Link
+          to="/tienda/carrito"
+          className="tienda-carrito-link"
+          data-cantidad={cantidadTotal}
+          onClick={() => setMenuMobileAbierto(false)}
+        >
           Carrito ({cantidadTotal})
         </Link>
       </nav>

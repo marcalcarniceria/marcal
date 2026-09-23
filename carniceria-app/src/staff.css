@@ -57,6 +57,23 @@
   }
 }
 
+/* Sin transform a propósito -- ver .staff-main: cualquier ancestro con
+   un transform activo (aunque termine en translateY(0), que sigue
+   siendo "distinto de none") se convierte en el contenedor de
+   cualquier position:fixed que tenga adentro, en vez del viewport real.
+   Eso rompía el numpad de Caja y el drawer de confirmar compra en
+   mobile (quedaban centrados en todo el alto scrolleable de la página,
+   no en la pantalla) -- bug preexistente, no relacionado a este cambio,
+   encontrado al revisar Caja para este tramo. */
+@keyframes staff-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .staff * {
     animation: none !important;
@@ -83,6 +100,12 @@
   height: 100vh;
 }
 
+.staff-sidebar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 .staff-logo {
   display: flex;
   align-items: center;
@@ -92,6 +115,39 @@
   padding: 0 0.4rem 1.25rem;
   margin-bottom: 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Hamburguesa: oculta en desktop, la muestra la media query de abajo */
+.staff-menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.staff-menu-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: #fff;
+}
+
+/* En desktop es simplemente la continuación en columna del sidebar (nav +
+   datos de usuario) -- el colapso solo pasa a existir en mobile. */
+.staff-sidebar-colapsable {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .staff-logo-marca {
@@ -203,7 +259,7 @@
   flex: 1;
   padding: 2rem 2.25rem;
   min-width: 0;
-  animation: staff-fade-up 0.35s var(--ease) both;
+  animation: staff-fade-in 0.35s var(--ease) both;
 }
 
 /* Componentes */
@@ -398,6 +454,23 @@
   box-shadow: 0 0 0 3px rgba(179, 134, 47, 0.16);
 }
 
+/* Tamaño cómodo para tocar con el dedo (~44px), sin cambiar cómo se ven
+   en desktop -- no toca .cajero-producto-btn ni .cajero-numpad-tecla a
+   propósito (ya son táctiles por diseño, ver Cajero). */
+@media (max-width: 640px) {
+  .staff-btn,
+  .staff-btn-secundario,
+  .staff-logout {
+    min-height: 44px;
+  }
+
+  .staff input,
+  .staff select,
+  .staff textarea {
+    min-height: 44px;
+  }
+}
+
 .staff-table {
   width: 100%;
   border-collapse: collapse;
@@ -426,6 +499,25 @@
 
 .staff-table tbody tr:hover {
   background: rgba(179, 134, 47, 0.05);
+}
+
+/* Mobile: las tablas anchas (Productos, Cajero, Cierre de caja, Compras,
+   Movimientos de stock/dinero, Fiados, Pedidos online) no entran en
+   375px -- en vez de cortarse o amontonarse, scrollean horizontal como
+   una unidad. Mismo criterio que se usó para el Carrito de la tienda
+   (Tramo 1): display:block en el <table> habilita el scroll, las
+   celdas internas siguen su layout de tabla normal. */
+@media (max-width: 640px) {
+  .staff-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .staff-table th,
+  .staff-table td {
+    white-space: nowrap;
+  }
 }
 
 /* Movimientos de stock: agrupa visualmente las filas que salieron de una
@@ -720,7 +812,12 @@
   flex: 1;
 }
 
-/* Responsive: sidebar colapsa arriba en pantallas chicas */
+/* Responsive: sidebar colapsa a una barra superior + menú hamburguesa.
+   ANTES esto escondía .staff-user-box del todo (display:none) -- bug
+   preexistente que dejaba "Cerrar sesión" inalcanzable desde el
+   celular, encontrado al revisar para este tramo. Ahora nada se
+   esconde: todo el bloque (nav + usuario) se colapsa junto detrás de
+   la hamburguesa, igual que el header de la tienda (Tramo 1). */
 @media (max-width: 760px) {
   .staff-shell {
     flex-direction: column;
@@ -730,8 +827,6 @@
     width: 100%;
     height: auto;
     position: static;
-    flex-direction: row;
-    align-items: center;
     padding: 0.75rem 1rem;
   }
 
@@ -741,14 +836,22 @@
     margin-bottom: 0;
   }
 
-  .staff-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    overflow-x: auto;
+  .staff-menu-toggle {
+    display: flex;
   }
 
-  .staff-user-box {
+  .staff-sidebar-colapsable {
     display: none;
+    margin-top: 0.75rem;
+  }
+
+  .staff-sidebar-colapsable.abierto {
+    display: flex;
+  }
+
+  .staff-nav {
+    flex-direction: column;
+    overflow-y: visible;
   }
 
   .staff-main {

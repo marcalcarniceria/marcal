@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { PedidosNuevosProvider } from '../context/PedidosNuevosContext'
@@ -31,48 +32,76 @@ export function AppLayout() {
 
 function AppLayoutInner() {
   const { usuario, signOut } = useAuth()
+  // Puramente visual: solo controla si el resto del sidebar (nav + datos
+  // de usuario) se ve desplegado en mobile -- antes ese bloque se
+  // escondía del todo en pantallas chicas (bug preexistente: "Cerrar
+  // sesión" quedaba inalcanzable desde el celular). Ahora nada se oculta,
+  // solo se colapsa detrás de este botón.
+  const [menuMobileAbierto, setMenuMobileAbierto] = useState(false)
+
+  function cerrarMenuMobile() {
+    setMenuMobileAbierto(false)
+  }
 
   return (
     <div className="staff">
       <NotificacionesFlotantes />
       <div className="staff-shell">
         <aside className="staff-sidebar">
-          <div className="staff-logo">
-            <span className="staff-logo-marca">M</span>
-            <span className="staff-logo-texto">
-              Mar-Cal
-              <small>Panel de gestión</small>
-            </span>
+          <div className="staff-sidebar-top">
+            <div className="staff-logo">
+              <span className="staff-logo-marca">M</span>
+              <span className="staff-logo-texto">
+                Mar-Cal
+                <small>Panel de gestión</small>
+              </span>
+            </div>
+
+            <button
+              type="button"
+              className="staff-menu-toggle"
+              onClick={() => setMenuMobileAbierto((abierto) => !abierto)}
+              aria-label={menuMobileAbierto ? 'Cerrar menú' : 'Abrir menú'}
+              aria-expanded={menuMobileAbierto}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
           </div>
 
-          <nav className="staff-nav">
-            {NAV_ITEMS.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) => `staff-nav-link${isActive ? ' activo' : ''}`}
+          <div className={`staff-sidebar-colapsable${menuMobileAbierto ? ' abierto' : ''}`}>
+            <nav className="staff-nav">
+              {NAV_ITEMS.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  onClick={cerrarMenuMobile}
+                  className={({ isActive }) => `staff-nav-link${isActive ? ' activo' : ''}`}
+                >
+                  {item.label}
+                </NavLink>
+              ))}
+              <div className="staff-nav-separador" />
+              <a
+                href="/tienda"
+                target="_blank"
+                rel="noreferrer"
+                className="staff-nav-link"
+                onClick={cerrarMenuMobile}
               >
-                {item.label}
-              </NavLink>
-            ))}
-            <div className="staff-nav-separador" />
-            <a
-              href="/tienda"
-              target="_blank"
-              rel="noreferrer"
-              className="staff-nav-link"
-            >
-              Ver tienda online ↗
-            </a>
-          </nav>
+                Ver tienda online ↗
+              </a>
+            </nav>
 
-          <div className="staff-user-box">
-            <div className="staff-user-nombre">{usuario?.nombre ?? 'Sin datos'}</div>
-            <div className="staff-user-rol">{usuario?.rol ?? '—'}</div>
-            <button type="button" className="staff-logout" onClick={signOut}>
-              Cerrar sesión
-            </button>
+            <div className="staff-user-box">
+              <div className="staff-user-nombre">{usuario?.nombre ?? 'Sin datos'}</div>
+              <div className="staff-user-rol">{usuario?.rol ?? '—'}</div>
+              <button type="button" className="staff-logout" onClick={signOut}>
+                Cerrar sesión
+              </button>
+            </div>
           </div>
         </aside>
 

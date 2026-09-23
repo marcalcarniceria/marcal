@@ -231,7 +231,7 @@ export function PlantillasDespiece() {
           {plantillas.length === 0 && <p>No hay plantillas cargadas.</p>}
           {plantillas.map((plantilla) => (
             <div key={plantilla.id} style={{ marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
                 <h2 style={{ margin: 0 }}>{plantilla.nombre}</h2>
                 <button
                   type="button"

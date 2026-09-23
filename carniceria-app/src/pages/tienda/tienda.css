@@ -176,6 +176,29 @@
   font-size: 0.9rem;
 }
 
+/* Hamburguesa: oculta en desktop, la muestra la media query de abajo */
+.tienda-menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.tienda-menu-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  border-radius: 2px;
+  background: #fff;
+}
+
 .tienda-carrito-link {
   background: var(--color-accent);
   color: #fff;
@@ -256,6 +279,54 @@
 
 .tienda-cuenta-menu-item:hover {
   background: var(--color-bg);
+}
+
+/* Mobile: el <nav> (cuenta + carrito) pasa a ser un panel desplegable
+   debajo del header, controlado por el botón hamburguesa -- mismas
+   opciones de siempre, solo cambia cómo se despliegan. */
+@media (max-width: 640px) {
+  .tienda-menu-toggle {
+    display: flex;
+  }
+
+  .tienda-header nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    background: var(--color-dark);
+    padding: 0.75rem 1.25rem 1.25rem;
+    box-shadow: var(--shadow-md);
+  }
+
+  .tienda-header nav.abierto {
+    display: flex;
+  }
+
+  .tienda-cuenta {
+    width: 100%;
+  }
+
+  .tienda-cuenta-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tienda-cuenta-menu {
+    position: static;
+    width: 100%;
+    margin-top: 0.4rem;
+    box-shadow: none;
+    border: 1px solid var(--color-border);
+  }
+
+  .tienda-carrito-link {
+    text-align: center;
+  }
 }
 
 /* Badges de estado (mismos colores que .staff-badge-* del panel interno,
@@ -627,6 +698,30 @@
   border-radius: 4px;
 }
 
+/* Mobile: la tabla del carrito (Producto/Cant./Precio/Subtotal/Quitar)
+   no entra en 375px -- en vez de cortarse o amontonarse, scrollea
+   horizontal como una unidad. El <table> se mantiene igual (mismas
+   filas/celdas), display:block en el elemento raíz es lo único que
+   habilita el scroll -- las celdas internas siguen su layout de tabla
+   normal. */
+@media (max-width: 640px) {
+  .tienda-tabla {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tienda-tabla th,
+  .tienda-tabla td {
+    white-space: nowrap;
+    padding-right: 1rem;
+  }
+
+  .tienda-tabla input[type='number'] {
+    min-height: 38px;
+  }
+}
+
 .tienda-total {
   font-family: var(--font-display);
   font-size: 1.3rem;
@@ -673,6 +768,31 @@
   outline: none;
   border-color: var(--color-gold);
   box-shadow: 0 0 0 3px rgba(179, 134, 47, 0.18);
+}
+
+/* Tamaño cómodo para tocar con el dedo (~44px), sin cambiar cómo se ven
+   en desktop -- solo mobile. Cubre botones e inputs de todas las
+   pantallas de este tramo (Checkout, Carrito, modales). */
+@media (max-width: 640px) {
+  .tienda-btn,
+  .tienda-btn-secundario,
+  .tienda-carrito-link,
+  .tienda-cuenta-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .tienda-form input,
+  .tienda-form select,
+  .tienda-form textarea {
+    min-height: 44px;
+  }
+
+  .tienda-form textarea {
+    min-height: 88px;
+  }
 }
 
 .tienda-resumen {
