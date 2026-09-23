@@ -1,8 +1,23 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
 
 const UNIDADES_COMUNES = ['Kilo', 'Unidad', 'Docena', 'Bandeja', 'Atado', 'Bolsa', 'Cajón']
+
+const FILTROS = [
+  { valor: 'todos', etiqueta: 'Todos' },
+  { valor: 'activos', etiqueta: 'Activos' },
+  { valor: 'eliminados', etiqueta: 'Eliminados' },
+  { valor: 'stock_bajo', etiqueta: 'Stock bajo' },
+]
+
+// Se calcula siempre al vuelo a partir de los dos números actuales -- nunca
+// se guarda como campo aparte, para no tener que mantenerlo sincronizado a
+// mano en cada compra/venta/transformación (mismo criterio que el saldo de
+// clientes_fiados/proveedores).
+function esStockBajo(producto) {
+  return Number(producto.stock_actual_unidad_base) < Number(producto.stock_minimo)
+}
 
 // costo_vigente queda en 0 acá: el formulario (tanto al crear un producto
 // como al editarlo) no tiene ningún campo de costo -- se actualiza solo al
@@ -17,11 +32,13 @@ export function Productos() {
   const [productos, setProductos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [filtro, setFiltro] = useState('todos')
 
   const [mostrarForm, setMostrarForm] = useState(false)
   const [editandoId, setEditandoId] = useState(null)
   const [nombre, setNombre] = useState('')
   const [stockInicial, setStockInicial] = useState('')
+  const [stockMinimo, setStockMinimo] = useState('')
   const [unidades, setUnidades] = useState([filaVacia()])
   const [unidadesEliminadas, setUnidadesEliminadas] = useState([])
 
@@ -58,10 +75,24 @@ export function Productos() {
     fetchProductos()
   }, [])
 
+  const productosFiltrados = useMemo(() => {
+    switch (filtro) {
+      case 'activos':
+        return productos.filter((p) => p.activo !== false)
+      case 'eliminados':
+        return productos.filter((p) => p.activo === false)
+      case 'stock_bajo':
+        return productos.filter(esStockBajo)
+      default:
+        return productos
+    }
+  }, [productos, filtro])
+
   function resetForm() {
     setEditandoId(null)
     setNombre('')
     setStockInicial('')
+    setStockMinimo('')
     setUnidades([filaVacia()])
     setUnidadesEliminadas([])
     setMensaje(null)
@@ -76,6 +107,7 @@ export function Productos() {
     setEditandoId(producto.id)
     setNombre(producto.nombre)
     setStockInicial(String(producto.stock_actual_unidad_base ?? ''))
+    setStockMinimo(String(producto.stock_minimo ?? ''))
     setUnidades(
       producto.unidades_venta_producto.map((u) => ({
         id: u.id,
@@ -131,6 +163,7 @@ export function Productos() {
         .update({
           nombre: nombre.trim(),
           stock_actual_unidad_base: Number(stockInicial) || 0,
+          stock_minimo: Number(stockMinimo) || 0,
         })
         .eq('id', editandoId)
 
@@ -196,6 +229,7 @@ export function Productos() {
         nombre: nombre.trim(),
         sucursal_id: SUCURSAL_ID,
         stock_actual_unidad_base: Number(stockInicial) || 0,
+        stock_minimo: Number(stockMinimo) || 0,
       })
       .select()
       .single()
@@ -279,6 +313,24 @@ export function Productos() {
                   placeholder="Cantidad de stock"
                   value={stockInicial}
                   onChange={(e) => setStockInicial(e.target.value)}
+                  style={{ width: 160 }}
+                />
+              </label>
+              <label>
+                <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>Stock mínimo</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>
+                  A partir de qué cantidad se considera "poco" este producto. Cuando el stock
+                  actual quede por debajo de este número, el producto se va a marcar en rojo acá
+                  y se va a bloquear la compra en la tienda online (el cajero puede seguir
+                  vendiéndolo sin problema).
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  placeholder="Ej: 5"
+                  value={stockMinimo}
+                  onChange={(e) => setStockMinimo(e.target.value)}
                   style={{ width: 160 }}
                 />
               </label>
@@ -380,8 +432,21 @@ export function Productos() {
 
       {!loading && !error && (
         <div className="staff-card">
-          {productos.length === 0 && <p>No se encontraron productos.</p>}
-          {productos.length > 0 && (
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+            {FILTROS.map((f) => (
+              <button
+                key={f.valor}
+                type="button"
+                className={`staff-btn${filtro === f.valor ? '' : ' staff-btn-secundario'}`}
+                onClick={() => setFiltro(f.valor)}
+              >
+                {f.etiqueta}
+              </button>
+            ))}
+          </div>
+
+          {productosFiltrados.length === 0 && <p>No hay productos para este filtro.</p>}
+          {productosFiltrados.length > 0 && (
             <table className="staff-table">
               <thead>
                 <tr>
@@ -393,8 +458,17 @@ export function Productos() {
                 </tr>
               </thead>
               <tbody>
-                {productos.map((producto) => (
-                  <tr key={producto.id} style={{ opacity: producto.activo === false ? 0.55 : 1 }}>
+                {productosFiltrados.map((producto) => {
+                  const bajo = esStockBajo(producto)
+                  return (
+                  <tr
+                    key={producto.id}
+                    style={{
+                      opacity: producto.activo === false ? 0.55 : 1,
+                      background: bajo ? '#f6dcd6' : undefined,
+                      boxShadow: bajo ? 'inset 3px 0 0 var(--color-error)' : undefined,
+                    }}
+                  >
                     <td>{producto.nombre}</td>
                     <td>{producto.stock_actual_unidad_base}</td>
                     <td>
@@ -426,7 +500,8 @@ export function Productos() {
                       </button>
                     </td>
                   </tr>
-                ))}
+                  )
+                })}
               </tbody>
             </table>
           )}

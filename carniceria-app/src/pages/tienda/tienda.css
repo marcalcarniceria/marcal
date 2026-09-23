@@ -533,6 +533,20 @@
   font-size: 0.9rem;
 }
 
+/* Producto con stock por debajo del mínimo configurado: bloqueado solo
+   en la tienda online (el cajero no usa este componente). */
+.tienda-card-bloqueada {
+  opacity: 0.55;
+  filter: grayscale(0.6);
+}
+
+.tienda-card-no-disponible {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+  padding: 0.75rem 0;
+}
+
 /* Botones */
 .tienda-btn {
   font-family: var(--font-body);
