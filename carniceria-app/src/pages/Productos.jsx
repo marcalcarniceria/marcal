@@ -4,6 +4,17 @@ import { SUCURSAL_ID } from '../config/sucursal'
 
 const UNIDADES_COMUNES = ['Kilo', 'Unidad', 'Docena', 'Bandeja', 'Atado', 'Bolsa', 'Cajón']
 
+// Mismos valores que el check constraint de productos.categoria (ver
+// schema_categoria_productos.sql / schema_categoria_mas_productos.sql).
+// '' (string vacío) es el valor del <select> para "Sin categoría", que se
+// guarda como null -- la columna es nullable a propósito.
+const CATEGORIAS = [
+  { valor: '', etiqueta: 'Sin categoría' },
+  { valor: 'carniceria', etiqueta: 'Carnicería' },
+  { valor: 'verduleria', etiqueta: 'Verdulería' },
+  { valor: 'mas_productos', etiqueta: 'Más productos' },
+]
+
 const FILTROS = [
   { valor: 'todos', etiqueta: 'Todos' },
   { valor: 'activos', etiqueta: 'Activos' },
@@ -39,6 +50,7 @@ export function Productos() {
   const [nombre, setNombre] = useState('')
   const [stockInicial, setStockInicial] = useState('')
   const [stockMinimo, setStockMinimo] = useState('')
+  const [categoria, setCategoria] = useState('')
   const [unidades, setUnidades] = useState([filaVacia()])
   const [unidadesEliminadas, setUnidadesEliminadas] = useState([])
 
@@ -93,6 +105,7 @@ export function Productos() {
     setNombre('')
     setStockInicial('')
     setStockMinimo('')
+    setCategoria('')
     setUnidades([filaVacia()])
     setUnidadesEliminadas([])
     setMensaje(null)
@@ -108,6 +121,7 @@ export function Productos() {
     setNombre(producto.nombre)
     setStockInicial(String(producto.stock_actual_unidad_base ?? ''))
     setStockMinimo(String(producto.stock_minimo ?? ''))
+    setCategoria(producto.categoria ?? '')
     setUnidades(
       producto.unidades_venta_producto.map((u) => ({
         id: u.id,
@@ -164,6 +178,7 @@ export function Productos() {
           nombre: nombre.trim(),
           stock_actual_unidad_base: Number(stockInicial) || 0,
           stock_minimo: Number(stockMinimo) || 0,
+          categoria: categoria || null,
         })
         .eq('id', editandoId)
 
@@ -230,6 +245,7 @@ export function Productos() {
         sucursal_id: SUCURSAL_ID,
         stock_actual_unidad_base: Number(stockInicial) || 0,
         stock_minimo: Number(stockMinimo) || 0,
+        categoria: categoria || null,
       })
       .select()
       .single()
@@ -333,6 +349,21 @@ export function Productos() {
                   onChange={(e) => setStockMinimo(e.target.value)}
                   style={{ width: 160 }}
                 />
+              </label>
+              <label>
+                <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>Categoría</div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>
+                  En qué bloque de la tienda online aparece este producto. "Sin categoría" lo deja
+                  afuera de los tres bloques (Carnicería/Verdulería/Más productos), pero sigue
+                  visible en el catálogo completo de abajo.
+                </div>
+                <select value={categoria} onChange={(e) => setCategoria(e.target.value)} style={{ width: 200 }}>
+                  {CATEGORIAS.map((c) => (
+                    <option key={c.valor} value={c.valor}>
+                      {c.etiqueta}
+                    </option>
+                  ))}
+                </select>
               </label>
             </div>
 

@@ -79,7 +79,10 @@ export function Tienda() {
   }, [])
 
   // Los que ya tienen categoría se muestran dentro de su bloque
-  // (Carnicería/Verdulería); acá abajo quedan solo los que todavía no.
+  // (Carnicería/Verdulería/Más Productos); acá abajo quedan solo los que
+  // todavía no tienen ninguna asignada. Con las tres categorías cargadas
+  // hoy este array puede quedar vacío -- la sección de abajo ya tiene el
+  // guard sinCategoria.length > 0, así que simplemente no se renderiza.
   const sinCategoria = productos.filter((p) => !p.categoria)
 
   function irAProductos() {
@@ -198,6 +201,13 @@ export function Tienda() {
                 imagen="/images/verduelria.png"
                 alt="Verdulería: frutas y verduras frescas, directo del campo"
                 productos={productos.filter((p) => p.categoria === 'verduleria')}
+                agregarItem={agregarItem}
+              />
+              <CategoriaBloque
+                tono="mas-productos"
+                imagen="/images/mas-productos.png"
+                alt="Más Productos: todo lo que necesitás, en un solo lugar"
+                productos={productos.filter((p) => p.categoria === 'mas_productos')}
                 agregarItem={agregarItem}
               />
             </>

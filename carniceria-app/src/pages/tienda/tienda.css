@@ -1167,6 +1167,12 @@
   --tono-hover: #256222;
 }
 
+.tienda-categoria-mas-productos {
+  background: #f7f0e0;
+  --tono: var(--color-gold);
+  --tono-hover: #8a6423;
+}
+
 .tienda-categoria-imagen {
   position: relative;
   border-radius: 14px;
