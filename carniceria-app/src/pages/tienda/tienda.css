@@ -1341,43 +1341,44 @@
 
 .tienda-categoria-fila {
   display: flex;
-  gap: 1rem;
+  gap: 0.75rem;
   overflow-x: auto;
   scroll-snap-type: x proximity;
   padding: 0.5rem 0.25rem 1rem;
   scrollbar-width: thin;
 }
 
-/* Tarjetas dentro de los bloques de categoría: más grandes que las de la
-   grilla de abajo (la tarjeta completa escala: padding, textos y botón). */
+/* Tarjetas dentro de los bloques de categoría: tamaño compacto para que
+   entren varias sin scrollear demasiado (en mobile se achican más abajo,
+   para que se vea más de una tarjeta a la vez). */
 .tienda-card-fila {
-  flex: 0 0 340px;
+  flex: 0 0 200px;
   scroll-snap-align: start;
-  padding: 1.75rem;
-  gap: 1rem;
-  border-radius: 12px;
+  padding: 1rem;
+  gap: 0.6rem;
+  border-radius: 10px;
 }
 
 .tienda-card-fila h3 {
-  font-size: 1.5rem;
+  font-size: 1rem;
 }
 
 .tienda-card-fila .tienda-card-unidad {
-  padding: 0.75rem 0;
+  padding: 0.4rem 0;
 }
 
 .tienda-card-fila .tienda-card-unidad-nombre {
-  font-size: 1.05rem;
+  font-size: 0.8rem;
 }
 
 .tienda-card-fila .tienda-card-precio {
-  font-size: 1.4rem;
+  font-size: 1rem;
 }
 
 .tienda-card-fila .tienda-btn {
-  font-size: 0.95rem;
-  padding: 0.75rem 1.35rem;
-  border-radius: 7px;
+  font-size: 0.75rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 5px;
 }
 
 .tienda-categoria-flecha {
@@ -1415,10 +1416,21 @@
     grid-template-columns: 1fr;
     padding: 1.5rem 1rem;
   }
+}
 
+/* Mobile: cada tarjeta ocupa una porción del ancho (no casi toda la
+   pantalla) para que se alcance a ver la siguiente asomando en el borde
+   -- señal de que hay más para scrollear, en vez de sentir que cada swipe
+   cambia de producto por completo. */
+@media (max-width: 640px) {
   .tienda-card-fila {
-    flex-basis: 300px;
-    padding: 1.5rem;
+    flex-basis: 58%;
+    padding: 0.85rem;
+    gap: 0.5rem;
+  }
+
+  .tienda-card-fila h3 {
+    font-size: 0.95rem;
   }
 }
 
