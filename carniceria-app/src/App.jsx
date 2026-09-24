@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/AppLayout'
+import { ReportesPage } from './pages/ReportesPage'
 import { Productos } from './pages/Productos'
 import { AdminCombos } from './pages/AdminCombos'
 import { Cajero } from './pages/Cajero'
@@ -30,6 +31,7 @@ function App() {
           </ProtectedRoute>
         }
       >
+        <Route path="/reportes" element={<ReportesPage />} />
         <Route path="/" element={<Productos />} />
         <Route path="/combos" element={<AdminCombos />} />
         <Route path="/cajero" element={<Cajero />} />

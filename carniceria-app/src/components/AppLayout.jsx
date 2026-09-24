@@ -6,6 +6,8 @@ import { PedidosStockInsuficienteProvider } from '../context/PedidosStockInsufic
 import { NotificacionesFlotantes } from './NotificacionesFlotantes'
 import '../staff.css'
 
+// 'Reportes' se agrega aparte (no en esta lista fija) porque solo se
+// muestra para el rol 'dueño' -- ver armado del nav más abajo.
 const NAV_ITEMS = [
   { to: '/', label: 'Productos', end: true },
   { to: '/combos', label: 'Combos' },
@@ -73,6 +75,15 @@ function AppLayoutInner() {
 
           <div className={`staff-sidebar-colapsable${menuMobileAbierto ? ' abierto' : ''}`}>
             <nav className="staff-nav">
+              {usuario?.rol === 'dueño' && (
+                <NavLink
+                  to="/reportes"
+                  onClick={cerrarMenuMobile}
+                  className={({ isActive }) => `staff-nav-link${isActive ? ' activo' : ''}`}
+                >
+                  Reportes
+                </NavLink>
+              )}
               {NAV_ITEMS.map((item) => (
                 <NavLink
                   key={item.to}

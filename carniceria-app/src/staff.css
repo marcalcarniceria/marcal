@@ -321,6 +321,291 @@
   box-shadow: none;
 }
 
+/* Reportes (pantalla de inicio del dueño) */
+.reportes-rango {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.reportes-rango-btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.82rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.45rem 1rem;
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background 0.15s var(--ease), border-color 0.15s var(--ease), color 0.15s var(--ease);
+}
+
+.reportes-rango-btn:hover {
+  background: var(--color-bg);
+}
+
+.reportes-rango-btn.activo {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+.reportes-rango-personalizado {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 0.85rem;
+}
+
+.reportes-rango-personalizado label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.reportes-rango-resumen {
+  margin: 0.85rem 0 0;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+.reportes-rango-card {
+  padding: 1rem 1.1rem;
+  margin-bottom: 0.85rem;
+}
+
+.reportes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.reportes-card {
+  margin-bottom: 0;
+  padding: 1rem 1.1rem;
+}
+
+.reportes-card-titulo {
+  font-size: 0.88rem;
+  color: var(--color-dark);
+  margin-bottom: 0.6rem;
+}
+
+/* Ganancias por período: es el número que más le importa al dueño de
+   un vistazo -- se destaca con acento de color en vez de pesar igual
+   que el resto de las tarjetas (todas compitiendo por atención). */
+.reportes-card-principal {
+  border-top: 3px solid var(--color-accent);
+  background: linear-gradient(180deg, rgba(176, 67, 31, 0.05), transparent 70%);
+}
+
+.reportes-card-principal .reportes-card-titulo {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-accent);
+}
+
+.reportes-numero-mediano {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  color: var(--color-dark);
+  margin: 0;
+}
+
+.reportes-placeholder {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  font-style: italic;
+  margin: 0;
+}
+
+.reportes-numero-grande {
+  font-family: var(--font-display);
+  font-size: 2.4rem;
+  color: var(--color-accent);
+  margin: 0;
+  line-height: 1;
+}
+
+.reportes-detalle-linea {
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  margin: 0.35rem 0 0;
+}
+
+.reportes-nota {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-style: italic;
+  margin: 0.45rem 0 0;
+}
+
+.reportes-card-ancha {
+  grid-column: span 2;
+}
+
+@media (max-width: 720px) {
+  .reportes-card-ancha {
+    grid-column: span 1;
+  }
+}
+
+.reportes-ranking-columnas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.reportes-subtitulo {
+  font-family: var(--font-body);
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin: 0 0 0.4rem;
+}
+
+.reportes-barra-canales {
+  display: flex;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-bg);
+}
+
+.reportes-barra-mostrador {
+  background: var(--color-accent);
+  transition: width 0.3s var(--ease);
+}
+
+.reportes-barra-online {
+  background: var(--color-gold);
+  transition: width 0.3s var(--ease);
+}
+
+.reportes-canales-leyenda {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* Ranking de productos: barras horizontales en vez de tablas de texto
+   -- una fila = nombre + barra proporcional al máximo de SU columna
+   (más vendidos / menos movimiento tienen escalas distintas) + valor. */
+.reportes-bar-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.reportes-bar-fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(60px, 35%) 3.2rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+}
+
+.reportes-bar-nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+.reportes-bar-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.reportes-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s var(--ease);
+}
+
+.reportes-bar-fill-top {
+  background: var(--color-accent);
+}
+
+.reportes-bar-fill-bajo {
+  background: var(--color-gold);
+}
+
+.reportes-bar-valor {
+  text-align: right;
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Evolución de costos: sparkline de 2 puntos (inicio -> fin del
+   período) en vez de solo la flecha -- mismo color que ya usaba el
+   texto (rojo sube, verde baja). */
+.reportes-sparkline {
+  display: block;
+  flex-shrink: 0;
+}
+
+.reportes-costo-fila {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+/* Tablas dentro de tarjetas de Reportes (Comisiones, Arqueos, Stock
+   bajo): un poco más compactas que el resto del panel, donde hay más
+   aire disponible -- acá conviven muchas tarjetas a la vez. */
+.reportes-card .staff-table {
+  font-size: 0.8rem;
+}
+
+.reportes-card .staff-table td,
+.reportes-card .staff-table th {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+.reportes-canales-leyenda p {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.reportes-leyenda-punto {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.reportes-leyenda-mostrador {
+  background: var(--color-accent);
+}
+
+.reportes-leyenda-online {
+  background: var(--color-gold);
+}
+
+.reportes-costo-subio {
+  color: var(--color-error);
+}
+
+.reportes-costo-bajo {
+  color: var(--color-success);
+}
+
 /* Botones de ajuste manual de stock (Movimientos): mismo estilo outline que
    staff-btn-secundario pero con el color que anticipa la acción, para que
    ingreso/egreso se distingan de un vistazo sin depender del texto. */

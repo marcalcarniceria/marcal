@@ -46,14 +46,16 @@ function FormIniciarSesion({ onExito }) {
     // usuarios (policy "usuarios_select_propio").
     const { data: usuarioData } = await supabase
       .from('usuarios')
-      .select('id')
+      .select('id, rol')
       .eq('id', data.user.id)
       .maybeSingle()
 
     setEnviando(false)
 
     if (usuarioData) {
-      navigate('/')
+      // Por ahora esta pantalla de inicio distinta es solo para 'dueño' --
+      // el resto de los roles sigue entrando a Productos como siempre.
+      navigate(usuarioData.rol === 'dueño' ? '/reportes' : '/')
       return
     }
 
