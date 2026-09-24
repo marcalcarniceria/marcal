@@ -23,9 +23,9 @@ const GOOGLE_MAPS_URL = 'https://maps.app.goo.gl/VT52EVQrtpZ2KUWJ8'
 const FILTROS_CATEGORIA = [
   { nombre: 'Carnicería', Icono: IconCarne, seccion: 'seccion-carniceria' },
   { nombre: 'Verdulería', Icono: IconVerdura, seccion: 'seccion-verduleria' },
+  { nombre: 'Más productos', Icono: IconGrilla, seccion: 'seccion-mas-productos' },
   { nombre: 'Promociones', Icono: IconEtiqueta, seccion: 'seccion-promociones' },
   { nombre: 'Combos', Icono: IconCaja, seccion: 'seccion-combos' },
-  { nombre: 'Más productos', Icono: IconGrilla, seccion: 'seccion-mas-productos' },
 ]
 
 const ANIO_INICIO = 1998
@@ -218,6 +218,14 @@ export function Tienda() {
                 agregarItem={agregarItem}
               />
               <CategoriaBloque
+                id="seccion-mas-productos"
+                tono="mas-productos"
+                imagen="/images/mas-productos.png"
+                alt="Más Productos: todo lo que necesitás, en un solo lugar"
+                productos={productos.filter((p) => p.categoria === 'mas_productos')}
+                agregarItem={agregarItem}
+              />
+              <CategoriaBloque
                 id="seccion-promociones"
                 tono="promociones"
                 imagen="/images/promociones.jpg"
@@ -237,14 +245,6 @@ export function Tienda() {
                 titulo="Combos"
                 subtitulo="Armados para ahorrar, listos para llevar."
                 productos={productos.filter((p) => p.categoria === 'combos')}
-                agregarItem={agregarItem}
-              />
-              <CategoriaBloque
-                id="seccion-mas-productos"
-                tono="mas-productos"
-                imagen="/images/mas-productos.png"
-                alt="Más Productos: todo lo que necesitás, en un solo lugar"
-                productos={productos.filter((p) => p.categoria === 'mas_productos')}
                 agregarItem={agregarItem}
               />
             </>

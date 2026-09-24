@@ -1312,37 +1312,45 @@
 }
 
 /* Rótulo superpuesto (ícono + título + subtítulo) para las imágenes que
-   son solo fondo (Promociones, Combos). Imita el rótulo dibujado en
-   carniceria.png: arriba a la izquierda, sobre la zona lisa de la foto. */
+   son solo fondo (Promociones, Combos). En carniceria.png y
+   mas-productos.png el rótulo está dibujado en la foto y escala con ella,
+   así que acá todo se mide en cqw (% del ancho de la tarjeta, ver
+   container-type en .tienda-categoria-imagen) con las proporciones
+   medidas sobre mas-productos.png: ícono ~19% del ancho, título ~9%,
+   subtítulo ~4.4%. Así se ven iguales en cualquier tamaño de pantalla. */
 .tienda-categoria-rotulo {
   position: absolute;
-  top: 9%;
-  left: 7%;
-  right: 7%;
+  top: 6cqw;
+  left: 8.5cqw;
+  right: 5cqw;
   display: flex;
   align-items: center;
-  gap: clamp(0.75rem, 2vw, 1.25rem);
+  gap: 4cqw;
 }
 
 .tienda-categoria-rotulo-icono {
   flex-shrink: 0;
-  width: clamp(56px, 18%, 96px);
-  height: auto;
+  width: 19cqw;
+  height: 19cqw;
   color: var(--tono);
-  stroke-width: 3;
+  stroke-width: 4.5;
 }
 
 .tienda-categoria-rotulo-titulo {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: clamp(1.9rem, 3.6vw, 3.2rem);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 9cqw;
   line-height: 1.05;
+  letter-spacing: -0.01em;
   color: var(--tono);
 }
 
 .tienda-categoria-rotulo-subtitulo {
-  margin: 0.35rem 0 0;
-  font-size: clamp(0.95rem, 1.5vw, 1.3rem);
+  margin: 0.35em 0 0;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 4.4cqw;
+  line-height: 1.3;
   color: var(--color-text);
 }
 
@@ -1352,6 +1360,8 @@
   overflow: hidden;
   box-shadow: var(--shadow-md);
   aspect-ratio: 4 / 3;
+  /* Base de las unidades cqw del rótulo superpuesto. */
+  container-type: inline-size;
 }
 
 .tienda-categoria-imagen img {
