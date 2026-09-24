@@ -1294,6 +1294,58 @@
   --tono-hover: #8a6423;
 }
 
+.tienda-categoria-promociones {
+  background: #fdeee6;
+  --tono: #d9480f;
+  --tono-hover: #b33a0b;
+}
+
+.tienda-categoria-combos {
+  background: #fbf5e1;
+  --tono: #b45309;
+  --tono-hover: #8f4207;
+}
+
+/* Destino de la botonera de filtros: deja lugar para el header sticky. */
+.tienda-categoria {
+  scroll-margin-top: 5rem;
+}
+
+/* Rótulo superpuesto (ícono + título + subtítulo) para las imágenes que
+   son solo fondo (Promociones, Combos). Imita el rótulo dibujado en
+   carniceria.png: arriba a la izquierda, sobre la zona lisa de la foto. */
+.tienda-categoria-rotulo {
+  position: absolute;
+  top: 9%;
+  left: 7%;
+  right: 7%;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.tienda-categoria-rotulo-icono {
+  flex-shrink: 0;
+  width: clamp(56px, 18%, 96px);
+  height: auto;
+  color: var(--tono);
+  stroke-width: 3;
+}
+
+.tienda-categoria-rotulo-titulo {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 3.6vw, 3.2rem);
+  line-height: 1.05;
+  color: var(--tono);
+}
+
+.tienda-categoria-rotulo-subtitulo {
+  margin: 0.35rem 0 0;
+  font-size: clamp(0.95rem, 1.5vw, 1.3rem);
+  color: var(--color-text);
+}
+
 .tienda-categoria-imagen {
   position: relative;
   border-radius: 14px;

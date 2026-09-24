@@ -19,12 +19,13 @@ import {
 
 const GOOGLE_MAPS_URL = 'https://maps.app.goo.gl/VT52EVQrtpZ2KUWJ8'
 
+// seccion: id del CategoriaBloque al que scrollea cada botón.
 const FILTROS_CATEGORIA = [
-  { nombre: 'Carnicería', Icono: IconCarne },
-  { nombre: 'Verdulería', Icono: IconVerdura },
-  { nombre: 'Promociones', Icono: IconEtiqueta },
-  { nombre: 'Combos', Icono: IconCaja },
-  { nombre: 'Más productos', Icono: IconGrilla },
+  { nombre: 'Carnicería', Icono: IconCarne, seccion: 'seccion-carniceria' },
+  { nombre: 'Verdulería', Icono: IconVerdura, seccion: 'seccion-verduleria' },
+  { nombre: 'Promociones', Icono: IconEtiqueta, seccion: 'seccion-promociones' },
+  { nombre: 'Combos', Icono: IconCaja, seccion: 'seccion-combos' },
+  { nombre: 'Más productos', Icono: IconGrilla, seccion: 'seccion-mas-productos' },
 ]
 
 const ANIO_INICIO = 1998
@@ -87,6 +88,12 @@ export function Tienda() {
 
   function irAProductos() {
     document.getElementById('vidriera-productos')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  // Mientras cargan los productos los bloques todavía no existen: el ?.
+  // evita el error si el cliente toca un botón antes de tiempo.
+  function irASeccion(id) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -176,8 +183,13 @@ export function Tienda() {
 
         <div className="tienda-vidriera-inner">
           <div className="tienda-filtros">
-            {FILTROS_CATEGORIA.map(({ nombre, Icono }) => (
-              <button key={nombre} type="button" className="tienda-filtro">
+            {FILTROS_CATEGORIA.map(({ nombre, Icono, seccion }) => (
+              <button
+                key={nombre}
+                type="button"
+                className="tienda-filtro"
+                onClick={() => irASeccion(seccion)}
+              >
                 <Icono aria-hidden="true" />
                 {nombre}
               </button>
@@ -190,6 +202,7 @@ export function Tienda() {
           {!loading && !error && (
             <>
               <CategoriaBloque
+                id="seccion-carniceria"
                 tono="carniceria"
                 imagen="/images/carniceria.png"
                 alt="Carnicería: carne fresca, de primera calidad"
@@ -197,6 +210,7 @@ export function Tienda() {
                 agregarItem={agregarItem}
               />
               <CategoriaBloque
+                id="seccion-verduleria"
                 tono="verduleria"
                 imagen="/images/verduelria.png"
                 alt="Verdulería: frutas y verduras frescas, directo del campo"
@@ -204,6 +218,29 @@ export function Tienda() {
                 agregarItem={agregarItem}
               />
               <CategoriaBloque
+                id="seccion-promociones"
+                tono="promociones"
+                imagen="/images/promociones.jpg"
+                alt="Promociones: las mejores ofertas de la semana"
+                Icono={IconEtiqueta}
+                titulo="Promociones"
+                subtitulo="Las mejores ofertas de la semana."
+                productos={productos.filter((p) => p.categoria === 'promociones')}
+                agregarItem={agregarItem}
+              />
+              <CategoriaBloque
+                id="seccion-combos"
+                tono="combos"
+                imagen="/images/combos.jpg"
+                alt="Combos: armados para ahorrar, listos para llevar"
+                Icono={IconCaja}
+                titulo="Combos"
+                subtitulo="Armados para ahorrar, listos para llevar."
+                productos={productos.filter((p) => p.categoria === 'combos')}
+                agregarItem={agregarItem}
+              />
+              <CategoriaBloque
+                id="seccion-mas-productos"
                 tono="mas-productos"
                 imagen="/images/mas-productos.png"
                 alt="Más Productos: todo lo que necesitás, en un solo lugar"
