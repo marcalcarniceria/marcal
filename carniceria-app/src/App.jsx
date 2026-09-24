@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/AppLayout'
 import { Productos } from './pages/Productos'
+import { AdminCombos } from './pages/AdminCombos'
 import { Cajero } from './pages/Cajero'
 import { CierreCaja } from './pages/CierreCaja'
 import { CompraProveedor } from './pages/CompraProveedor'
@@ -30,6 +31,7 @@ function App() {
         }
       >
         <Route path="/" element={<Productos />} />
+        <Route path="/combos" element={<AdminCombos />} />
         <Route path="/cajero" element={<Cajero />} />
         <Route path="/cierre-caja" element={<CierreCaja />} />
         <Route path="/compras" element={<CompraProveedor />} />

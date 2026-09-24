@@ -31,7 +31,7 @@ export function Carrito() {
               </thead>
               <tbody>
                 {items.map((item) => (
-                  <tr key={item.unidad_venta_id}>
+                  <tr key={item.clave}>
                     <td>
                       {item.producto_nombre} ({item.unidad_nombre})
                     </td>
@@ -42,7 +42,7 @@ export function Carrito() {
                         step="1"
                         value={item.cantidad}
                         onChange={(e) =>
-                          actualizarCantidad(item.unidad_venta_id, Math.max(1, Number(e.target.value)))
+                          actualizarCantidad(item.clave, Math.max(1, Number(e.target.value)))
                         }
                       />
                     </td>
@@ -52,7 +52,7 @@ export function Carrito() {
                       <button
                         type="button"
                         className="tienda-btn tienda-btn-secundario"
-                        onClick={() => quitarItem(item.unidad_venta_id)}
+                        onClick={() => quitarItem(item.clave)}
                       >
                         Quitar
                       </button>

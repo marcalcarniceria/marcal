@@ -81,11 +81,13 @@ export function Checkout() {
       p_cliente_web_id: cliente?.id ?? null,
       p_metodo_pago: metodoPago,
       p_metodo_entrega: metodoEntrega,
-      p_items: items.map((i) => ({
-        producto_id: i.producto_id,
-        unidad_venta_id: i.unidad_venta_id,
-        cantidad: i.cantidad,
-      })),
+      // Combos van con combo_id; productos con producto_id + unidad_venta_id
+      // (ver crear_pedido_online en schema_combos_ventas.sql).
+      p_items: items.map((i) =>
+        i.combo_id
+          ? { combo_id: i.combo_id, cantidad: i.cantidad }
+          : { producto_id: i.producto_id, unidad_venta_id: i.unidad_venta_id, cantidad: i.cantidad },
+      ),
     })
 
     setEnviando(false)

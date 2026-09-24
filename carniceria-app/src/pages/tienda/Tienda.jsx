@@ -4,6 +4,8 @@ import { SUCURSAL_ID } from '../../config/sucursal'
 import { useCarrito } from './CarritoContext'
 import { TiendaHeader } from './TiendaHeader'
 import { ProductoCard } from './ProductoCard'
+import { ComboCard } from './ComboCard'
+import { esStockBajo } from './stock'
 import { CategoriaBloque } from './CategoriaBloque'
 import {
   IconCarne,
@@ -65,6 +67,7 @@ export function Tienda() {
   const [productos, setProductos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [combos, setCombos] = useState([])
 
   useEffect(() => {
     supabase
@@ -77,7 +80,20 @@ export function Tienda() {
         else setProductos(data)
         setLoading(false)
       })
+
+    // Combos: stock virtual calculado en la base (schema_combos.sql). Si
+    // falla, la tienda sigue andando sin esa sección en vez de romperse.
+    supabase
+      .rpc('obtener_combos_tienda', { p_sucursal_id: SUCURSAL_ID })
+      .then(({ data, error }) => {
+        if (error) console.error('[tienda] no se pudieron cargar los combos', error)
+        else setCombos(data)
+      })
   }, [])
+
+  // Solo los que hoy se pueden armar (stock de todos los ingredientes y
+  // ninguno bajo su mínimo), mismo criterio que Promociones.
+  const combosDisponibles = combos.filter((c) => c.disponible)
 
   // Los que ya tienen categoría se muestran dentro de su bloque
   // (Carnicería/Verdulería/Más Productos); acá abajo quedan solo los que
@@ -85,6 +101,18 @@ export function Tienda() {
   // hoy este array puede quedar vacío -- la sección de abajo ya tiene el
   // guard sinCategoria.length > 0, así que simplemente no se renderiza.
   const sinCategoria = productos.filter((p) => !p.categoria)
+
+  // Promociones no depende de la categoría: entra cualquier producto con al
+  // menos una unidad con precio_promocional (ver
+  // schema_precio_promocional.sql). Además sigue apareciendo en su propio
+  // bloque (Carnicería, Verdulería...), con la oferta marcada en la tarjeta.
+  // Los que están bajo el stock mínimo (la tarjeta diría "No disponible por
+  // el momento") no entran: en una vidriera de ofertas no suman.
+  const enPromocion = productos.filter(
+    (p) =>
+      !esStockBajo(p) &&
+      p.unidades_venta_producto?.some((u) => u.precio_promocional != null),
+  )
 
   function irAProductos() {
     document.getElementById('vidriera-productos')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
@@ -233,7 +261,7 @@ export function Tienda() {
                 Icono={IconEtiqueta}
                 titulo="Promociones"
                 subtitulo="Las mejores ofertas de la semana."
-                productos={productos.filter((p) => p.categoria === 'promociones')}
+                productos={enPromocion}
                 agregarItem={agregarItem}
               />
               <CategoriaBloque
@@ -244,7 +272,8 @@ export function Tienda() {
                 Icono={IconCaja}
                 titulo="Combos"
                 subtitulo="Armados para ahorrar, listos para llevar."
-                productos={productos.filter((p) => p.categoria === 'combos')}
+                productos={combosDisponibles}
+                Card={ComboCard}
                 agregarItem={agregarItem}
               />
             </>

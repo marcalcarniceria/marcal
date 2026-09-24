@@ -604,6 +604,69 @@
   font-size: 0.9rem;
 }
 
+/* Precio promocional: el original tachado en gris y la promo en el rojo
+   de la marca, con el % de descuento al lado. */
+.tienda-card-precios {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.5rem;
+}
+
+.tienda-card-precio-original {
+  color: var(--color-text-muted);
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.tienda-card-precio-promo {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
+.tienda-card-descuento {
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+}
+
+/* Tarjeta de combo (ComboCard.jsx): misma base que .tienda-card, con la
+   foto arriba y la lista de ingredientes en chico. */
+.tienda-combo-imagen {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.tienda-combo-descripcion {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.tienda-combo-incluye {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.tienda-card-oferta {
+  align-self: flex-start;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+}
+
 /* Producto con stock por debajo del mínimo configurado: bloqueado solo
    en la tienda online (el cajero no usa este componente). */
 .tienda-card-bloqueada {
