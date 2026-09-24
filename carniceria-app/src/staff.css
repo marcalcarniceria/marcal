@@ -655,6 +655,25 @@
   transform: scale(0.96);
 }
 
+/* Combos en la caja: fondo dorado suave + badge, para distinguirlos de
+   un vistazo de los productos sueltos. */
+.cajero-combo-btn {
+  background: #faf3e3;
+  border-color: #e6d3a8;
+}
+
+.cajero-combo-badge {
+  display: inline-block;
+  background: var(--color-gold);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+}
+
 .cajero-producto-btn-chico {
   min-height: 72px;
   padding: 0.5rem 0.6rem;
@@ -676,6 +695,14 @@
   font-family: var(--font-display);
   color: var(--color-accent);
   font-size: 0.95rem;
+}
+
+/* Precio normal tachado al lado del promocional: solo informativo, para
+   que el cajero sepa que se está aplicando una oferta. */
+.cajero-precio-original {
+  margin-left: 0.4rem;
+  font-size: 0.75em;
+  color: var(--color-text-muted);
 }
 
 .cajero-numpad-overlay {

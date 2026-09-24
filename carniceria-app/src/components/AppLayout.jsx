@@ -8,6 +8,7 @@ import '../staff.css'
 
 const NAV_ITEMS = [
   { to: '/', label: 'Productos', end: true },
+  { to: '/combos', label: 'Combos' },
   { to: '/cajero', label: 'Caja' },
   { to: '/cierre-caja', label: 'Cierre de caja' },
   { to: '/compras', label: 'Compras' },

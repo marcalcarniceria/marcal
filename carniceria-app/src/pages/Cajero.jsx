@@ -5,10 +5,24 @@ import { SUCURSAL_ID } from '../config/sucursal'
 
 const TOP_N_MAS_VENDIDOS = 18
 
+// Precio en los botones de la grilla: si la unidad tiene promo, se muestra
+// esa (es la que se cobra) con el precio normal tachado chiquito al lado.
+function PrecioCaja({ item }) {
+  return (
+    <span className="cajero-producto-precio">
+      ${item.precio_cobrar.toFixed(2)}
+      {item.precio_promocional != null && (
+        <s className="cajero-precio-original">${item.precio_venta.toFixed(2)}</s>
+      )}
+    </span>
+  )
+}
+
 export function Cajero() {
   const { usuario } = useAuth()
 
   const [catalogoVenta, setCatalogoVenta] = useState([])
+  const [combos, setCombos] = useState([])
   const [metodosPago, setMetodosPago] = useState([])
   const [loadingBase, setLoadingBase] = useState(true)
   const [loadingCatalogo, setLoadingCatalogo] = useState(false)
@@ -59,6 +73,12 @@ export function Cajero() {
             data.map((item) => ({
               ...item,
               precio_venta: Number(item.precio_venta),
+              precio_promocional:
+                item.precio_promocional == null ? null : Number(item.precio_promocional),
+              // Precio a cobrar: misma regla que registrar_venta
+              // (coalesce(precio_promocional, precio_venta)). La promo se
+              // aplica siempre, sin opción de sacarla desde la caja.
+              precio_cobrar: Number(item.precio_promocional ?? item.precio_venta),
               costo_vigente: Number(item.costo_vigente),
               factor_conversion_base: Number(item.factor_conversion_base),
               stock_actual_unidad_base: Number(item.stock_actual_unidad_base),
@@ -66,6 +86,36 @@ export function Cajero() {
           )
         }
         setLoadingCatalogo(false)
+      })
+
+    // Combos activos (stock virtual calculado en la base, ver
+    // schema_combos.sql). Se normalizan a la misma forma que un item del
+    // catálogo para reutilizar el numpad y el carrito. En el mostrador no se
+    // bloquean por stock (mismo criterio que los productos sueltos): la
+    // cantidad armable es solo una referencia para el cajero.
+    supabase
+      .rpc('obtener_combos_tienda', { p_sucursal_id: SUCURSAL_ID })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error('[caja] no se pudieron cargar los combos', error)
+          return
+        }
+        setCombos(
+          data.map((c) => ({
+            es_combo: true,
+            combo_id: c.id,
+            producto_id: null,
+            unidad_venta_id: null,
+            producto_nombre: c.nombre,
+            unidad_nombre: 'Combo',
+            precio_venta: Number(c.precio_fijo),
+            precio_promocional: null,
+            precio_cobrar: Number(c.precio_fijo),
+            // El costo real lo calcula registrar_venta con los ingredientes.
+            costo_vigente: 0,
+            stock_virtual: c.stock_virtual,
+          })),
+        )
       })
   }, [])
 
@@ -140,17 +190,25 @@ export function Cajero() {
       return
     }
 
+    if (numpadItem.es_combo && !Number.isInteger(valor)) {
+      setMensaje({ tipo: 'error', texto: 'Los combos se venden por unidad entera.' })
+      return
+    }
+
     const cantidadFinal =
-      numpadModo === 'cantidad' ? valor : valor / numpadItem.precio_venta
+      numpadModo === 'cantidad' ? valor : valor / numpadItem.precio_cobrar
 
     const nuevoItem = {
-      key: `${numpadItem.unidad_venta_id}-${Date.now()}`,
+      key: `${numpadItem.combo_id ?? numpadItem.unidad_venta_id}-${Date.now()}`,
+      combo_id: numpadItem.combo_id ?? null,
       producto_id: numpadItem.producto_id,
       producto_nombre: numpadItem.producto_nombre,
       unidad_venta_id: numpadItem.unidad_venta_id,
       unidad_nombre: numpadItem.unidad_nombre,
       cantidad: cantidadFinal,
-      precio_unitario_historico: Number(numpadItem.precio_venta),
+      precio_unitario_historico: numpadItem.precio_cobrar,
+      // Solo para mostrar el tachado en el carrito; no se manda al RPC.
+      precio_original: numpadItem.precio_promocional == null ? null : numpadItem.precio_venta,
       costo_unitario_historico: Number(numpadItem.costo_vigente),
       descuento_aplicado: 0,
     }
@@ -242,9 +300,12 @@ export function Cajero() {
     const { data, error } = await supabase.rpc('registrar_venta', {
       p_sucursal_id: SUCURSAL_ID,
       p_descuento_general: Number(descuentoGeneral) || 0,
+      // Combos van con combo_id en vez de producto_id/unidad_venta_id; el
+      // costo lo calcula registrar_venta (schema_combos_ventas.sql).
       p_items: carrito.map((item) => ({
-        producto_id: item.producto_id,
-        unidad_venta_id: item.unidad_venta_id,
+        ...(item.combo_id
+          ? { combo_id: item.combo_id }
+          : { producto_id: item.producto_id, unidad_venta_id: item.unidad_venta_id }),
         cantidad: item.cantidad,
         precio_unitario_historico: item.precio_unitario_historico,
         costo_unitario_historico: item.costo_unitario_historico,
@@ -289,6 +350,29 @@ export function Cajero() {
     <div style={{ maxWidth: 1100 }}>
       <h1>Caja — {usuario?.nombre}</h1>
 
+      {combos.length > 0 && (
+        <div className="staff-card">
+          <h2>Combos</h2>
+          <div className="cajero-grid">
+            {combos.map((combo) => (
+              <button
+                key={combo.combo_id}
+                type="button"
+                className="cajero-producto-btn cajero-combo-btn"
+                onClick={() => abrirNumpad(combo)}
+              >
+                <span className="cajero-combo-badge">Combo</span>
+                <span className="cajero-producto-nombre">{combo.producto_nombre}</span>
+                <span className="cajero-producto-unidad">
+                  {combo.stock_virtual > 0 ? `Se pueden armar ${combo.stock_virtual}` : 'Sin stock para armar'}
+                </span>
+                <span className="cajero-producto-precio">${combo.precio_cobrar.toFixed(2)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="staff-card">
         <h2>Más vendidos</h2>
         {loadingCatalogo && <p>Cargando catálogo...</p>}
@@ -306,7 +390,7 @@ export function Cajero() {
               >
                 <span className="cajero-producto-nombre">{item.producto_nombre}</span>
                 <span className="cajero-producto-unidad">{item.unidad_nombre}</span>
-                <span className="cajero-producto-precio">${Number(item.precio_venta).toFixed(2)}</span>
+                <PrecioCaja item={item} />
               </button>
             ))}
           </div>
@@ -326,7 +410,7 @@ export function Cajero() {
               >
                 <span className="cajero-producto-nombre">{item.producto_nombre}</span>
                 <span className="cajero-producto-unidad">{item.unidad_nombre}</span>
-                <span className="cajero-producto-precio">${Number(item.precio_venta).toFixed(2)}</span>
+                <PrecioCaja item={item} />
               </button>
             ))}
           </div>
@@ -339,7 +423,10 @@ export function Cajero() {
             <div className="cajero-numpad-header">
               <strong>{numpadItem.producto_nombre}</strong>
               <span>
-                {numpadItem.unidad_nombre} — ${Number(numpadItem.precio_venta).toFixed(2)}
+                {numpadItem.unidad_nombre} — ${numpadItem.precio_cobrar.toFixed(2)}
+                {numpadItem.precio_promocional != null && (
+                  <s className="cajero-precio-original">${numpadItem.precio_venta.toFixed(2)}</s>
+                )}
               </span>
             </div>
 
@@ -354,16 +441,19 @@ export function Cajero() {
               >
                 Cantidad
               </button>
-              <button
-                type="button"
-                className={`cajero-numpad-modo${numpadModo === 'monto' ? ' activo' : ''}`}
-                onClick={() => {
-                  setNumpadModo('monto')
-                  setNumpadValor('')
-                }}
-              >
-                Monto $
-              </button>
+              {/* Un combo no se vende "por monto": siempre unidades enteras. */}
+              {!numpadItem.es_combo && (
+                <button
+                  type="button"
+                  className={`cajero-numpad-modo${numpadModo === 'monto' ? ' activo' : ''}`}
+                  onClick={() => {
+                    setNumpadModo('monto')
+                    setNumpadValor('')
+                  }}
+                >
+                  Monto $
+                </button>
+              )}
             </div>
 
             <div className="cajero-numpad-pantalla">
@@ -373,9 +463,9 @@ export function Cajero() {
 
             <div className="cajero-numpad-preview">
               {numpadModo === 'cantidad'
-                ? `= $${((Number(numpadValor) || 0) * numpadItem.precio_venta).toFixed(2)}`
+                ? `= $${((Number(numpadValor) || 0) * numpadItem.precio_cobrar).toFixed(2)}`
                 : `≈ ${(
-                    (Number(numpadValor) || 0) / numpadItem.precio_venta
+                    (Number(numpadValor) || 0) / numpadItem.precio_cobrar
                   ).toFixed(3)} ${numpadItem.unidad_nombre}`}
             </div>
 
@@ -427,9 +517,16 @@ export function Cajero() {
               {carrito.map((item) => (
                 <tr key={item.key}>
                   <td>{item.producto_nombre}</td>
-                  <td>{item.unidad_nombre}</td>
+                  <td>
+                    {item.combo_id ? <span className="cajero-combo-badge">Combo</span> : item.unidad_nombre}
+                  </td>
                   <td>{item.cantidad}</td>
-                  <td>${item.precio_unitario_historico.toFixed(2)}</td>
+                  <td>
+                    ${item.precio_unitario_historico.toFixed(2)}
+                    {item.precio_original != null && (
+                      <s className="cajero-precio-original">${item.precio_original.toFixed(2)}</s>
+                    )}
+                  </td>
                   <td>
                     <input
                       type="number"

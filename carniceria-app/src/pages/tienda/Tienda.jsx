@@ -4,6 +4,8 @@ import { SUCURSAL_ID } from '../../config/sucursal'
 import { useCarrito } from './CarritoContext'
 import { TiendaHeader } from './TiendaHeader'
 import { ProductoCard } from './ProductoCard'
+import { ComboCard } from './ComboCard'
+import { esStockBajo } from './stock'
 import { CategoriaBloque } from './CategoriaBloque'
 import {
   IconCarne,
@@ -19,12 +21,13 @@ import {
 
 const GOOGLE_MAPS_URL = 'https://maps.app.goo.gl/VT52EVQrtpZ2KUWJ8'
 
+// seccion: id del CategoriaBloque al que scrollea cada botón.
 const FILTROS_CATEGORIA = [
-  { nombre: 'Carnicería', Icono: IconCarne },
-  { nombre: 'Verdulería', Icono: IconVerdura },
-  { nombre: 'Promociones', Icono: IconEtiqueta },
-  { nombre: 'Combos', Icono: IconCaja },
-  { nombre: 'Más productos', Icono: IconGrilla },
+  { nombre: 'Carnicería', Icono: IconCarne, seccion: 'seccion-carniceria' },
+  { nombre: 'Verdulería', Icono: IconVerdura, seccion: 'seccion-verduleria' },
+  { nombre: 'Más productos', Icono: IconGrilla, seccion: 'seccion-mas-productos' },
+  { nombre: 'Promociones', Icono: IconEtiqueta, seccion: 'seccion-promociones' },
+  { nombre: 'Combos', Icono: IconCaja, seccion: 'seccion-combos' },
 ]
 
 const ANIO_INICIO = 1998
@@ -64,6 +67,7 @@ export function Tienda() {
   const [productos, setProductos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [combos, setCombos] = useState([])
 
   useEffect(() => {
     supabase
@@ -76,7 +80,20 @@ export function Tienda() {
         else setProductos(data)
         setLoading(false)
       })
+
+    // Combos: stock virtual calculado en la base (schema_combos.sql). Si
+    // falla, la tienda sigue andando sin esa sección en vez de romperse.
+    supabase
+      .rpc('obtener_combos_tienda', { p_sucursal_id: SUCURSAL_ID })
+      .then(({ data, error }) => {
+        if (error) console.error('[tienda] no se pudieron cargar los combos', error)
+        else setCombos(data)
+      })
   }, [])
+
+  // Solo los que hoy se pueden armar (stock de todos los ingredientes y
+  // ninguno bajo su mínimo), mismo criterio que Promociones.
+  const combosDisponibles = combos.filter((c) => c.disponible)
 
   // Los que ya tienen categoría se muestran dentro de su bloque
   // (Carnicería/Verdulería/Más Productos); acá abajo quedan solo los que
@@ -85,8 +102,26 @@ export function Tienda() {
   // guard sinCategoria.length > 0, así que simplemente no se renderiza.
   const sinCategoria = productos.filter((p) => !p.categoria)
 
+  // Promociones no depende de la categoría: entra cualquier producto con al
+  // menos una unidad con precio_promocional (ver
+  // schema_precio_promocional.sql). Además sigue apareciendo en su propio
+  // bloque (Carnicería, Verdulería...), con la oferta marcada en la tarjeta.
+  // Los que están bajo el stock mínimo (la tarjeta diría "No disponible por
+  // el momento") no entran: en una vidriera de ofertas no suman.
+  const enPromocion = productos.filter(
+    (p) =>
+      !esStockBajo(p) &&
+      p.unidades_venta_producto?.some((u) => u.precio_promocional != null),
+  )
+
   function irAProductos() {
     document.getElementById('vidriera-productos')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  // Mientras cargan los productos los bloques todavía no existen: el ?.
+  // evita el error si el cliente toca un botón antes de tiempo.
+  function irASeccion(id) {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
@@ -176,8 +211,13 @@ export function Tienda() {
 
         <div className="tienda-vidriera-inner">
           <div className="tienda-filtros">
-            {FILTROS_CATEGORIA.map(({ nombre, Icono }) => (
-              <button key={nombre} type="button" className="tienda-filtro">
+            {FILTROS_CATEGORIA.map(({ nombre, Icono, seccion }) => (
+              <button
+                key={nombre}
+                type="button"
+                className="tienda-filtro"
+                onClick={() => irASeccion(seccion)}
+              >
                 <Icono aria-hidden="true" />
                 {nombre}
               </button>
@@ -190,6 +230,7 @@ export function Tienda() {
           {!loading && !error && (
             <>
               <CategoriaBloque
+                id="seccion-carniceria"
                 tono="carniceria"
                 imagen="/images/carniceria.png"
                 alt="Carnicería: carne fresca, de primera calidad"
@@ -197,6 +238,7 @@ export function Tienda() {
                 agregarItem={agregarItem}
               />
               <CategoriaBloque
+                id="seccion-verduleria"
                 tono="verduleria"
                 imagen="/images/verduelria.png"
                 alt="Verdulería: frutas y verduras frescas, directo del campo"
@@ -204,10 +246,34 @@ export function Tienda() {
                 agregarItem={agregarItem}
               />
               <CategoriaBloque
+                id="seccion-mas-productos"
                 tono="mas-productos"
                 imagen="/images/mas-productos.png"
                 alt="Más Productos: todo lo que necesitás, en un solo lugar"
                 productos={productos.filter((p) => p.categoria === 'mas_productos')}
+                agregarItem={agregarItem}
+              />
+              <CategoriaBloque
+                id="seccion-promociones"
+                tono="promociones"
+                imagen="/images/promociones.jpg"
+                alt="Promociones: las mejores ofertas de la semana"
+                Icono={IconEtiqueta}
+                titulo="Promociones"
+                subtitulo="Las mejores ofertas de la semana."
+                productos={enPromocion}
+                agregarItem={agregarItem}
+              />
+              <CategoriaBloque
+                id="seccion-combos"
+                tono="combos"
+                imagen="/images/combos.jpg"
+                alt="Combos: armados para ahorrar, listos para llevar"
+                Icono={IconCaja}
+                titulo="Combos"
+                subtitulo="Armados para ahorrar, listos para llevar."
+                productos={combosDisponibles}
+                Card={ComboCard}
                 agregarItem={agregarItem}
               />
             </>

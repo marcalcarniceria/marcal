@@ -1,9 +1,26 @@
 import { useEffect, useRef, useState } from 'react'
 import { ProductoCard } from './ProductoCard'
 
-// tono: 'carniceria' | 'verduleria' (solo cambia el color de acentos).
+// tono: 'carniceria' | 'verduleria' | ... (solo cambia el color de acentos).
 // El botón "Ver todos" es solo visual por ahora: sin onClick a propósito.
-export function CategoriaBloque({ tono, imagen, alt, productos, agregarItem }) {
+// Icono/titulo/subtitulo son opcionales: las imágenes de Carnicería,
+// Verdulería y Más Productos ya traen el texto dibujado; las de
+// Promociones y Combos son solo fondo, así que se superpone en HTML.
+// Card: componente de tarjeta para cada elemento de `productos` (por
+// defecto ProductoCard; el bloque de Combos pasa ComboCard). Recibe el
+// elemento en la prop `item` vía el adaptador de abajo.
+export function CategoriaBloque({
+  id,
+  tono,
+  imagen,
+  alt,
+  Icono,
+  titulo,
+  subtitulo,
+  productos,
+  agregarItem,
+  Card,
+}) {
   const filaRef = useRef(null)
   // desborda: la fila no entra entera (reserva el carril de la flecha).
   // alFinal: ya se scrolleó hasta el último producto (oculta la flecha).
@@ -37,9 +54,18 @@ export function CategoriaBloque({ tono, imagen, alt, productos, agregarItem }) {
   }
 
   return (
-    <div className={`tienda-categoria tienda-categoria-${tono}`}>
+    <div id={id} className={`tienda-categoria tienda-categoria-${tono}`}>
       <div className="tienda-categoria-imagen">
         <img src={imagen} alt={alt} loading="lazy" />
+        {titulo && (
+          <div className="tienda-categoria-rotulo" aria-hidden="true">
+            {Icono && <Icono className="tienda-categoria-rotulo-icono" />}
+            <div>
+              <div className="tienda-categoria-rotulo-titulo">{titulo}</div>
+              {subtitulo && <p className="tienda-categoria-rotulo-subtitulo">{subtitulo}</p>}
+            </div>
+          </div>
+        )}
         <button type="button" className="tienda-categoria-vertodos">
           Ver todos →
         </button>
@@ -51,14 +77,18 @@ export function CategoriaBloque({ tono, imagen, alt, productos, agregarItem }) {
         ) : (
           <>
             <div className="tienda-categoria-fila" ref={filaRef} onScroll={actualizarEstado}>
-              {productos.map((producto) => (
-                <ProductoCard
-                  key={producto.id}
-                  producto={producto}
-                  agregarItem={agregarItem}
-                  className="tienda-card-fila"
-                />
-              ))}
+              {productos.map((producto) =>
+                Card ? (
+                  <Card key={producto.id} item={producto} agregarItem={agregarItem} className="tienda-card-fila" />
+                ) : (
+                  <ProductoCard
+                    key={producto.id}
+                    producto={producto}
+                    agregarItem={agregarItem}
+                    className="tienda-card-fila"
+                  />
+                ),
+              )}
             </div>
             {estado.desborda && !estado.alFinal && (
               <button

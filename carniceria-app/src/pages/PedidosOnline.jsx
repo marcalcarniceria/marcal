@@ -44,7 +44,7 @@ export function PedidosOnline() {
     setLoading(true)
     const { data, error } = await supabase
       .from('pedidos_online')
-      .select('*, detalle_pedidos(*, productos(nombre), unidades_venta_producto(nombre_unidad))')
+      .select('*, detalle_pedidos(*, productos(nombre), unidades_venta_producto(nombre_unidad), combos(nombre))')
       .order('fecha_creacion', { ascending: false })
 
     if (error) setError(error)
@@ -155,10 +155,13 @@ export function PedidosOnline() {
               {p.detalle_pedidos.map((d) => (
                 <tr key={d.id}>
                   <td>
-                    {d.cantidad} x {d.productos?.nombre}
+                    {/* Línea de combo: combo_id en vez de producto_id (el
+                        faltante viene en cantidad de combos). */}
+                    {d.cantidad} x {d.combo_id ? `Combo ${d.combos?.nombre ?? ''}` : d.productos?.nombre}
                     {d.stock_insuficiente && (
                       <span className="staff-detalle-faltante">
-                        {' '}— Faltan {Number(d.faltante).toFixed(2)} {d.unidades_venta_producto?.nombre_unidad ?? ''}
+                        {' '}— Faltan {Number(d.faltante).toFixed(2)}{' '}
+                        {d.combo_id ? 'combos' : d.unidades_venta_producto?.nombre_unidad ?? ''}
                       </span>
                     )}
                   </td>

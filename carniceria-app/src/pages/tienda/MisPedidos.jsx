@@ -38,7 +38,7 @@ export function MisPedidosModal({ clienteId, onClose }) {
       setLoading(true)
       const { data, error } = await supabase
         .from('pedidos_online')
-        .select('id, fecha_creacion, total, estado, detalle_pedidos(cantidad, productos(nombre))')
+        .select('id, fecha_creacion, total, estado, detalle_pedidos(cantidad, productos(nombre), combos(nombre))')
         .eq('cliente_web_id', clienteId)
         .order('fecha_creacion', { ascending: false })
 
@@ -80,7 +80,7 @@ export function MisPedidosModal({ clienteId, onClose }) {
                 </div>
                 <p style={{ margin: '0.35rem 0', color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
                   {p.detalle_pedidos
-                    .map((d) => `${d.cantidad} x ${d.productos?.nombre ?? 'Producto'}`)
+                    .map((d) => `${d.cantidad} x ${d.productos?.nombre ?? d.combos?.nombre ?? 'Producto'}`)
                     .join(', ')}
                 </p>
                 <p style={{ margin: 0, fontWeight: 600 }}>Total: ${Number(p.total).toFixed(2)}</p>

@@ -36,7 +36,21 @@ function esStockBajo(producto) {
 // Toda unidad de venta nueva arranca en costo 0 hasta la primera compra que
 // la incluya.
 function filaVacia() {
-  return { id: null, nombre_unidad: '', factor_conversion_base: 1, costo_vigente: 0, precio_venta: 0 }
+  return {
+    id: null,
+    nombre_unidad: '',
+    factor_conversion_base: 1,
+    costo_vigente: 0,
+    precio_venta: 0,
+    precio_promocional: '',
+  }
+}
+
+// Vacío o 0 = sin promo: se guarda null (ver schema_precio_promocional.sql,
+// que además rechaza 0/negativos del lado de la base).
+function precioPromocionalParaGuardar(valor) {
+  const numero = Number(valor)
+  return numero > 0 ? numero : null
 }
 
 export function Productos() {
@@ -129,6 +143,7 @@ export function Productos() {
         factor_conversion_base: u.factor_conversion_base,
         costo_vigente: u.costo_vigente,
         precio_venta: u.precio_venta,
+        precio_promocional: u.precio_promocional ?? '',
       })),
     )
     setUnidadesEliminadas([])
@@ -169,6 +184,19 @@ export function Productos() {
       return
     }
 
+    const promoInvalida = unidadesValidas.find((u) => {
+      const promo = precioPromocionalParaGuardar(u.precio_promocional)
+      return promo !== null && promo >= Number(u.precio_venta)
+    })
+
+    if (promoInvalida) {
+      setMensaje({
+        tipo: 'error',
+        texto: `El precio promocional de "${promoInvalida.nombre_unidad}" tiene que ser menor que su precio normal.`,
+      })
+      return
+    }
+
     setGuardando(true)
 
     if (editandoId) {
@@ -197,7 +225,13 @@ export function Productos() {
         operaciones.push(
           supabase
             .from('unidades_venta_producto')
-            .insert(nuevas.map(({ id, ...u }) => ({ ...u, producto_id: editandoId }))),
+            .insert(
+              nuevas.map(({ id, ...u }) => ({
+                ...u,
+                precio_promocional: precioPromocionalParaGuardar(u.precio_promocional),
+                producto_id: editandoId,
+              })),
+            ),
         )
       }
 
@@ -210,6 +244,7 @@ export function Productos() {
               factor_conversion_base: Number(u.factor_conversion_base),
               costo_vigente: Number(u.costo_vigente),
               precio_venta: Number(u.precio_venta),
+              precio_promocional: precioPromocionalParaGuardar(u.precio_promocional),
             })
             .eq('id', u.id),
         )
@@ -262,6 +297,7 @@ export function Productos() {
         factor_conversion_base: Number(u.factor_conversion_base),
         costo_vigente: Number(u.costo_vigente),
         precio_venta: Number(u.precio_venta),
+        precio_promocional: precioPromocionalParaGuardar(u.precio_promocional),
         producto_id: producto.id,
       })),
     )
@@ -378,6 +414,7 @@ export function Productos() {
                   <th>Unidad</th>
                   <th>Factor</th>
                   <th>Precio</th>
+                  <th>Precio Promocional (Opcional)</th>
                   <th></th>
                 </tr>
               </thead>
@@ -418,6 +455,17 @@ export function Productos() {
                       />
                     </td>
                     <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="Sin promo"
+                        value={u.precio_promocional}
+                        onChange={(e) => actualizarFilaUnidad(i, 'precio_promocional', e.target.value)}
+                        style={{ width: 110 }}
+                      />
+                    </td>
+                    <td>
                       <button
                         type="button"
                         className="staff-btn staff-btn-secundario"
@@ -437,6 +485,10 @@ export function Productos() {
             <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
               El "factor" indica cuánto stock consume 1 unidad vendida (ej: si el stock se mide
               en kilos y la unidad es "Kilo", el factor es 1).
+            </p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+              Precio promocional: si dejás este campo vacío, el producto se vende a su precio
+              normal. Si le ponés un precio, aparecerá automáticamente en la sección Promociones.
             </p>
 
             {mensaje && (
@@ -506,6 +558,7 @@ export function Productos() {
                       {producto.unidades_venta_producto?.map((unidad) => (
                         <div key={unidad.id}>
                           {unidad.nombre_unidad} — ${unidad.precio_venta}
+                          {unidad.precio_promocional != null && ` (promo $${unidad.precio_promocional})`}
                         </div>
                       ))}
                     </td>
