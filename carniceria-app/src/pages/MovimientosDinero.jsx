@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { SeccionTabs } from '../components/SeccionTabs'
+
+const TABS_DINERO = [
+  { to: '/movimientos-dinero', label: 'Movimientos' },
+  { to: '/gastos', label: 'Gastos' },
+]
 
 const FILAS_POR_PAGINA = 20
 
@@ -124,6 +130,7 @@ export function MovimientosDinero() {
 
   return (
     <div style={{ maxWidth: 900 }}>
+      <SeccionTabs tabs={TABS_DINERO} />
       <h1>Movimientos de dinero</h1>
 
       <div className="movimientos-resumen">

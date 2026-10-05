@@ -3,6 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
 import { telefonoValidoWhatsApp, linkWhatsApp } from '../lib/whatsapp'
+import { SeccionTabs } from '../components/SeccionTabs'
+
+const TABS_COMPRAS = [
+  { to: '/compras', label: 'Cargar compra' },
+  { to: '/proveedores', label: 'Proveedores' },
+  { to: '/plantillas-despiece', label: 'Plantillas de despiece' },
+]
 
 export function Proveedores() {
   const navigate = useNavigate()
@@ -124,6 +131,7 @@ export function Proveedores() {
 
   return (
     <div style={{ maxWidth: 760 }}>
+      <SeccionTabs tabs={TABS_COMPRAS} />
       <h1>Proveedores</h1>
 
       <div className="staff-card">

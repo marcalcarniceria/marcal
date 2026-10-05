@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { SeccionTabs } from '../components/SeccionTabs'
+
+const TABS_CAJA = [
+  { to: '/cajero', label: 'Vender' },
+  { to: '/cierre-caja', label: 'Cierre de caja', secundaria: true },
+]
 
 const TOP_N_MAS_VENDIDOS = 18
 
@@ -348,6 +354,7 @@ export function Cajero() {
 
   return (
     <div style={{ maxWidth: 1100 }}>
+      <SeccionTabs tabs={TABS_CAJA} />
       <h1>Caja — {usuario?.nombre}</h1>
 
       {combos.length > 0 && (

@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { SeccionTabs } from '../components/SeccionTabs'
+
+const TABS_COMPRAS = [
+  { to: '/compras', label: 'Cargar compra' },
+  { to: '/proveedores', label: 'Proveedores' },
+  { to: '/plantillas-despiece', label: 'Plantillas de despiece' },
+]
 
 function lineaVacia() {
   return { producto_destino_id: '', porcentaje_rendimiento: '' }
@@ -115,6 +122,7 @@ export function PlantillasDespiece() {
 
   return (
     <div style={{ maxWidth: 760 }}>
+      <SeccionTabs tabs={TABS_COMPRAS} />
       <h1>Plantillas de despiece</h1>
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
         Reparten el peso y costo de una compra (ej. media res) entre varios productos destino según

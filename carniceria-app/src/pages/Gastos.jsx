@@ -2,6 +2,12 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { SeccionTabs } from '../components/SeccionTabs'
+
+const TABS_DINERO = [
+  { to: '/movimientos-dinero', label: 'Movimientos' },
+  { to: '/gastos', label: 'Gastos' },
+]
 
 function hoyLocal() {
   const d = new Date()
@@ -95,6 +101,7 @@ export function Gastos() {
 
   return (
     <div style={{ maxWidth: 680 }}>
+      <SeccionTabs tabs={TABS_DINERO} />
       <h1>Gastos</h1>
 
       <div className="staff-card">

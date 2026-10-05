@@ -2,6 +2,13 @@ import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { SeccionTabs } from '../components/SeccionTabs'
+
+const TABS_COMPRAS = [
+  { to: '/compras', label: 'Cargar compra' },
+  { to: '/proveedores', label: 'Proveedores' },
+  { to: '/plantillas-despiece', label: 'Plantillas de despiece' },
+]
 
 function resumenDetalle(detalle) {
   if (!detalle || detalle.length === 0) return '—'
@@ -534,6 +541,7 @@ export function CompraProveedor() {
 
   return (
     <div style={{ maxWidth: 1300 }}>
+      <SeccionTabs tabs={TABS_COMPRAS} />
       <h1>Compra a proveedor</h1>
 
       <div className="staff-card">
@@ -1019,3 +1027,4 @@ export function CompraProveedor() {
     </div>
   )
 }
+//a

@@ -2,6 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { SeccionTabs } from '../components/SeccionTabs'
+
+const TABS_CAJA = [
+  { to: '/cajero', label: 'Vender' },
+  { to: '/cierre-caja', label: 'Cierre de caja', secundaria: true },
+]
 
 const METODO_EFECTIVO = 'Efectivo'
 const FILAS_POR_PAGINA = 20
@@ -247,6 +253,7 @@ export function CierreCaja() {
 
   return (
     <div style={{ maxWidth: 1200 }}>
+      <SeccionTabs tabs={TABS_CAJA} />
       <h1>Cierre de caja</h1>
 
       <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
