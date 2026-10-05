@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { to: '/cierre-caja', label: 'Cierre de caja' },
   { to: '/compras', label: 'Compras' },
   { to: '/proveedores', label: 'Proveedores' },
+  { to: '/zonas-envio', label: 'Zonas de envío' },
   { to: '/plantillas-despiece', label: 'Plantillas de despiece' },
   { to: '/movimientos-stock', label: 'Movimientos de stock' },
   { to: '/gastos', label: 'Gastos' },

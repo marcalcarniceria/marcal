@@ -8,6 +8,7 @@ import { Cajero } from './pages/Cajero'
 import { CierreCaja } from './pages/CierreCaja'
 import { CompraProveedor } from './pages/CompraProveedor'
 import { Proveedores } from './pages/Proveedores'
+import { ZonasEnvio } from './pages/ZonasEnvio'
 import { PlantillasDespiece } from './pages/PlantillasDespiece'
 import { MovimientosStock } from './pages/MovimientosStock'
 import { Gastos } from './pages/Gastos'
@@ -38,6 +39,7 @@ function App() {
         <Route path="/cierre-caja" element={<CierreCaja />} />
         <Route path="/compras" element={<CompraProveedor />} />
         <Route path="/proveedores" element={<Proveedores />} />
+        <Route path="/zonas-envio" element={<ZonasEnvio />} />
         <Route path="/plantillas-despiece" element={<PlantillasDespiece />} />
         <Route path="/movimientos-stock" element={<MovimientosStock />} />
         <Route path="/gastos" element={<Gastos />} />
