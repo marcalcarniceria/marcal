@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { validarImagen, subirImagen, borrarImagenAnterior } from '../lib/imagenesStorage'
 
 // Un combo no tiene stock propio: es una receta de productos físicos (ver
 // schema_combos.sql). Cada ingrediente es producto + unidad de venta +
@@ -14,6 +16,9 @@ function formatoPrecio(valor) {
 }
 
 export function AdminCombos() {
+  const { usuario } = useAuth()
+  const esDueno = usuario?.rol === 'dueño'
+
   const [combos, setCombos] = useState([])
   const [productos, setProductos] = useState([])
   // Stock virtual por combo (solo activos), de obtener_combos_tienda.
@@ -27,8 +32,18 @@ export function AdminCombos() {
   const [nombre, setNombre] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [precio, setPrecio] = useState('')
-  const [imagenUrl, setImagenUrl] = useState('')
   const [ingredientes, setIngredientes] = useState([ingredienteVacio()])
+
+  // Mismo patrón que Productos.jsx: imagenUrlActual es la que ya está
+  // guardada (si se está editando); imagenArchivo es un File nuevo recién
+  // elegido, todavía sin subir; quitarImagen marca "borrar la que había"
+  // al guardar. Los tres son independientes porque recién se resuelven en
+  // guardarCombo, no al tocar el input.
+  const [imagenUrlActual, setImagenUrlActual] = useState(null)
+  const [imagenArchivo, setImagenArchivo] = useState(null)
+  const [imagenPreview, setImagenPreview] = useState(null)
+  const [imagenError, setImagenError] = useState(null)
+  const [quitarImagen, setQuitarImagen] = useState(false)
 
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
@@ -84,9 +99,37 @@ export function AdminCombos() {
     setNombre('')
     setDescripcion('')
     setPrecio('')
-    setImagenUrl('')
     setIngredientes([ingredienteVacio()])
+    setImagenUrlActual(null)
+    setImagenArchivo(null)
+    setImagenPreview(null)
+    setImagenError(null)
+    setQuitarImagen(false)
     setMensaje(null)
+  }
+
+  function elegirImagen(e) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // permite re-elegir el mismo archivo después de un error
+    if (!file) return
+
+    const errorValidacion = validarImagen(file)
+    if (errorValidacion) {
+      setImagenError(errorValidacion)
+      return
+    }
+
+    setImagenError(null)
+    setImagenArchivo(file)
+    setQuitarImagen(false)
+    setImagenPreview(URL.createObjectURL(file))
+  }
+
+  function quitarImagenSeleccionada() {
+    setImagenArchivo(null)
+    setImagenPreview(null)
+    setImagenError(null)
+    setQuitarImagen(true)
   }
 
   function abrirNuevo() {
@@ -99,7 +142,11 @@ export function AdminCombos() {
     setNombre(combo.nombre)
     setDescripcion(combo.descripcion ?? '')
     setPrecio(String(combo.precio_fijo))
-    setImagenUrl(combo.imagen_url ?? '')
+    setImagenUrlActual(combo.imagen_url ?? null)
+    setImagenArchivo(null)
+    setImagenPreview(null)
+    setImagenError(null)
+    setQuitarImagen(false)
     setIngredientes(
       combo.combo_ingredientes.length > 0
         ? combo.combo_ingredientes.map((ci) => ({
@@ -172,13 +219,34 @@ export function AdminCombos() {
     }
 
     setGuardando(true)
+
+    // La imagen se resuelve ANTES del guardar_combo para poder mandar la
+    // URL final en un solo round-trip (igual que Productos.jsx) -- si la
+    // subida falla, nunca se pierde el resto: sigue con la url que ya
+    // había (o null) y solo avisa en el mensaje final.
+    let imagenUrlParaGuardar = imagenUrlActual
+    let imagenUrlABorrar = null
+    let avisoImagen = null
+
+    if (quitarImagen) {
+      imagenUrlABorrar = imagenUrlActual
+      imagenUrlParaGuardar = null
+    } else if (imagenArchivo) {
+      try {
+        imagenUrlParaGuardar = await subirImagen(`combo-${editandoId ?? 'nuevo'}`, imagenArchivo)
+        imagenUrlABorrar = imagenUrlActual
+      } catch (e) {
+        avisoImagen = `No se pudo subir la imagen (${e.message}). El resto de los cambios se guardó igual.`
+      }
+    }
+
     const { error } = await supabase.rpc('guardar_combo', {
       p_combo_id: editandoId,
       p_sucursal_id: SUCURSAL_ID,
       p_nombre: nombre.trim(),
       p_descripcion: descripcion.trim() || null,
       p_precio_fijo: Number(precio),
-      p_imagen_url: imagenUrl.trim() || null,
+      p_imagen_url: imagenUrlParaGuardar,
       p_ingredientes: ingredientesValidos.map((ing) => ({
         producto_id: ing.producto_id,
         unidad_venta_id: ing.unidad_venta_id,
@@ -192,7 +260,13 @@ export function AdminCombos() {
       return
     }
 
-    setMensaje({ tipo: 'exito', texto: editandoId ? 'Combo actualizado.' : 'Combo creado.' })
+    if (imagenUrlABorrar) await borrarImagenAnterior(imagenUrlABorrar)
+
+    const textoBase = editandoId ? 'Combo actualizado.' : 'Combo creado.'
+    setMensaje({
+      tipo: avisoImagen ? 'error' : 'exito',
+      texto: avisoImagen ? `${textoBase} ${avisoImagen}` : textoBase,
+    })
     resetForm()
     setMostrarForm(false)
     setRecarga((n) => n + 1)
@@ -279,26 +353,48 @@ export function AdminCombos() {
                   style={{ width: 160 }}
                 />
               </label>
-              <label>
-                <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>Imagen (opcional)</div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginBottom: '0.2rem' }}>
-                  Pegá el link de una imagen (ej: /images/combos.jpg o una dirección https://...).
-                </div>
-                <input
-                  type="text"
-                  placeholder="https://..."
-                  value={imagenUrl}
-                  onChange={(e) => setImagenUrl(e.target.value)}
-                  style={{ width: '100%' }}
-                />
-              </label>
-              {imagenUrl.trim() && (
-                <img
-                  src={imagenUrl.trim()}
-                  alt="Vista previa del combo"
-                  style={{ width: 200, aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: 8, border: '1px solid var(--color-border)' }}
-                />
-              )}
+              <div>
+                <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>Imagen del combo (opcional)</div>
+                {(() => {
+                  const imagenAMostrar = imagenPreview ?? (quitarImagen ? null : imagenUrlActual)
+                  return (
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                      <div className="staff-imagen-preview">
+                        {imagenAMostrar ? (
+                          <img src={imagenAMostrar} alt="" />
+                        ) : (
+                          <span className="staff-imagen-preview-vacia">Sin foto</span>
+                        )}
+                      </div>
+                      <div>
+                        {esDueno ? (
+                          <>
+                            <input type="file" accept="image/*" onChange={elegirImagen} />
+                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.3rem' }}>
+                              JPG, PNG o WEBP. Máximo 2 MB.
+                            </div>
+                            {imagenError && <p className="staff-mensaje-error" style={{ marginTop: '0.3rem' }}>{imagenError}</p>}
+                            {imagenAMostrar && (
+                              <button
+                                type="button"
+                                className="staff-btn staff-btn-secundario"
+                                onClick={quitarImagenSeleccionada}
+                                style={{ marginTop: '0.4rem' }}
+                              >
+                                Quitar imagen
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                            Solo el dueño puede cambiar la foto.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
             </div>
 
             <h2>Ingredientes</h2>

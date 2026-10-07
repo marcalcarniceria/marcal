@@ -1,6 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { descargarExcel } from '../lib/exportarExcel'
+
+function BotonExportar({ onClick, disabled }) {
+  return (
+    <button
+      type="button"
+      className="staff-btn staff-btn-secundario reportes-exportar-btn"
+      onClick={onClick}
+      disabled={disabled}
+    >
+      Exportar
+    </button>
+  )
+}
 
 const OPCIONES_RANGO = [
   { valor: 'hoy', label: 'Hoy' },
@@ -82,9 +96,25 @@ function ReporteGanancias({ desde, hasta }) {
     }
   }, [desde, hasta])
 
+  function exportar() {
+    descargarExcel(`ganancias_${desde}_a_${hasta}.xlsx`, [
+      {
+        nombre: 'Ganancias',
+        filas: [
+          { Concepto: 'Ganancia total', Monto: Number(datos.ganancia_total) },
+          { Concepto: 'Mostrador', Monto: Number(datos.ganancia_ventas) },
+          { Concepto: 'Tienda online', Monto: Number(datos.ganancia_pedidos) },
+        ],
+      },
+    ])
+  }
+
   return (
     <div className="staff-card reportes-card reportes-card-principal">
-      <h2 className="reportes-card-titulo">Ganancias por período</h2>
+      <div className="reportes-card-header">
+        <h2 className="reportes-card-titulo">Ganancias por período</h2>
+        <BotonExportar onClick={exportar} disabled={!datos || loading} />
+      </div>
 
       {loading && <p className="reportes-placeholder">Calculando...</p>}
       {error && <p className="staff-mensaje-error">{error}</p>}
@@ -173,9 +203,24 @@ function ReporteCanales({ desde, hasta }) {
   const pctMostrador = total > 0 ? (Number(datos.total_mostrador) / total) * 100 : 0
   const pctOnline = total > 0 ? (Number(datos.total_online) / total) * 100 : 0
 
+  function exportar() {
+    descargarExcel(`canales_${desde}_a_${hasta}.xlsx`, [
+      {
+        nombre: 'Canales',
+        filas: [
+          { Canal: 'Mostrador', Total: Number(datos.total_mostrador) },
+          { Canal: 'Tienda online', Total: Number(datos.total_online) },
+        ],
+      },
+    ])
+  }
+
   return (
     <div className="staff-card reportes-card">
-      <h2 className="reportes-card-titulo">Mostrador vs. Tienda online</h2>
+      <div className="reportes-card-header">
+        <h2 className="reportes-card-titulo">Mostrador vs. Tienda online</h2>
+        <BotonExportar onClick={exportar} disabled={!datos || loading} />
+      </div>
 
       {loading && <p className="reportes-placeholder">Calculando...</p>}
       {error && <p className="staff-mensaje-error">{error}</p>}
@@ -253,9 +298,27 @@ function ReporteCostos({ desde, hasta }) {
     }
   }, [desde, hasta])
 
+  function exportar() {
+    descargarExcel(`costos_${desde}_a_${hasta}.xlsx`, [
+      {
+        nombre: 'Costos',
+        filas: filas.map((f) => ({
+          Producto: f.producto_nombre,
+          Unidad: f.unidad_nombre,
+          'Costo inicial': Number(f.costo_inicial),
+          'Costo final': Number(f.costo_final),
+          Cambios: f.cantidad_cambios,
+        })),
+      },
+    ])
+  }
+
   return (
     <div className="staff-card reportes-card">
-      <h2 className="reportes-card-titulo">Evolución de costos por producto</h2>
+      <div className="reportes-card-header">
+        <h2 className="reportes-card-titulo">Evolución de costos por producto</h2>
+        <BotonExportar onClick={exportar} disabled={!filas || loading} />
+      </div>
 
       {loading && <p className="reportes-placeholder">Calculando...</p>}
       {error && <p className="staff-mensaje-error">{error}</p>}
@@ -354,9 +417,27 @@ function ReporteStockBajo() {
     }
   }, [])
 
+  function exportar() {
+    descargarExcel('stock_bajo.xlsx', [
+      {
+        nombre: 'Stock bajo',
+        filas: filas.map((f) => ({
+          Producto: f.producto_nombre,
+          'Stock actual': Number(f.stock_actual),
+          'Stock mínimo': Number(f.stock_minimo),
+          Faltante: Number(f.faltante),
+          'Proveedor sugerido': f.proveedor_sugerido ?? '',
+        })),
+      },
+    ])
+  }
+
   return (
     <div className="staff-card reportes-card reportes-card-ancha">
-      <h2 className="reportes-card-titulo">Stock bajo + sugerencia de compra</h2>
+      <div className="reportes-card-header">
+        <h2 className="reportes-card-titulo">Stock bajo + sugerencia de compra</h2>
+        <BotonExportar onClick={exportar} disabled={!filas || loading} />
+      </div>
       <p className="reportes-nota" style={{ marginTop: 0, marginBottom: '0.85rem' }}>
         Tiempo real, no depende del rango de fechas. "Proveedor sugerido" es el último proveedor que
         vendió ese producto (no hay un dato de "proveedor habitual" guardado) -- puede no ser el que
@@ -426,9 +507,24 @@ function ReporteArqueos({ desde, hasta }) {
     }
   }, [desde, hasta])
 
+  function exportar() {
+    descargarExcel(`arqueos_${desde}_a_${hasta}.xlsx`, [
+      {
+        nombre: 'Arqueos',
+        filas: datos.detalle_diferencias.map((d) => ({
+          Fecha: d.fecha,
+          Diferencia: Number(d.diferencia),
+        })),
+      },
+    ])
+  }
+
   return (
     <div className="staff-card reportes-card">
-      <h2 className="reportes-card-titulo">Historial de arqueos de caja</h2>
+      <div className="reportes-card-header">
+        <h2 className="reportes-card-titulo">Historial de arqueos de caja</h2>
+        <BotonExportar onClick={exportar} disabled={!datos || loading} />
+      </div>
 
       {loading && <p className="reportes-placeholder">Calculando...</p>}
       {error && <p className="staff-mensaje-error">{error}</p>}
@@ -502,9 +598,26 @@ function ReporteComisiones({ desde, hasta }) {
     }
   }, [desde, hasta])
 
+  function exportar() {
+    descargarExcel(`comisiones_${desde}_a_${hasta}.xlsx`, [
+      {
+        nombre: 'Comisiones',
+        filas: datos.por_metodo.map((m) => ({
+          Método: m.metodo_nombre,
+          Movido: Number(m.total_movido),
+          '% Comisión': Number(m.porcentaje_comision),
+          Comisión: Number(m.comision_monto),
+        })),
+      },
+    ])
+  }
+
   return (
     <div className="staff-card reportes-card">
-      <h2 className="reportes-card-titulo">Comisiones por método de pago</h2>
+      <div className="reportes-card-header">
+        <h2 className="reportes-card-titulo">Comisiones por método de pago</h2>
+        <BotonExportar onClick={exportar} disabled={!datos || loading} />
+      </div>
 
       {loading && <p className="reportes-placeholder">Calculando...</p>}
       {error && <p className="staff-mensaje-error">{error}</p>}
@@ -566,9 +679,31 @@ function ReporteDeudas() {
     }
   }, [])
 
+  function exportar() {
+    descargarExcel('deudas_y_fiados.xlsx', [
+      {
+        nombre: 'Proveedores',
+        filas: datos.deuda_proveedores.map((p) => ({
+          Proveedor: p.proveedor_nombre,
+          Saldo: Number(p.saldo),
+        })),
+      },
+      {
+        nombre: 'Fiados',
+        filas: datos.saldo_fiados.map((c) => ({
+          Cliente: c.cliente_nombre,
+          Saldo: Number(c.saldo),
+        })),
+      },
+    ])
+  }
+
   return (
     <div className="staff-card reportes-card reportes-card-ancha">
-      <h2 className="reportes-card-titulo">Deuda a proveedores y saldo de fiados</h2>
+      <div className="reportes-card-header">
+        <h2 className="reportes-card-titulo">Deuda a proveedores y saldo de fiados</h2>
+        <BotonExportar onClick={exportar} disabled={!datos || loading} />
+      </div>
       <p className="reportes-nota" style={{ marginTop: 0, marginBottom: '0.85rem' }}>
         Saldo en tiempo real, no depende del rango de fechas de arriba.
       </p>
@@ -617,9 +752,24 @@ function ReporteRanking({ desde, hasta }) {
   const top10 = filas?.slice(0, 10) ?? []
   const menos10 = filas ? [...filas].reverse().slice(0, 10) : []
 
+  function exportar() {
+    descargarExcel(`ranking_${desde}_a_${hasta}.xlsx`, [
+      {
+        nombre: 'Ranking',
+        filas: filas.map((f) => ({
+          Producto: f.producto_nombre,
+          'Cantidad total': Number(f.cantidad_total),
+        })),
+      },
+    ])
+  }
+
   return (
     <div className="staff-card reportes-card reportes-card-ancha">
-      <h2 className="reportes-card-titulo">Ranking de productos</h2>
+      <div className="reportes-card-header">
+        <h2 className="reportes-card-titulo">Ranking de productos</h2>
+        <BotonExportar onClick={exportar} disabled={!filas || loading} />
+      </div>
 
       {loading && <p className="reportes-placeholder">Calculando...</p>}
       {error && <p className="staff-mensaje-error">{error}</p>}

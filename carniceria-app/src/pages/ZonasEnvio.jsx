@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 // Solo informativo (ver nota en el card de config): ida y vuelta, litros
 // cada 100km convertidos a litros/km, por el precio de la nafta.
@@ -41,6 +42,9 @@ export function ZonasEnvio() {
   const [textoMasivo, setTextoMasivo] = useState('')
   const [cargandoMasivo, setCargandoMasivo] = useState(false)
   const [resultadoMasivo, setResultadoMasivo] = useState(null)
+
+  const [zonaAEliminar, setZonaAEliminar] = useState(null)
+  const [eliminando, setEliminando] = useState(false)
 
   async function fetchTodo() {
     setLoading(true)
@@ -128,8 +132,13 @@ export function ZonasEnvio() {
     fetchTodo()
   }
 
-  async function eliminarZona(id) {
-    const { error: errorEliminar } = await supabase.from('zonas_envio').delete().eq('id', id)
+  async function confirmarEliminarZona() {
+    if (!zonaAEliminar) return
+    setEliminando(true)
+    const { error: errorEliminar } = await supabase.from('zonas_envio').delete().eq('id', zonaAEliminar.id)
+    setEliminando(false)
+    setZonaAEliminar(null)
+
     if (errorEliminar) {
       setMensaje({ tipo: 'error', texto: errorEliminar.message })
       return
@@ -540,7 +549,7 @@ export function ZonasEnvio() {
                         </button>
                       </td>
                       <td>
-                        <button type="button" className="staff-btn staff-btn-secundario" onClick={() => eliminarZona(z.id)}>
+                        <button type="button" className="staff-btn staff-btn-secundario" onClick={() => setZonaAEliminar(z)}>
                           Eliminar
                         </button>
                       </td>
@@ -552,6 +561,15 @@ export function ZonasEnvio() {
           )}
         </div>
       )}
+
+      <ConfirmModal
+        abierto={Boolean(zonaAEliminar)}
+        titulo="Eliminar zona"
+        mensaje={`¿Eliminar la zona "${zonaAEliminar?.nombre}"? Esta acción no se puede deshacer.`}
+        procesando={eliminando}
+        onConfirmar={confirmarEliminarZona}
+        onCancelar={() => setZonaAEliminar(null)}
+      />
     </div>
   )
 }

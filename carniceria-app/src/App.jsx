@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { AppLayout } from './components/AppLayout'
 import { ReportesPage } from './pages/ReportesPage'
+import { GestionUsuarios } from './pages/GestionUsuarios'
 import { Productos } from './pages/Productos'
 import { AdminCombos } from './pages/AdminCombos'
 import { Cajero } from './pages/Cajero'
@@ -46,6 +47,20 @@ function App() {
         <Route path="/movimientos-dinero" element={<MovimientosDinero />} />
         <Route path="/fiados" element={<Fiados />} />
         <Route path="/pedidos-online" element={<PedidosOnline />} />
+      </Route>
+
+      {/* /usuarios aparte del resto: exige rolRequerido="dueño" a nivel
+          de ruta (no solo escondido del sidebar) porque esta pantalla
+          puede crear cuentas y ver datos de clientes -- ver nota en
+          ProtectedRoute.jsx. */}
+      <Route
+        element={
+          <ProtectedRoute rolRequerido="dueño">
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/usuarios" element={<GestionUsuarios />} />
       </Route>
 
       {/* Tienda online: rutas públicas, sin login */}

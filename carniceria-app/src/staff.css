@@ -395,6 +395,23 @@
   margin-bottom: 0.6rem;
 }
 
+.reportes-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.reportes-card-header .reportes-card-titulo {
+  margin-bottom: 0.6rem;
+}
+
+.reportes-exportar-btn {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
 /* Ganancias por período: es el número que más le importa al dueño de
    un vistazo -- se destaca con acento de color en vez de pesar igual
    que el resto de las tarjetas (todas compitiendo por atención). */
@@ -1087,6 +1104,47 @@
   justify-content: center;
   z-index: 50;
   padding: 1rem;
+}
+
+/* Modal de confirmación genérico (eliminar, cancelar, etc.) -- z-index por
+   encima de drawers/toasts para que siempre quede arriba de todo. */
+.staff-confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 23, 20, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 1rem;
+}
+
+.staff-confirm-card {
+  background: var(--color-surface);
+  width: 100%;
+  max-width: 380px;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  animation: staff-fade-up 0.2s var(--ease) both;
+}
+
+.staff-confirm-titulo {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.staff-confirm-mensaje {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.staff-confirm-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
 }
 
 /* Panel lateral (drawer) genérico — confirmar pedido de compra, etc. */

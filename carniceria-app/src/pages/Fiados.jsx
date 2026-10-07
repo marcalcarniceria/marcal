@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
 
+const FILAS_POR_PAGINA = 20
+
 export function Fiados() {
   const [metodosPago, setMetodosPago] = useState([])
+  const [busqueda, setBusqueda] = useState('')
+  const [pagina, setPagina] = useState(0)
 
   const [clientes, setClientes] = useState([])
   const [loading, setLoading] = useState(true)
@@ -66,6 +70,23 @@ export function Fiados() {
   useEffect(() => {
     fetchClientesConSaldo()
   }, [])
+
+  const clientesFiltrados = useMemo(() => {
+    const buscado = busqueda.trim().toLowerCase()
+    if (!buscado) return clientes
+    return clientes.filter((c) => c.nombre.toLowerCase().includes(buscado))
+  }, [clientes, busqueda])
+
+  useEffect(() => {
+    setPagina(0)
+  }, [busqueda])
+
+  const totalFilas = clientesFiltrados.length
+  const haySiguiente = (pagina + 1) * FILAS_POR_PAGINA < totalFilas
+  const clientesPagina = clientesFiltrados.slice(
+    pagina * FILAS_POR_PAGINA,
+    pagina * FILAS_POR_PAGINA + FILAS_POR_PAGINA,
+  )
 
   async function crearCliente() {
     setMensaje(null)
@@ -133,28 +154,58 @@ export function Fiados() {
         <>
           <div className="staff-card">
             <h2>Saldo por cliente</h2>
+            <input
+              type="text"
+              placeholder="Buscar por nombre..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              style={{ marginBottom: '0.75rem' }}
+            />
             {clientes.length === 0 && <p>No hay clientes fiados cargados.</p>}
-            {clientes.length > 0 && (
-              <table className="staff-table">
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Teléfono</th>
-                    <th>Debe</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {clientes.map((c) => (
-                    <tr key={c.id}>
-                      <td>{c.nombre}</td>
-                      <td>{c.telefono}</td>
-                      <td className={c.saldo > 0 ? 'staff-mensaje-error' : ''}>
-                        ${c.saldo.toFixed(2)}
-                      </td>
+            {clientes.length > 0 && totalFilas === 0 && <p>Ningún cliente coincide con la búsqueda.</p>}
+            {totalFilas > 0 && (
+              <>
+                <table className="staff-table">
+                  <thead>
+                    <tr>
+                      <th>Cliente</th>
+                      <th>Teléfono</th>
+                      <th>Debe</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {clientesPagina.map((c) => (
+                      <tr key={c.id}>
+                        <td>{c.nombre}</td>
+                        <td>{c.telefono}</td>
+                        <td className={c.saldo > 0 ? 'staff-mensaje-error' : ''}>
+                          ${c.saldo.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.75rem' }}>
+                  <button
+                    type="button"
+                    className="staff-btn staff-btn-secundario"
+                    onClick={() => setPagina((p) => p - 1)}
+                    disabled={pagina === 0}
+                  >
+                    ← Anterior
+                  </button>
+                  <span>Página {pagina + 1}</span>
+                  <button
+                    type="button"
+                    className="staff-btn staff-btn-secundario"
+                    onClick={() => setPagina((p) => p + 1)}
+                    disabled={!haySiguiente}
+                  >
+                    Siguiente →
+                  </button>
+                </div>
+              </>
             )}
           </div>
 

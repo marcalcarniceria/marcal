@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
 import { telefonoValidoWhatsApp, linkWhatsApp } from '../lib/whatsapp'
 import { SeccionTabs } from '../components/SeccionTabs'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 const TABS_COMPRAS = [
   { to: '/compras', label: 'Cargar compra' },
@@ -24,6 +25,9 @@ export function Proveedores() {
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
   const [repitiendoId, setRepitiendoId] = useState(null)
+  const [busqueda, setBusqueda] = useState('')
+  const [proveedorAEliminar, setProveedorAEliminar] = useState(null)
+  const [eliminando, setEliminando] = useState(false)
 
   async function fetchProveedores() {
     setLoading(true)
@@ -44,6 +48,12 @@ export function Proveedores() {
   useEffect(() => {
     fetchProveedores()
   }, [])
+
+  const proveedoresFiltrados = useMemo(() => {
+    const buscado = busqueda.trim().toLowerCase()
+    if (!buscado) return proveedores
+    return proveedores.filter((p) => p.nombre.toLowerCase().includes(buscado))
+  }, [proveedores, busqueda])
 
   async function repetirUltimaCompra(proveedorId) {
     setMensaje(null)
@@ -120,8 +130,13 @@ export function Proveedores() {
     fetchProveedores()
   }
 
-  async function eliminarProveedor(id) {
-    const { error } = await supabase.from('proveedores').delete().eq('id', id)
+  async function confirmarEliminarProveedor() {
+    if (!proveedorAEliminar) return
+    setEliminando(true)
+    const { error } = await supabase.from('proveedores').delete().eq('id', proveedorAEliminar.id)
+    setEliminando(false)
+    setProveedorAEliminar(null)
+
     if (error) {
       setMensaje({ tipo: 'error', texto: error.message })
       return
@@ -176,8 +191,19 @@ export function Proveedores() {
 
       {!loading && !error && (
         <div className="staff-card">
+          <input
+            type="text"
+            placeholder="Buscar por nombre..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            style={{ marginBottom: '0.75rem' }}
+          />
+
           {proveedores.length === 0 && <p>No hay proveedores cargados.</p>}
-          {proveedores.length > 0 && (
+          {proveedores.length > 0 && proveedoresFiltrados.length === 0 && (
+            <p>Ningún proveedor coincide con la búsqueda.</p>
+          )}
+          {proveedoresFiltrados.length > 0 && (
             <table className="staff-table">
               <thead>
                 <tr>
@@ -189,7 +215,7 @@ export function Proveedores() {
                 </tr>
               </thead>
               <tbody>
-                {proveedores.map((p) => {
+                {proveedoresFiltrados.map((p) => {
                   const valido = telefonoValidoWhatsApp(p.telefono)
                   const tieneCompras = proveedoresConCompras.has(p.id)
                   return (
@@ -237,7 +263,7 @@ export function Proveedores() {
                         <button
                           type="button"
                           className="staff-btn staff-btn-secundario"
-                          onClick={() => eliminarProveedor(p.id)}
+                          onClick={() => setProveedorAEliminar(p)}
                         >
                           Eliminar
                         </button>
@@ -250,6 +276,15 @@ export function Proveedores() {
           )}
         </div>
       )}
+
+      <ConfirmModal
+        abierto={Boolean(proveedorAEliminar)}
+        titulo="Eliminar proveedor"
+        mensaje={`¿Eliminar a "${proveedorAEliminar?.nombre}"? Esta acción no se puede deshacer.`}
+        procesando={eliminando}
+        onConfirmar={confirmarEliminarProveedor}
+        onCancelar={() => setProveedorAEliminar(null)}
+      />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
@@ -30,6 +30,7 @@ export function Gastos() {
 
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
+  const [busqueda, setBusqueda] = useState('')
 
   useEffect(() => {
     supabase
@@ -99,6 +100,12 @@ export function Gastos() {
 
   const totalGastosDia = gastos.reduce((acc, g) => acc + Number(g.monto), 0)
 
+  const gastosFiltrados = useMemo(() => {
+    const buscado = busqueda.trim().toLowerCase()
+    if (!buscado) return gastos
+    return gastos.filter((g) => g.concepto.toLowerCase().includes(buscado))
+  }, [gastos, busqueda])
+
   return (
     <div style={{ maxWidth: 680 }}>
       <SeccionTabs tabs={TABS_DINERO} />
@@ -146,8 +153,20 @@ export function Gastos() {
         <h2>Gastos de hoy</h2>
         {error && <pre>{JSON.stringify(error, null, 2)}</pre>}
         {loading && <p>Cargando...</p>}
-        {!loading && gastos.length === 0 && <p>Sin gastos hoy.</p>}
         {!loading && gastos.length > 0 && (
+          <input
+            type="text"
+            placeholder="Buscar por concepto..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            style={{ marginBottom: '0.75rem' }}
+          />
+        )}
+        {!loading && gastos.length === 0 && <p>Sin gastos hoy.</p>}
+        {!loading && gastos.length > 0 && gastosFiltrados.length === 0 && (
+          <p>Ningún gasto coincide con la búsqueda.</p>
+        )}
+        {!loading && gastosFiltrados.length > 0 && (
           <table className="staff-table">
             <thead>
               <tr>
@@ -157,7 +176,7 @@ export function Gastos() {
               </tr>
             </thead>
             <tbody>
-              {gastos.map((g) => (
+              {gastosFiltrados.map((g) => (
                 <tr key={g.id}>
                   <td>{g.concepto}</td>
                   <td>{g.metodos_pago?.nombre}</td>

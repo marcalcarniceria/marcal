@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
 import { SeccionTabs } from '../components/SeccionTabs'
+import { ConfirmModal } from '../components/ConfirmModal'
 
 const TABS_COMPRAS = [
   { to: '/compras', label: 'Cargar compra' },
@@ -25,6 +26,8 @@ export function PlantillasDespiece() {
 
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
+  const [plantillaAEliminar, setPlantillaAEliminar] = useState(null)
+  const [eliminando, setEliminando] = useState(false)
 
   async function fetchTodo() {
     setLoading(true)
@@ -111,8 +114,13 @@ export function PlantillasDespiece() {
     fetchTodo()
   }
 
-  async function eliminarPlantilla(id) {
-    const { error } = await supabase.from('plantillas_despiece').delete().eq('id', id)
+  async function confirmarEliminarPlantilla() {
+    if (!plantillaAEliminar) return
+    setEliminando(true)
+    const { error } = await supabase.from('plantillas_despiece').delete().eq('id', plantillaAEliminar.id)
+    setEliminando(false)
+    setPlantillaAEliminar(null)
+
     if (error) {
       setMensaje({ tipo: 'error', texto: error.message })
       return
@@ -244,7 +252,7 @@ export function PlantillasDespiece() {
                 <button
                   type="button"
                   className="staff-btn staff-btn-secundario"
-                  onClick={() => eliminarPlantilla(plantilla.id)}
+                  onClick={() => setPlantillaAEliminar(plantilla)}
                 >
                   Eliminar plantilla
                 </button>
@@ -269,6 +277,15 @@ export function PlantillasDespiece() {
           ))}
         </div>
       )}
+
+      <ConfirmModal
+        abierto={Boolean(plantillaAEliminar)}
+        titulo="Eliminar plantilla"
+        mensaje={`¿Eliminar la plantilla "${plantillaAEliminar?.nombre}"? Esta acción no se puede deshacer.`}
+        procesando={eliminando}
+        onConfirmar={confirmarEliminarPlantilla}
+        onCancelar={() => setPlantillaAEliminar(null)}
+      />
     </div>
   )
 }

@@ -41,7 +41,18 @@ export function MovimientosDinero() {
   const [desde, setDesde] = useState(haceDiasLocal(30))
   const [hasta, setHasta] = useState(hoyLocal())
   const [tipoFiltro, setTipoFiltro] = useState('todos')
+  const [busqueda, setBusqueda] = useState('')
+  const [busquedaAplicada, setBusquedaAplicada] = useState('')
   const [pagina, setPagina] = useState(0)
+
+  // Debounce: evita disparar una query por cada tecla tipeada.
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setBusquedaAplicada(busqueda)
+      setPagina(0)
+    }, 400)
+    return () => clearTimeout(id)
+  }, [busqueda])
 
   const [movimientos, setMovimientos] = useState([])
   const [totalFilas, setTotalFilas] = useState(0)
@@ -80,6 +91,7 @@ export function MovimientosDinero() {
     if (desdeISO) query = query.gte('fecha', desdeISO)
     if (hastaISO) query = query.lt('fecha', hastaISO)
     if (tipoFiltro !== 'todos') query = query.eq('tipo', tipoFiltro)
+    if (busquedaAplicada.trim()) query = query.ilike('motivo', `%${busquedaAplicada.trim()}%`)
 
     const desdeFila = pagina * FILAS_POR_PAGINA
     query = query.range(desdeFila, desdeFila + FILAS_POR_PAGINA - 1)
@@ -118,7 +130,7 @@ export function MovimientosDinero() {
   useEffect(() => {
     fetchMovimientos()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [desde, hasta, tipoFiltro, pagina])
+  }, [desde, hasta, tipoFiltro, busquedaAplicada, pagina])
 
   useEffect(() => {
     fetchTotales()
@@ -159,6 +171,12 @@ export function MovimientosDinero() {
           Hasta:{' '}
           <input type="date" value={hasta} onChange={(e) => cambiarHasta(e.target.value)} />
         </label>
+        <input
+          type="text"
+          placeholder="Buscar por motivo..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+        />
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             type="button"

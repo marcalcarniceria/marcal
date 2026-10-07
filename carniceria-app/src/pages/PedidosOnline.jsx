@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
+import { ConfirmModal } from '../components/ConfirmModal'
+
+const FILAS_POR_PAGINA = 10
 
 // 'pagado' YA NO es una opción seleccionable -- el estado ahora refleja
 // solo la etapa física del proceso (preparación/entrega), separado de si
@@ -39,6 +42,10 @@ export function PedidosOnline() {
   const [error, setError] = useState(null)
   const [mensaje, setMensaje] = useState(null)
   const [erroresPorPedido, setErroresPorPedido] = useState({})
+  const [pedidoACancelar, setPedidoACancelar] = useState(null)
+  const [cancelando, setCancelando] = useState(false)
+  const [busqueda, setBusqueda] = useState('')
+  const [pagina, setPagina] = useState(0)
 
   async function fetchPedidos() {
     setLoading(true)
@@ -95,6 +102,22 @@ export function PedidosOnline() {
     fetchPedidos()
   }
 
+  function alCambiarEstado(pedidoId, nuevoEstado) {
+    if (nuevoEstado === 'cancelado') {
+      setPedidoACancelar(pedidoId)
+      return
+    }
+    cambiarEstado(pedidoId, nuevoEstado)
+  }
+
+  async function confirmarCancelacion() {
+    if (!pedidoACancelar) return
+    setCancelando(true)
+    await cambiarEstado(pedidoACancelar, 'cancelado')
+    setCancelando(false)
+    setPedidoACancelar(null)
+  }
+
   async function asignarRepartidor(pedidoId, repartidorId) {
     setMensaje(null)
     const { error } = await supabase
@@ -109,12 +132,37 @@ export function PedidosOnline() {
     fetchPedidos()
   }
 
+  const pedidosFiltrados = useMemo(() => {
+    const buscado = busqueda.trim().toLowerCase()
+    if (!buscado) return pedidos
+    return pedidos.filter((p) => p.cliente_nombre?.toLowerCase().includes(buscado))
+  }, [pedidos, busqueda])
+
+  useEffect(() => {
+    setPagina(0)
+  }, [busqueda])
+
+  const totalFilas = pedidosFiltrados.length
+  const haySiguiente = (pagina + 1) * FILAS_POR_PAGINA < totalFilas
+  const pedidosPagina = pedidosFiltrados.slice(
+    pagina * FILAS_POR_PAGINA,
+    pagina * FILAS_POR_PAGINA + FILAS_POR_PAGINA,
+  )
+
   if (loading) return <p>Cargando pedidos...</p>
   if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>
 
   return (
     <div style={{ maxWidth: 920 }}>
       <h1>Pedidos online</h1>
+
+      <input
+        type="text"
+        placeholder="Buscar por nombre del cliente..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        style={{ marginBottom: '0.75rem' }}
+      />
 
       {mensaje && (
         <p className={mensaje.tipo === 'error' ? 'staff-mensaje-error' : 'staff-mensaje-exito'}>
@@ -123,8 +171,9 @@ export function PedidosOnline() {
       )}
 
       {pedidos.length === 0 && <p>No hay pedidos.</p>}
+      {pedidos.length > 0 && totalFilas === 0 && <p>Ningún pedido coincide con la búsqueda.</p>}
 
-      {pedidos.map((p) => {
+      {pedidosPagina.map((p) => {
         const tieneStockInsuficiente = p.detalle_pedidos.some((d) => d.stock_insuficiente)
 
         return (
@@ -183,7 +232,7 @@ export function PedidosOnline() {
           <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.75rem' }}>
             <label>
               Estado:{' '}
-              <select value={p.estado} onChange={(e) => cambiarEstado(p.id, e.target.value)}>
+              <select value={p.estado} onChange={(e) => alCambiarEstado(p.id, e.target.value)}>
                 {opcionesEstado(p.estado).map((e) => (
                   <option key={e} value={e}>
                     {e}
@@ -226,6 +275,38 @@ export function PedidosOnline() {
         </div>
         )
       })}
+
+      {totalFilas > 0 && (
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', margin: '0.75rem 0' }}>
+          <button
+            type="button"
+            className="staff-btn staff-btn-secundario"
+            onClick={() => setPagina((p) => p - 1)}
+            disabled={pagina === 0}
+          >
+            ← Anterior
+          </button>
+          <span>Página {pagina + 1}</span>
+          <button
+            type="button"
+            className="staff-btn staff-btn-secundario"
+            onClick={() => setPagina((p) => p + 1)}
+            disabled={!haySiguiente}
+          >
+            Siguiente →
+          </button>
+        </div>
+      )}
+
+      <ConfirmModal
+        abierto={Boolean(pedidoACancelar)}
+        titulo="Cancelar pedido"
+        mensaje="¿Cancelar este pedido? Esta acción no se puede deshacer."
+        textoConfirmar="Cancelar pedido"
+        procesando={cancelando}
+        onConfirmar={confirmarCancelacion}
+        onCancelar={() => setPedidoACancelar(null)}
+      />
     </div>
   )
 }

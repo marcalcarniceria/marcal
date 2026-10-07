@@ -34,15 +34,18 @@ export function CarritoProvider({ children }) {
 
   // item: producto { producto_id, unidad_venta_id, ... } o combo
   // { combo_id, ... }. En los dos casos precio_venta es el precio a cobrar
-  // y producto_nombre/unidad_nombre lo que se muestra.
-  function agregarItem(item) {
+  // y producto_nombre/unidad_nombre lo que se muestra. `cantidad` es
+  // opcional (default 1, el botón "Agregar" de cada card) -- "Repetir
+  // pedido" en Mis Pedidos lo usa para sumar de una la cantidad exacta
+  // de cada línea del pedido viejo.
+  function agregarItem(item, cantidad = 1) {
     const clave = claveDe(item)
     setItems((prev) => {
       const existente = prev.find((i) => i.clave === clave)
       if (existente) {
-        return prev.map((i) => (i.clave === clave ? { ...i, cantidad: i.cantidad + 1 } : i))
+        return prev.map((i) => (i.clave === clave ? { ...i, cantidad: i.cantidad + cantidad } : i))
       }
-      return [...prev, { ...item, clave, cantidad: 1 }]
+      return [...prev, { ...item, clave, cantidad }]
     })
   }
 

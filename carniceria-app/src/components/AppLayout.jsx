@@ -73,13 +73,22 @@ function AppLayoutInner() {
           <div className={`staff-sidebar-colapsable${menuMobileAbierto ? ' abierto' : ''}`}>
             <nav className="staff-nav">
               {usuario?.rol === 'dueño' && (
-                <NavLink
-                  to="/reportes"
-                  onClick={cerrarMenuMobile}
-                  className={({ isActive }) => `staff-nav-link${isActive ? ' activo' : ''}`}
-                >
-                  Reportes
-                </NavLink>
+                <>
+                  <NavLink
+                    to="/reportes"
+                    onClick={cerrarMenuMobile}
+                    className={({ isActive }) => `staff-nav-link${isActive ? ' activo' : ''}`}
+                  >
+                    Reportes
+                  </NavLink>
+                  <NavLink
+                    to="/usuarios"
+                    onClick={cerrarMenuMobile}
+                    className={({ isActive }) => `staff-nav-link${isActive ? ' activo' : ''}`}
+                  >
+                    Gestión de usuarios
+                  </NavLink>
+                </>
               )}
               {NAV_ITEMS.map((item) => (
                 <NavLink

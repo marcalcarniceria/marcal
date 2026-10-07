@@ -2,63 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { validarImagen, subirImagen, borrarImagenAnterior } from '../lib/imagenesStorage'
 
 const UNIDADES_COMUNES = ['Kilo', 'Unidad', 'Docena', 'Bandeja', 'Atado', 'Bolsa', 'Cajón']
-
-const IMAGEN_MAX_BYTES = 2 * 1024 * 1024
-const IMAGEN_TIPOS_VALIDOS = ['image/jpeg', 'image/png', 'image/webp']
-
-// Valida ANTES de intentar subir nada -- el input ya filtra con accept,
-// pero accept es solo una sugerencia del selector de archivos, no una
-// garantía (el usuario puede forzar otro tipo), así que se revisa igual acá.
-function validarImagen(file) {
-  if (!IMAGEN_TIPOS_VALIDOS.includes(file.type)) {
-    return 'Formato no permitido. Usá una imagen JPG, PNG o WEBP.'
-  }
-  if (file.size > IMAGEN_MAX_BYTES) {
-    return 'La imagen es muy pesada, probá con una más chica (máximo 2 MB).'
-  }
-  return null
-}
-
-function extensionDeArchivo(file) {
-  const porTipo = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
-  return porTipo[file.type] ?? file.name.split('.').pop().toLowerCase()
-}
-
-// El bucket es público, así que la URL es siempre previsible a partir
-// del path -- se guarda la URL completa en productos.imagen_url (así el
-// frontend de la tienda no necesita saber nada de Storage), pero acá
-// hace falta poder ir de URL a path de nuevo para borrar el archivo
-// viejo al reemplazar o quitar una imagen.
-function pathDesdeUrlImagen(url) {
-  const marca = '/object/public/productos/'
-  const i = url.indexOf(marca)
-  return i === -1 ? null : url.slice(i + marca.length)
-}
-
-async function subirImagenProducto(productoId, file) {
-  const ext = extensionDeArchivo(file)
-  const path = `${productoId}-${Date.now()}.${ext}`
-
-  const { error } = await supabase.storage.from('productos').upload(path, file, {
-    cacheControl: '3600',
-    upsert: false,
-  })
-  if (error) throw error
-
-  const { data } = supabase.storage.from('productos').getPublicUrl(path)
-  return data.publicUrl
-}
-
-// Best-effort: si falla borrar el archivo viejo no es grave (queda un
-// archivo huérfano en Storage, nada más) -- nunca debe cortar el
-// guardado del producto por esto.
-async function borrarImagenAnterior(urlVieja) {
-  const path = pathDesdeUrlImagen(urlVieja)
-  if (!path) return
-  await supabase.storage.from('productos').remove([path]).catch(() => {})
-}
 
 // Mismos valores que el check constraint de productos.categoria (ver
 // schema_categoria_productos.sql / schema_categoria_mas_productos.sql).
@@ -70,6 +16,8 @@ const CATEGORIAS = [
   { valor: 'verduleria', etiqueta: 'Verdulería' },
   { valor: 'mas_productos', etiqueta: 'Más productos' },
 ]
+
+const FILAS_POR_PAGINA = 20
 
 const FILTROS = [
   { valor: 'todos', etiqueta: 'Todos' },
@@ -117,6 +65,8 @@ export function Productos() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filtro, setFiltro] = useState('todos')
+  const [busqueda, setBusqueda] = useState('')
+  const [pagina, setPagina] = useState(0)
 
   const [mostrarForm, setMostrarForm] = useState(false)
   const [editandoId, setEditandoId] = useState(null)
@@ -173,17 +123,37 @@ export function Productos() {
   }, [])
 
   const productosFiltrados = useMemo(() => {
+    let lista = productos
     switch (filtro) {
       case 'activos':
-        return productos.filter((p) => p.activo !== false)
+        lista = lista.filter((p) => p.activo !== false)
+        break
       case 'eliminados':
-        return productos.filter((p) => p.activo === false)
+        lista = lista.filter((p) => p.activo === false)
+        break
       case 'stock_bajo':
-        return productos.filter(esStockBajo)
+        lista = lista.filter(esStockBajo)
+        break
       default:
-        return productos
+        break
     }
-  }, [productos, filtro])
+
+    const buscado = busqueda.trim().toLowerCase()
+    if (buscado) lista = lista.filter((p) => p.nombre.toLowerCase().includes(buscado))
+
+    return lista
+  }, [productos, filtro, busqueda])
+
+  useEffect(() => {
+    setPagina(0)
+  }, [filtro, busqueda])
+
+  const totalFilas = productosFiltrados.length
+  const haySiguiente = (pagina + 1) * FILAS_POR_PAGINA < totalFilas
+  const productosPagina = productosFiltrados.slice(
+    pagina * FILAS_POR_PAGINA,
+    pagina * FILAS_POR_PAGINA + FILAS_POR_PAGINA,
+  )
 
   function resetForm() {
     setEditandoId(null)
@@ -318,7 +288,7 @@ export function Productos() {
         imagenUrlParaGuardar = null
       } else if (imagenArchivo) {
         try {
-          imagenUrlParaGuardar = await subirImagenProducto(editandoId, imagenArchivo)
+          imagenUrlParaGuardar = await subirImagen(editandoId, imagenArchivo)
           imagenUrlABorrar = imagenUrlActual
         } catch (e) {
           avisoImagen = `No se pudo subir la imagen nueva (${e.message}). El resto de los cambios se guardó igual.`
@@ -448,7 +418,7 @@ export function Productos() {
     let avisoImagen = null
     if (imagenArchivo) {
       try {
-        const url = await subirImagenProducto(producto.id, imagenArchivo)
+        const url = await subirImagen(producto.id, imagenArchivo)
         const { error: errorImagen } = await supabase
           .from('productos')
           .update({ imagen_url: url })
@@ -711,7 +681,7 @@ export function Productos() {
 
       {!loading && !error && (
         <div className="staff-card">
-          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem', alignItems: 'center' }}>
             {FILTROS.map((f) => (
               <button
                 key={f.valor}
@@ -722,10 +692,21 @@ export function Productos() {
                 {f.etiqueta}
               </button>
             ))}
+            <input
+              type="text"
+              placeholder="Buscar por nombre..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              style={{ marginLeft: 'auto' }}
+            />
           </div>
 
-          {productosFiltrados.length === 0 && <p>No hay productos para este filtro.</p>}
-          {productosFiltrados.length > 0 && (
+          {totalFilas === 0 && <p>No hay productos para este filtro.</p>}
+          {totalFilas > 0 && (
+            <>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>
+              Mostrando {pagina * FILAS_POR_PAGINA + 1}–{Math.min((pagina + 1) * FILAS_POR_PAGINA, totalFilas)} de {totalFilas} productos
+            </p>
             <table className="staff-table">
               <thead>
                 <tr>
@@ -737,7 +718,7 @@ export function Productos() {
                 </tr>
               </thead>
               <tbody>
-                {productosFiltrados.map((producto) => {
+                {productosPagina.map((producto) => {
                   const bajo = esStockBajo(producto)
                   return (
                   <tr
@@ -784,6 +765,27 @@ export function Productos() {
                 })}
               </tbody>
             </table>
+
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginTop: '0.75rem' }}>
+              <button
+                type="button"
+                className="staff-btn staff-btn-secundario"
+                onClick={() => setPagina((p) => p - 1)}
+                disabled={pagina === 0}
+              >
+                ← Anterior
+              </button>
+              <span>Página {pagina + 1}</span>
+              <button
+                type="button"
+                className="staff-btn staff-btn-secundario"
+                onClick={() => setPagina((p) => p + 1)}
+                disabled={!haySiguiente}
+              >
+                Siguiente →
+              </button>
+            </div>
+            </>
           )}
         </div>
       )}
