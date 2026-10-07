@@ -1,8 +1,64 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
 
 const UNIDADES_COMUNES = ['Kilo', 'Unidad', 'Docena', 'Bandeja', 'Atado', 'Bolsa', 'Cajón']
+
+const IMAGEN_MAX_BYTES = 2 * 1024 * 1024
+const IMAGEN_TIPOS_VALIDOS = ['image/jpeg', 'image/png', 'image/webp']
+
+// Valida ANTES de intentar subir nada -- el input ya filtra con accept,
+// pero accept es solo una sugerencia del selector de archivos, no una
+// garantía (el usuario puede forzar otro tipo), así que se revisa igual acá.
+function validarImagen(file) {
+  if (!IMAGEN_TIPOS_VALIDOS.includes(file.type)) {
+    return 'Formato no permitido. Usá una imagen JPG, PNG o WEBP.'
+  }
+  if (file.size > IMAGEN_MAX_BYTES) {
+    return 'La imagen es muy pesada, probá con una más chica (máximo 2 MB).'
+  }
+  return null
+}
+
+function extensionDeArchivo(file) {
+  const porTipo = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }
+  return porTipo[file.type] ?? file.name.split('.').pop().toLowerCase()
+}
+
+// El bucket es público, así que la URL es siempre previsible a partir
+// del path -- se guarda la URL completa en productos.imagen_url (así el
+// frontend de la tienda no necesita saber nada de Storage), pero acá
+// hace falta poder ir de URL a path de nuevo para borrar el archivo
+// viejo al reemplazar o quitar una imagen.
+function pathDesdeUrlImagen(url) {
+  const marca = '/object/public/productos/'
+  const i = url.indexOf(marca)
+  return i === -1 ? null : url.slice(i + marca.length)
+}
+
+async function subirImagenProducto(productoId, file) {
+  const ext = extensionDeArchivo(file)
+  const path = `${productoId}-${Date.now()}.${ext}`
+
+  const { error } = await supabase.storage.from('productos').upload(path, file, {
+    cacheControl: '3600',
+    upsert: false,
+  })
+  if (error) throw error
+
+  const { data } = supabase.storage.from('productos').getPublicUrl(path)
+  return data.publicUrl
+}
+
+// Best-effort: si falla borrar el archivo viejo no es grave (queda un
+// archivo huérfano en Storage, nada más) -- nunca debe cortar el
+// guardado del producto por esto.
+async function borrarImagenAnterior(urlVieja) {
+  const path = pathDesdeUrlImagen(urlVieja)
+  if (!path) return
+  await supabase.storage.from('productos').remove([path]).catch(() => {})
+}
 
 // Mismos valores que el check constraint de productos.categoria (ver
 // schema_categoria_productos.sql / schema_categoria_mas_productos.sql).
@@ -54,6 +110,9 @@ function precioPromocionalParaGuardar(valor) {
 }
 
 export function Productos() {
+  const { usuario } = useAuth()
+  const esDueno = usuario?.rol === 'dueño'
+
   const [productos, setProductos] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -67,6 +126,18 @@ export function Productos() {
   const [categoria, setCategoria] = useState('')
   const [unidades, setUnidades] = useState([filaVacia()])
   const [unidadesEliminadas, setUnidadesEliminadas] = useState([])
+
+  // Imagen: imagenUrlActual es la que ya está guardada (si se está
+  // editando); imagenArchivo es un File nuevo recién elegido, todavía
+  // sin subir; quitarImagen marca "borrar la que había" al guardar. Los
+  // tres son independientes porque recién se resuelven en guardarProducto,
+  // no al tocar el input (así una subida fallida nunca deja el form a
+  // medio guardar).
+  const [imagenUrlActual, setImagenUrlActual] = useState(null)
+  const [imagenArchivo, setImagenArchivo] = useState(null)
+  const [imagenPreview, setImagenPreview] = useState(null)
+  const [imagenError, setImagenError] = useState(null)
+  const [quitarImagen, setQuitarImagen] = useState(false)
 
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
@@ -122,7 +193,36 @@ export function Productos() {
     setCategoria('')
     setUnidades([filaVacia()])
     setUnidadesEliminadas([])
+    setImagenUrlActual(null)
+    setImagenArchivo(null)
+    setImagenPreview(null)
+    setImagenError(null)
+    setQuitarImagen(false)
     setMensaje(null)
+  }
+
+  function elegirImagen(e) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // permite re-elegir el mismo archivo después de un error
+    if (!file) return
+
+    const error = validarImagen(file)
+    if (error) {
+      setImagenError(error)
+      return
+    }
+
+    setImagenError(null)
+    setImagenArchivo(file)
+    setQuitarImagen(false)
+    setImagenPreview(URL.createObjectURL(file))
+  }
+
+  function quitarImagenSeleccionada() {
+    setImagenArchivo(null)
+    setImagenPreview(null)
+    setImagenError(null)
+    setQuitarImagen(true)
   }
 
   function abrirNuevo() {
@@ -147,6 +247,11 @@ export function Productos() {
       })),
     )
     setUnidadesEliminadas([])
+    setImagenUrlActual(producto.imagen_url ?? null)
+    setImagenArchivo(null)
+    setImagenPreview(null)
+    setImagenError(null)
+    setQuitarImagen(false)
     setMensaje(null)
     setMostrarForm(true)
   }
@@ -200,6 +305,26 @@ export function Productos() {
     setGuardando(true)
 
     if (editandoId) {
+      // La imagen se resuelve ANTES del update de los campos del
+      // producto para poder guardar todo en una sola llamada -- pero si
+      // la subida falla, nunca se pierde el resto: sigue con la url que
+      // ya había (o null si no tenía) y solo avisa en el mensaje final.
+      let imagenUrlParaGuardar = imagenUrlActual
+      let imagenUrlABorrar = null
+      let avisoImagen = null
+
+      if (quitarImagen) {
+        imagenUrlABorrar = imagenUrlActual
+        imagenUrlParaGuardar = null
+      } else if (imagenArchivo) {
+        try {
+          imagenUrlParaGuardar = await subirImagenProducto(editandoId, imagenArchivo)
+          imagenUrlABorrar = imagenUrlActual
+        } catch (e) {
+          avisoImagen = `No se pudo subir la imagen nueva (${e.message}). El resto de los cambios se guardó igual.`
+        }
+      }
+
       const { error: errorProducto } = await supabase
         .from('productos')
         .update({
@@ -207,6 +332,7 @@ export function Productos() {
           stock_actual_unidad_base: Number(stockInicial) || 0,
           stock_minimo: Number(stockMinimo) || 0,
           categoria: categoria || null,
+          imagen_url: imagenUrlParaGuardar,
         })
         .eq('id', editandoId)
 
@@ -215,6 +341,8 @@ export function Productos() {
         setMensaje({ tipo: 'error', texto: errorProducto.message })
         return
       }
+
+      if (imagenUrlABorrar) await borrarImagenAnterior(imagenUrlABorrar)
 
       const nuevas = unidadesValidas.filter((u) => !u.id)
       const existentes = unidadesValidas.filter((u) => u.id)
@@ -266,7 +394,10 @@ export function Productos() {
         return
       }
 
-      setMensaje({ tipo: 'exito', texto: 'Producto actualizado.' })
+      setMensaje({
+        tipo: avisoImagen ? 'error' : 'exito',
+        texto: avisoImagen ? `Producto actualizado. ${avisoImagen}` : 'Producto actualizado.',
+      })
       resetForm()
       setMostrarForm(false)
       fetchProductos()
@@ -302,9 +433,8 @@ export function Productos() {
       })),
     )
 
-    setGuardando(false)
-
     if (errorUnidades) {
+      setGuardando(false)
       setMensaje({
         tipo: 'error',
         texto: `El producto se creó, pero falló al cargar las unidades: ${errorUnidades.message}`,
@@ -312,7 +442,30 @@ export function Productos() {
       return
     }
 
-    setMensaje({ tipo: 'exito', texto: `Producto "${producto.nombre}" creado — ya está visible en la tienda online.` })
+    // La imagen se sube DESPUÉS de crear el producto (el nombre del
+    // archivo necesita su id) -- si falla, el producto ya quedó creado
+    // igual, solo se avisa que la foto no se pudo cargar.
+    let avisoImagen = null
+    if (imagenArchivo) {
+      try {
+        const url = await subirImagenProducto(producto.id, imagenArchivo)
+        const { error: errorImagen } = await supabase
+          .from('productos')
+          .update({ imagen_url: url })
+          .eq('id', producto.id)
+        if (errorImagen) avisoImagen = `No se pudo guardar la imagen (${errorImagen.message}).`
+      } catch (e) {
+        avisoImagen = `No se pudo subir la imagen (${e.message}).`
+      }
+    }
+
+    setGuardando(false)
+
+    const textoBase = `Producto "${producto.nombre}" creado — ya está visible en la tienda online.`
+    setMensaje({
+      tipo: avisoImagen ? 'error' : 'exito',
+      texto: avisoImagen ? `${textoBase} ${avisoImagen}` : textoBase,
+    })
     resetForm()
     setMostrarForm(false)
     fetchProductos()
@@ -401,6 +554,49 @@ export function Productos() {
                   ))}
                 </select>
               </label>
+
+              <div>
+                <div style={{ fontWeight: 600, marginBottom: '0.2rem' }}>Foto del producto</div>
+                {(() => {
+                  const imagenAMostrar = imagenPreview ?? (quitarImagen ? null : imagenUrlActual)
+                  return (
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                      <div className="staff-imagen-preview">
+                        {imagenAMostrar ? (
+                          <img src={imagenAMostrar} alt="" />
+                        ) : (
+                          <span className="staff-imagen-preview-vacia">Sin foto</span>
+                        )}
+                      </div>
+                      <div>
+                        {esDueno ? (
+                          <>
+                            <input type="file" accept="image/*" onChange={elegirImagen} />
+                            <div style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.3rem' }}>
+                              JPG, PNG o WEBP. Máximo 2 MB.
+                            </div>
+                            {imagenError && <p className="staff-mensaje-error" style={{ marginTop: '0.3rem' }}>{imagenError}</p>}
+                            {imagenAMostrar && (
+                              <button
+                                type="button"
+                                className="staff-btn staff-btn-secundario"
+                                onClick={quitarImagenSeleccionada}
+                                style={{ marginTop: '0.4rem' }}
+                              >
+                                Quitar imagen
+                              </button>
+                            )}
+                          </>
+                        ) : (
+                          <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)' }}>
+                            Solo el dueño puede cambiar la foto.
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
             </div>
 
             <h2>Unidades de venta</h2>

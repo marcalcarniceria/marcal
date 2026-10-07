@@ -14,6 +14,18 @@ export function ProductoCard({ producto, agregarItem, className = '' }) {
 
   return (
     <div className={`tienda-card ${bloqueado ? 'tienda-card-bloqueada' : ''} ${className}`.trim()}>
+      <div className="tienda-card-imagen">
+        {producto.imagen_url ? (
+          <img src={producto.imagen_url} alt={producto.nombre} loading="lazy" />
+        ) : (
+          <img
+            className="tienda-card-imagen-placeholder"
+            src="/images/logo-marcal.png"
+            alt=""
+            loading="lazy"
+          />
+        )}
+      </div>
       {enOferta && <span className="tienda-card-oferta">Oferta</span>}
       <h3>{producto.nombre}</h3>
 

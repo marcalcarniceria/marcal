@@ -562,6 +562,36 @@
   animation: tienda-fade-up 0.5s var(--ease) both;
 }
 
+/* Imagen de producto: proporción fija y recortada (object-fit cover)
+   para que todas las tarjetas de una misma fila queden parejas aunque
+   las fotos originales tengan tamaños distintos. Sin foto cargada, el
+   logo de la marca se ve tenue sobre el fondo -- nunca el ícono de
+   "imagen rota" del navegador ni un hueco vacío. */
+.tienda-card-imagen {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tienda-card-imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.tienda-card-imagen-placeholder {
+  width: 45% !important;
+  height: 45% !important;
+  object-fit: contain !important;
+  opacity: 0.18;
+}
+
 .tienda-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
