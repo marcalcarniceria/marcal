@@ -124,7 +124,9 @@ function AppLayoutInner() {
         </aside>
 
         <main className="staff-main">
-          <Outlet />
+          <div className="staff-main-contenido">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

@@ -107,7 +107,7 @@ export function Gastos() {
   }, [gastos, busqueda])
 
   return (
-    <div style={{ maxWidth: 680 }}>
+    <div>
       <SeccionTabs tabs={TABS_DINERO} />
       <h1>Gastos</h1>
 

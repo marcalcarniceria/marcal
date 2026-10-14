@@ -452,7 +452,7 @@ export function GestionUsuarios() {
   }
 
   return (
-    <div style={{ maxWidth: 1000 }}>
+    <div>
       <h1>Gestión de usuarios</h1>
 
       <div className="staff-card">

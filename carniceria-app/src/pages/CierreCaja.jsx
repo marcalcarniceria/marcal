@@ -252,7 +252,7 @@ export function CierreCaja() {
   }
 
   return (
-    <div style={{ maxWidth: 1200 }}>
+    <div>
       <SeccionTabs tabs={TABS_CAJA} />
       <h1>Cierre de caja</h1>
 

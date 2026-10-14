@@ -144,7 +144,7 @@ export function Fiados() {
   }
 
   return (
-    <div style={{ maxWidth: 680 }}>
+    <div>
       <h1>Clientes fiados</h1>
 
       {error && <pre>{JSON.stringify(error, null, 2)}</pre>}

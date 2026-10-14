@@ -153,7 +153,7 @@ export function PedidosOnline() {
   if (error) return <pre>{JSON.stringify(error, null, 2)}</pre>
 
   return (
-    <div style={{ maxWidth: 920 }}>
+    <div>
       <h1>Pedidos online</h1>
 
       <input

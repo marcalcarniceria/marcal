@@ -353,7 +353,7 @@ export function Cajero() {
   }
 
   return (
-    <div style={{ maxWidth: 1100 }}>
+    <div>
       <SeccionTabs tabs={TABS_CAJA} />
       <h1>Caja — {usuario?.nombre}</h1>
 

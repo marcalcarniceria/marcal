@@ -210,7 +210,7 @@ export function MovimientosStock() {
   const productoSeleccionado = productos.find((p) => p.id === productoId)
 
   return (
-    <div style={{ maxWidth: 1100 }}>
+    <div>
       {toast && (
         <div className="staff-toast-stack" style={{ position: 'fixed' }}>
           <div className={`staff-toast staff-toast-${toast.tipo === 'error' ? 'error' : 'exito'}`} role="status">

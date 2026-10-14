@@ -141,7 +141,7 @@ export function MovimientosDinero() {
   const haySiguiente = (pagina + 1) * FILAS_POR_PAGINA < totalFilas
 
   return (
-    <div style={{ maxWidth: 900 }}>
+    <div>
       <SeccionTabs tabs={TABS_DINERO} />
       <h1>Movimientos de dinero</h1>
 

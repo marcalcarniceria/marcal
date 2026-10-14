@@ -282,7 +282,7 @@ export function ZonasEnvio() {
   }
 
   return (
-    <div style={{ maxWidth: 820 }}>
+    <div>
       <h1>Zonas de envío</h1>
 
       <div className="staff-card">

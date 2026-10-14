@@ -145,7 +145,7 @@ export function Proveedores() {
   }
 
   return (
-    <div style={{ maxWidth: 760 }}>
+    <div>
       <SeccionTabs tabs={TABS_COMPRAS} />
       <h1>Proveedores</h1>
 

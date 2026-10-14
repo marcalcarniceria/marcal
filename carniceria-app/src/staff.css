@@ -262,6 +262,17 @@
   animation: staff-fade-in 0.35s var(--ease) both;
 }
 
+/* Ancho de TODAS las pantallas del panel, en un solo lugar: ocupa todo
+   el espacio al lado del sidebar hasta 1400px y se centra a partir de
+   ahí. Las páginas no deben ponerse su propio maxWidth en el div raíz
+   (antes cada una tenía uno distinto, sin margin auto, y el contenido
+   quedaba arrinconado a la izquierda en pantallas grandes). */
+.staff-main-contenido {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
 /* Componentes */
 .staff-card {
   background: var(--color-surface);

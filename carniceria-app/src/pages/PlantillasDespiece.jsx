@@ -129,7 +129,7 @@ export function PlantillasDespiece() {
   }
 
   return (
-    <div style={{ maxWidth: 760 }}>
+    <div>
       <SeccionTabs tabs={TABS_COMPRAS} />
       <h1>Plantillas de despiece</h1>
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>

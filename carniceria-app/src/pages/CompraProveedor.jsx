@@ -540,7 +540,7 @@ export function CompraProveedor() {
   }
 
   return (
-    <div style={{ maxWidth: 1300 }}>
+    <div>
       <SeccionTabs tabs={TABS_COMPRAS} />
       <h1>Compra a proveedor</h1>
 

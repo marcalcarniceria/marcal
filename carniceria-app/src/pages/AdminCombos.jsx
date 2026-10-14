@@ -289,7 +289,7 @@ export function AdminCombos() {
   }
 
   return (
-    <div style={{ maxWidth: 1000 }}>
+    <div>
       <h1>Combos</h1>
       <p style={{ color: 'var(--color-text-muted)', fontSize: '0.9rem' }}>
         Un combo no tiene stock propio: es una "receta" armada con productos que ya existen. Se
