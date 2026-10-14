@@ -1188,6 +1188,56 @@
   animation: tienda-pop 0.5s var(--ease) 0.15s both;
 }
 
+/* Resultado del pago con Mercado Pago (?pago= en la URL) */
+.tienda-pago-alerta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  text-align: left;
+  border: 1px solid;
+  border-left-width: 4px;
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+  margin: 1rem 0 1.25rem;
+  font-size: 0.95rem;
+}
+
+.tienda-pago-alerta strong {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  letter-spacing: 0.02em;
+}
+
+.tienda-pago-alerta-exito {
+  background: #e9f3eb;
+  border-color: #3f7d4f;
+  color: #2c5a38;
+}
+
+.tienda-pago-alerta-pendiente {
+  background: #fdf4dc;
+  border-color: #d9a520;
+  color: #6b4f0c;
+}
+
+.tienda-pago-alerta-error {
+  background: #fbebe6;
+  border-color: var(--color-accent);
+  color: var(--color-accent-hover);
+}
+
+.tienda-pago-alerta-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.tienda-pago-alerta-acciones .tienda-btn {
+  text-decoration: none;
+  display: inline-block;
+}
+
 /* Contenido general: leve entrada al montar cada página */
 .tienda-contenido {
   animation: tienda-fade-in 0.35s var(--ease) both;

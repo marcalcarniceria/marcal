@@ -90,15 +90,52 @@ export function Checkout() {
       ),
     })
 
-    setEnviando(false)
-
     if (error) {
+      setEnviando(false)
       setError(error.message)
       return
     }
 
+    if (metodoPago !== 'mercadopago') {
+      setEnviando(false)
+      vaciarCarrito()
+      navigate(`/tienda/confirmacion/${data.pedido_id}`)
+      return
+    }
+
+    // Mercado Pago: el pedido ya quedó registrado como pendiente_pago. La
+    // Edge Function arma la preferencia leyendo el pedido desde la base
+    // (los precios NO salen del carrito del navegador); `items` va solo
+    // como referencia.
+    const { data: preferencia, error: errorPreferencia } = await supabase.functions.invoke(
+      'crear-preferencia-mp',
+      {
+        body: {
+          pedido_id: data.pedido_id,
+          items: items.map((i) => ({
+            producto_id: i.producto_id ?? null,
+            combo_id: i.combo_id ?? null,
+            cantidad: i.cantidad,
+          })),
+        },
+      },
+    )
+
+    // El pedido ya existe: se vacía el carrito igual, para que un reintento
+    // no genere un pedido duplicado.
     vaciarCarrito()
-    navigate(`/tienda/confirmacion/${data.pedido_id}`)
+
+    if (errorPreferencia || !preferencia?.ok || !preferencia.init_point) {
+      // No se pudo abrir el pago, pero el pedido está registrado -- se
+      // muestra la confirmación y el local coordina el cobro.
+      console.error(errorPreferencia ?? preferencia?.error)
+      setEnviando(false)
+      navigate(`/tienda/confirmacion/${data.pedido_id}?pago=error`)
+      return
+    }
+
+    // Redirección completa (no navigate): Checkout Pro es un sitio externo.
+    window.location.href = preferencia.init_point
   }
 
   if (items.length === 0) {
@@ -225,11 +262,17 @@ export function Checkout() {
         <p className="tienda-aviso">
           {metodoPago === 'efectivo'
             ? 'Pagás en efectivo cuando recibas o retires el pedido. No hace falta pagar nada ahora.'
-            : 'El pago con Mercado Pago todavía no está conectado. El pedido queda registrado como pendiente de pago y te vamos a contactar para coordinar.'}
+            : 'Al confirmar, te llevamos a Mercado Pago para completar el pago de forma segura.'}
         </p>
 
         <button type="button" className="tienda-btn" onClick={confirmarPedido} disabled={enviando}>
-          {enviando ? 'Enviando...' : 'Confirmar pedido'}
+          {enviando
+            ? metodoPago === 'mercadopago'
+              ? 'Redirigiendo a Mercado Pago...'
+              : 'Enviando...'
+            : metodoPago === 'mercadopago'
+              ? 'Pagar con Mercado Pago'
+              : 'Confirmar pedido'}
         </button>
       </div>
     </>

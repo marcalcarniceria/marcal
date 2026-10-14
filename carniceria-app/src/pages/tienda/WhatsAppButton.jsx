@@ -1,4 +1,7 @@
-const WHATSAPP_URL = 'https://wa.me/5493513866592?text=Hola%2C%20quiero%20hacer%20un%20pedido'
+import { WHATSAPP_LOCAL } from '../../config/sucursal'
+import { linkWhatsApp } from '../../lib/whatsapp'
+
+const WHATSAPP_URL = linkWhatsApp(WHATSAPP_LOCAL, 'Hola, quiero hacer un pedido')
 
 export function WhatsAppButton() {
   return (
