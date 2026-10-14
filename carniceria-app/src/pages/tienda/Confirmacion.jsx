@@ -1,37 +1,9 @@
-import { useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
-import { supabase } from '../../supabaseClient'
 import { WHATSAPP_LOCAL } from '../../config/sucursal'
 import { linkWhatsApp } from '../../lib/whatsapp'
+import { useConfirmacionPago } from './useConfirmacionPago'
+import { AVISOS_PAGO } from './confirmacionTextos'
 import { TiendaHeader } from './TiendaHeader'
-
-// ?pago= lo agregan las back_urls de crear-preferencia-mp (aprobado /
-// pendiente / rechazado) y Checkout.jsx cuando no se pudo abrir Mercado
-// Pago (error). Es SOLO feedback para el cliente: quien marca el pedido
-// como cobrado es webhook-mp, nunca esta página (la URL se puede tipear
-// a mano).
-const AVISOS_PAGO = {
-  aprobado: {
-    clase: 'exito',
-    titulo: '¡Pago confirmado!',
-    texto: 'Ya estamos preparando tu pedido.',
-  },
-  pendiente: {
-    clase: 'pendiente',
-    titulo: 'Tu pago se está procesando.',
-    texto: 'Te avisaremos apenas se acredite. No hace falta que pagues de nuevo.',
-  },
-  rechazado: {
-    clase: 'error',
-    titulo: 'El pago no se pudo completar.',
-    texto: 'Tu pedido quedó registrado pero todavía no está pagado. Podés intentar de nuevo o escribirnos.',
-  },
-  error: {
-    clase: 'error',
-    titulo: 'No pudimos abrir Mercado Pago.',
-    texto: 'Tu pedido quedó registrado pero todavía no está pagado. Podés intentar de nuevo o escribirnos.',
-  },
-}
 
 export function Confirmacion() {
   const { pedidoId } = useParams()
@@ -39,28 +11,7 @@ export function Confirmacion() {
   const aviso = AVISOS_PAGO[searchParams.get('pago')]
   const pagoFallido = aviso?.clase === 'error'
 
-  const [reintentando, setReintentando] = useState(false)
-  const [errorReintento, setErrorReintento] = useState(null)
-
-  // El pedido ya existe y sigue pendiente de pago: se pide una preferencia
-  // nueva para el MISMO pedido (no hace falta el carrito, que ya se vació).
-  // crear-preferencia-mp rechaza el reintento si mientras tanto se cobró.
-  async function reintentarPago() {
-    setErrorReintento(null)
-    setReintentando(true)
-
-    const { data, error } = await supabase.functions.invoke('crear-preferencia-mp', {
-      body: { pedido_id: pedidoId },
-    })
-
-    if (error || !data?.ok || !data.init_point) {
-      setReintentando(false)
-      setErrorReintento(data?.error ?? 'No pudimos abrir Mercado Pago. Escribinos por WhatsApp y lo resolvemos.')
-      return
-    }
-
-    window.location.href = data.init_point
-  }
+  const { reintentando, errorReintento, reintentarPago } = useConfirmacionPago(pedidoId)
 
   const linkWhatsAppPedido = linkWhatsApp(
     WHATSAPP_LOCAL,

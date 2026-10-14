@@ -3,6 +3,7 @@ import { useIsMobile } from './useIsMobile'
 import { CatalogoMobile } from './CatalogoMobile'
 import { CarritoMobile } from './CarritoMobile'
 import { CheckoutMobile } from './CheckoutMobile'
+import { ConfirmacionMobile } from './ConfirmacionMobile'
 import { Tienda } from '../pages/tienda/Tienda'
 import { Carrito } from '../pages/tienda/Carrito'
 import { Checkout } from '../pages/tienda/Checkout'
@@ -38,7 +39,7 @@ export function CheckoutSwitch() {
 }
 
 export function ConfirmacionSwitch() {
-  return useIsMobile() ? <PantallaEnConstruccion nombre="Confirmación" /> : <Confirmacion />
+  return useIsMobile() ? <ConfirmacionMobile /> : <Confirmacion />
 }
 
 export function CrearCuentaSwitch() {
