@@ -50,6 +50,7 @@ function vmProducto(p, items) {
       unidad_venta_id: unidad.id,
       unidad_nombre: unidad.nombre_unidad,
       precio_venta: promo ?? precioNormal,
+      imagen_url: p.imagen_url ?? null,
     },
     kg: esUnidadKg(unidad.nombre_unidad),
   }
@@ -74,6 +75,7 @@ function vmCombo(c, items) {
       producto_nombre: c.nombre,
       unidad_nombre: 'Combo',
       precio_venta: Number(c.precio_fijo),
+      imagen_url: c.imagen_url ?? null,
     },
     kg: false,
   }

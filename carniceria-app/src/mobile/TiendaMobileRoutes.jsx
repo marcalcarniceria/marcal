@@ -1,6 +1,7 @@
 import { Navigate } from 'react-router-dom'
 import { useIsMobile } from './useIsMobile'
 import { CatalogoMobile } from './CatalogoMobile'
+import { CarritoMobile } from './CarritoMobile'
 import { Tienda } from '../pages/tienda/Tienda'
 import { Carrito } from '../pages/tienda/Carrito'
 import { Checkout } from '../pages/tienda/Checkout'
@@ -28,7 +29,7 @@ export function CatalogoSwitch() {
 }
 
 export function CarritoSwitch() {
-  return useIsMobile() ? <PantallaEnConstruccion nombre="Carrito" /> : <Carrito />
+  return useIsMobile() ? <CarritoMobile /> : <Carrito />
 }
 
 export function CheckoutSwitch() {

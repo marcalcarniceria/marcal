@@ -65,7 +65,13 @@ export function ProductoDetalleMobile() {
   function agregarAlCarrito() {
     if (esCombo) {
       agregarItem(
-        { combo_id: combo.id, producto_nombre: combo.nombre, unidad_nombre: 'Combo', precio_venta: Number(combo.precio_fijo) },
+        {
+          combo_id: combo.id,
+          producto_nombre: combo.nombre,
+          unidad_nombre: 'Combo',
+          precio_venta: Number(combo.precio_fijo),
+          imagen_url: combo.imagen_url ?? null,
+        },
         cantidadDefault,
       )
     } else {
@@ -76,6 +82,7 @@ export function ProductoDetalleMobile() {
           unidad_venta_id: unidad.id,
           unidad_nombre: unidad.nombre_unidad,
           precio_venta: precioUnitario,
+          imagen_url: producto.imagen_url ?? null,
         },
         cantidadDefault,
       )
