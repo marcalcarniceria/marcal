@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useCarrito } from './CarritoContext'
 import { TiendaHeader } from './TiendaHeader'
 
@@ -11,14 +11,32 @@ export function Carrito() {
       <TiendaHeader />
       <div className="tienda-contenido" style={{ maxWidth: 640 }}>
         <h1>Carrito</h1>
-        <Link to="/tienda" className="tienda-volver">
-          ← Seguir comprando
-        </Link>
 
-        {items.length === 0 && <p style={{ marginTop: '1rem' }}>Tu carrito está vacío.</p>}
+        {items.length === 0 && (
+          <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+            <p>Tu carrito está vacío.</p>
+            <button
+              type="button"
+              className="tienda-btn"
+              style={{ marginTop: '0.75rem' }}
+              onClick={() => navigate('/tienda')}
+            >
+              Volver a ver productos
+            </button>
+          </div>
+        )}
 
         {items.length > 0 && (
           <>
+            <button
+              type="button"
+              className="tienda-btn tienda-btn-secundario"
+              style={{ margin: '0.75rem 0 1.25rem' }}
+              onClick={() => navigate('/tienda')}
+            >
+              ← Seguir comprando
+            </button>
+
             <table className="tienda-tabla">
               <thead>
                 <tr>

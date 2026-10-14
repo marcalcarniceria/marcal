@@ -1098,6 +1098,20 @@
   padding: 2rem 1.5rem;
 }
 
+/* Sticky footer (solo compu, ver TiendaLayout.jsx): columna flex de
+   altura mínima 100%, con el footer empujado al fondo vía margin-top:
+   auto -- si hay poco contenido el espacio sobrante queda arriba del
+   footer; si hay mucho, el footer sigue después del contenido como
+   siempre. */
+.tienda-desktop-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.tienda-desktop-layout .tienda-footer {
+  margin-top: auto;
+}
+
 .tienda-footer-inner {
   max-width: 960px;
   margin: 0 auto;

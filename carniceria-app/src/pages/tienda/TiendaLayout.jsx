@@ -12,8 +12,11 @@ export function TiendaLayout() {
   // app, de pantalla completa). En compu no cambia nada.
   const esMobile = useIsMobile()
 
+  // Clase extra SOLO para compu (el sticky footer de abajo nunca debe
+  // aplicarle nada a .mob-app) -- useIsMobile y el resto de este
+  // componente quedan exactamente igual.
   return (
-    <div className="tienda">
+    <div className={`tienda${esMobile ? '' : ' tienda-desktop-layout'}`}>
       <CarritoProvider>
         <Outlet />
         {!esMobile && <TiendaFooter />}
