@@ -19,7 +19,7 @@ const BADGE_POR_ESTADO = {
 // schema_ecommerce.sql), pero eso no es lo que se le muestra a alguien
 // que no conoce el sistema.
 const TEXTO_POR_ESTADO = {
-  pendiente_pago: 'Pendiente de pago',
+  pendiente_pago: 'Pendiente',
   pagado: 'Pagado',
   en_preparacion: 'En preparación',
   en_camino: 'En camino',

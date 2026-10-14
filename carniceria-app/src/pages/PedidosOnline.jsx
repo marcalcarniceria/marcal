@@ -33,6 +33,13 @@ const BADGE_POR_ESTADO = {
   cancelado: 'staff-badge-cancelado',
 }
 
+// Solo para mostrar: en todo lo demás el valor sigue siendo
+// 'pendiente_pago' tal cual (filtros, lógica, la base) -- esto únicamente
+// saca la palabra "pago" de lo que se ve en pantalla.
+function textoEstado(estado) {
+  return estado === 'pendiente_pago' ? 'pendiente' : estado
+}
+
 export function PedidosOnline() {
   const { usuario } = useAuth()
 
@@ -187,7 +194,7 @@ export function PedidosOnline() {
               {p.notas && <p style={{ margin: '0.2rem 0', color: 'var(--color-text-muted)' }}>Notas: {p.notas}</p>}
             </div>
             <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
-              <span className={`staff-badge ${BADGE_POR_ESTADO[p.estado] ?? ''}`}>{p.estado}</span>
+              <span className={`staff-badge ${BADGE_POR_ESTADO[p.estado] ?? ''}`}>{textoEstado(p.estado)}</span>
               <span className="staff-badge staff-badge-camino">
                 {p.metodo_pago === 'efectivo' ? 'Efectivo' : 'Mercado Pago'}
               </span>
@@ -235,7 +242,7 @@ export function PedidosOnline() {
               <select value={p.estado} onChange={(e) => alCambiarEstado(p.id, e.target.value)}>
                 {opcionesEstado(p.estado).map((e) => (
                   <option key={e} value={e}>
-                    {e}
+                    {textoEstado(e)}
                   </option>
                 ))}
               </select>
