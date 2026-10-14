@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#e8e1d6;font-family:Lexend,system-ui,sans-serif;color:#1c1916}a{color:#b5401c}a:hover{color:#8f3115}*{box-sizing:border-box}button{font-family:inherit}input,textarea{font-family:inherit}::-webkit-scrollbar{width:0;height:0}@keyframes toastIn{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;gap:48px;align-items:center;justify-content:center;padding:40px 24px">
+  <div style="width:260px;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <img src="assets/logo.png" style="width:52px;height:52px;border-radius:50%;object-fit:cover">
+      <div>
+        <div style="font:700 22px/1 Oswald;letter-spacing:.04em">MAR-CAL</div>
+        <div style="font:400 13px/1.3 Lexend;color:#6b5f55;margin-top:4px">Tienda online · versión celular</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font:600 11px Lexend;letter-spacing:.1em;color:#8a7d70;margin-bottom:4px">PANTALLAS</div>
+      <sc-for list="{{ jumps }}" as="j" hint-placeholder-count="6">
+        <button onClick="{{ j.go }}" style="all:unset;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:{{ j.bg }};color:{{ j.fg }};font:500 14px Lexend">
+          <span style="font:600 11px ui-monospace,Menlo,monospace;opacity:.6">{{ j.n }}</span>{{ j.label }}
+        </button>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font:600 11px Lexend;letter-spacing:.1em;color:#8a7d70">SESIÓN</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:12px;background:#ddd4c7">
+        <button onClick="{{ setLoggedOut }}" style="all:unset;cursor:pointer;height:36px;border-radius:9px;display:grid;place-items:center;font:500 13px Lexend;background:{{ sessOut.bg }};color:{{ sessOut.fg }}">Sin sesión</button>
+        <button onClick="{{ setLoggedIn }}" style="all:unset;cursor:pointer;height:36px;border-radius:9px;display:grid;place-items:center;font:500 13px Lexend;background:{{ sessIn.bg }};color:{{ sessIn.fg }}">Logueado</button>
+      </div>
+    </div>
+    <p style="margin:0;font:300 12.5px/1.55 Lexend;color:#6b5f55;text-wrap:pretty">Prototipo navegable: agregá productos, abrí el carrito y completá el checkout. Las fotos sin imagen real muestran el logo hasta que se carguen las del local.</p>
+  </div>
+
+  <div style="width:390px;height:844px;border-radius:54px;background:#111;padding:10px;box-shadow:0 30px 60px rgba(40,25,10,.25),0 0 0 1px rgba(0,0,0,.2);flex:none">
+    <div style="position:relative;width:100%;height:100%;border-radius:44px;overflow:hidden;background:#f7f2ea">
+      <div style="position:absolute;top:0;left:0;right:0;height:44px;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:0 28px 0 32px;background:{{ statusBg }};color:{{ statusFg }};font:600 15px system-ui">
+        <span>9:41</span>
+        <div style="position:absolute;left:50%;top:10px;transform:translateX(-50%);width:110px;height:28px;border-radius:20px;background:#000"></div>
+        <span style="display:flex;gap:5px;align-items:center"><svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor"><rect x="0" y="7" width="3" height="4" rx="1"></rect><rect x="4.5" y="5" width="3" height="6" rx="1"></rect><rect x="9" y="2.5" width="3" height="8.5" rx="1"></rect><rect x="13.5" y="0" width="3" height="11" rx="1"></rect></svg><svg width="25" height="12" viewBox="0 0 25 12"><rect x=".5" y=".5" width="21" height="11" rx="3" fill="none" stroke="currentColor" opacity=".5"></rect><rect x="2" y="2" width="16" height="8" rx="2" fill="currentColor"></rect></svg></span>
+      </div>
+
+      <div ref="{{ scrollRef }}" style="position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding-top:44px;scrollbar-width:none">
+
+        <sc-if value="{{ isHome }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#1c1916;color:#fff;padding:12px 16px 18px">
+            <div style="display:flex;align-items:center;gap:12px">
+              <img src="assets/logo.png" style="width:46px;height:46px;border-radius:50%;object-fit:cover;flex:none">
+              <div style="flex:1;min-width:0">
+                <div style="font:700 21px/1 Oswald;letter-spacing:.05em">MAR-CAL</div>
+                <div style="font:300 12.5px/1.2 Lexend;color:#d8cdbf;margin-top:4px">Carnicería y Verdulería</div>
+              </div>
+              <sc-if value="{{ loggedIn }}">
+                <button onClick="{{ goOrders }}" style="all:unset;cursor:pointer;flex:none;height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.22);display:flex;align-items:center;gap:8px;font:500 13.5px Lexend;white-space:nowrap">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path><path d="M9 8h6M9 12h6"></path></svg>Pedidos
+                </button>
+              </sc-if>
+              <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ goLogin }}" style="all:unset;cursor:pointer;flex:none;height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.22);display:flex;align-items:center;gap:8px;font:500 13.5px Lexend;white-space:nowrap">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>Iniciar sesión
+                </button>
+              </sc-if>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:14px;font:400 11.5px Lexend;color:#e3c98f;white-space:nowrap">
+              <span>Pesado al momento</span><span style="opacity:.4">•</span><span>Envío por zona</span><span style="opacity:.4">•</span><span>Mercado Pago</span>
+            </div>
+          </div>
+          <div style="padding:14px 16px 4px;background:#f7f2ea">
+            <label style="display:flex;align-items:center;gap:10px;height:52px;padding:0 16px;background:#fffdf9;border:1.5px solid #e3d9cc;border-radius:14px">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b5f55" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+              <input value="{{ q }}" onChange="{{ onSearch }}" placeholder="Buscar carne, verdura, combo…" style="all:unset;flex:1;font:400 16px Lexend;color:#1c1916">
+              <sc-if value="{{ hasQ }}"><button onClick="{{ clearSearch }}" style="all:unset;cursor:pointer;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;background:#efe7db;font:500 16px Lexend;color:#6b5f55">×</button></sc-if>
+            </label>
+          </div>
+          <div style="position:sticky;top:0;z-index:5;background:#f7f2ea;padding:10px 0 10px">
+            <div style="display:flex;gap:8px;overflow-x:auto;padding:0 16px 2px;scrollbar-width:none">
+              <sc-for list="{{ chips }}" as="c" hint-placeholder-count="5">
+                <button onClick="{{ c.pick }}" style="all:unset;cursor:pointer;flex:none;height:44px;padding:0 18px;border-radius:999px;display:flex;align-items:center;font:500 14.5px Lexend;background:{{ c.bg }};color:{{ c.fg }};border:1.5px solid {{ c.bd }}">{{ c.label }}</button>
+              </sc-for>
+            </div>
+          </div>
+
+          <div style="padding:6px 16px 140px;display:flex;flex-direction:column;gap:28px">
+            <sc-if value="{{ showPromo }}">
+              <button onClick="{{ pickOfertas }}" style="all:unset;cursor:pointer;position:relative;display:block;height:150px;border-radius:20px;overflow:hidden;background:#f6e7d8">
+                <img src="assets/promo.png" style="position:absolute;right:-30px;bottom:0;height:100%;width:78%;object-fit:cover;object-position:left center">
+                <div style="position:absolute;inset:0;background:linear-gradient(90deg,#f6e7d8 38%,rgba(246,231,216,0) 70%)"></div>
+                <div style="position:relative;padding:20px;display:flex;flex-direction:column;gap:6px;max-width:62%">
+                  <span style="align-self:flex-start;background:#b5401c;color:#fff;font:600 11px Lexend;letter-spacing:.08em;padding:4px 9px;border-radius:999px">PROMOCIONES</span>
+                  <div style="font:700 22px/1.1 Lexend;color:#7a2a12">Ofertas de la semana</div>
+                  <div style="font:500 13px Lexend;color:#b5401c">Ver ofertas →</div>
+                </div>
+              </button>
+            </sc-if>
+
+            <sc-for list="{{ sections }}" as="sec" hint-placeholder-count="2">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <sc-if value="{{ sec.hasBanner }}">
+                  <div style="position:relative;min-height:132px;border-radius:20px;overflow:hidden;background:{{ sec.tint }}">
+                    <img src="{{ sec.img }}" style="position:absolute;right:0;top:0;height:100%;width:60%;object-fit:cover;object-position:{{ sec.pos }}">
+                    <div style="position:absolute;inset:0;background:linear-gradient(90deg,{{ sec.tint }} 42%,{{ sec.tint0 }} 75%)"></div>
+                    <div style="position:relative;padding:18px 20px;max-width:64%">
+                      <div style="font:700 26px/1.05 Lexend;color:{{ sec.color }}">{{ sec.title }}</div>
+                      <div style="font:400 13px/1.35 Lexend;color:#4a3f36;margin-top:6px;text-wrap:pretty">{{ sec.sub }}</div>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ sec.plainTitle }}">
+                  <div style="font:600 22px/1.15 Oswald;letter-spacing:.02em;text-transform:uppercase">{{ sec.title }}</div>
+                </sc-if>
+                <sc-if value="{{ sec.empty }}">
+                  <div style="padding:32px 20px;text-align:center;background:#fffdf9;border-radius:18px;font:400 15px/1.5 Lexend;color:#6b5f55">No encontramos productos con ese nombre.<br>Probá con otra palabra.</div>
+                </sc-if>
+
+                <sc-if value="{{ isGrid }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <sc-for list="{{ sec.items }}" as="it" hint-placeholder-count="4">
+                      <div style="background:#fffdf9;border-radius:18px;overflow:hidden;box-shadow:0 1px 2px rgba(60,40,20,.08),0 4px 14px rgba(60,40,20,.06);display:flex;flex-direction:column;opacity:{{ it.op }}">
+                        <button onClick="{{ it.open }}" style="all:unset;cursor:pointer;display:block;position:relative;aspect-ratio:1/1;background:{{ it.tint }}">
+                          <sc-if value="{{ it.hasImg }}"><img src="{{ it.img }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></sc-if>
+                          <sc-if value="{{ it.noImg }}"><div style="position:absolute;inset:0;display:grid;place-items:center"><img src="assets/logo.png" style="width:58px;height:58px;border-radius:50%;opacity:.3"></div></sc-if>
+                          <sc-if value="{{ it.oferta }}"><span style="position:absolute;top:10px;left:10px;background:#b5401c;color:#fff;font:600 11px Lexend;letter-spacing:.06em;padding:4px 9px;border-radius:999px">OFERTA</span></sc-if>
+                        </button>
+                        <div style="padding:11px 12px 12px;display:flex;flex-direction:column;gap:3px;flex:1">
+                          <div style="font:600 15px/1.2 Lexend;color:#1c1916">{{ it.name }}</div>
+                          <div style="display:flex;align-items:baseline;gap:4px;flex-wrap:wrap;margin-top:2px">
+                            <span style="font:600 21px/1 Oswald;color:#1c1916">{{ it.price }}</span>
+                            <span style="font:400 12px Lexend;color:#6b5f55">{{ it.suffix }}</span>
+                          </div>
+                          <sc-if value="{{ it.oferta }}"><span style="font:400 12px Lexend;color:#8a7d70;text-decoration:line-through">{{ it.old }}</span></sc-if>
+                          <sc-if value="{{ it.multi }}"><span style="font:400 12px Lexend;color:#6b5f55">{{ it.multiLabel }}</span></sc-if>
+                          <div style="margin-top:auto;padding-top:10px">
+                            <sc-if value="{{ it.showAdd }}"><button onClick="{{ it.add }}" style="all:unset;cursor:pointer;width:100%;height:44px;border-radius:12px;background:#b5401c;color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;font:600 15px Lexend;box-sizing:border-box" style-active="transform:scale(.97)"><span style="font-size:20px;line-height:1">+</span>Agregar</button></sc-if>
+                            <sc-if value="{{ it.inCart }}">
+                              <div style="height:44px;border-radius:12px;background:#f4e3da;display:flex;align-items:center;justify-content:space-between">
+                                <button onClick="{{ it.dec }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;font:500 22px Lexend;color:#b5401c">−</button>
+                                <span style="font:600 14px Lexend;color:#7a2a12">{{ it.qty }}</span>
+                                <button onClick="{{ it.inc }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center;font:500 22px Lexend;color:#b5401c">+</button>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ it.out }}"><div style="height:44px;border-radius:12px;background:#efe9e1;color:#6b5f55;display:flex;align-items:center;justify-content:center;font:500 13.5px Lexend">Sin stock por hoy</div></sc-if>
+                          </div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ isList }}">
+                  <div style="display:flex;flex-direction:column;gap:10px">
+                    <sc-for list="{{ sec.items }}" as="it" hint-placeholder-count="4">
+                      <div style="background:#fffdf9;border-radius:18px;padding:10px;display:flex;gap:12px;box-shadow:0 1px 2px rgba(60,40,20,.08),0 4px 14px rgba(60,40,20,.05);opacity:{{ it.op }}">
+                        <button onClick="{{ it.open }}" style="all:unset;cursor:pointer;position:relative;width:104px;height:104px;flex:none;border-radius:12px;overflow:hidden;background:{{ it.tint }}">
+                          <sc-if value="{{ it.hasImg }}"><img src="{{ it.img }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></sc-if>
+                          <sc-if value="{{ it.noImg }}"><div style="position:absolute;inset:0;display:grid;place-items:center"><img src="assets/logo.png" style="width:44px;height:44px;border-radius:50%;opacity:.3"></div></sc-if>
+                          <sc-if value="{{ it.oferta }}"><span style="position:absolute;top:6px;left:6px;background:#b5401c;color:#fff;font:600 10px Lexend;letter-spacing:.06em;padding:3px 7px;border-radius:999px">OFERTA</span></sc-if>
+                        </button>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;padding-top:2px">
+                          <div style="font:600 15.5px/1.2 Lexend">{{ it.name }}</div>
+                          <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap">
+                            <span style="font:600 21px/1 Oswald">{{ it.price }}</span>
+                            <span style="font:400 12px Lexend;color:#6b5f55">{{ it.suffix }}</span>
+                            <sc-if value="{{ it.oferta }}"><span style="font:400 12px Lexend;color:#8a7d70;text-decoration:line-through">{{ it.old }}</span></sc-if>
+                          </div>
+                          <div style="margin-top:auto">
+                            <sc-if value="{{ it.showAdd }}"><button onClick="{{ it.add }}" style="all:unset;cursor:pointer;width:100%;height:44px;border-radius:12px;background:#b5401c;color:#fff;display:flex;align-items:center;justify-content:center;gap:6px;font:600 15px Lexend;box-sizing:border-box"><span style="font-size:20px;line-height:1">+</span>Agregar</button></sc-if>
+                            <sc-if value="{{ it.inCart }}">
+                              <div style="height:44px;border-radius:12px;background:#f4e3da;display:flex;align-items:center;justify-content:space-between">
+                                <button onClick="{{ it.dec }}" style="all:unset;cursor:pointer;width:48px;height:44px;display:grid;place-items:center;font:500 22px Lexend;color:#b5401c">−</button>
+                                <span style="font:600 14px Lexend;color:#7a2a12">{{ it.qty }}</span>
+                                <button onClick="{{ it.inc }}" style="all:unset;cursor:pointer;width:48px;height:44px;display:grid;place-items:center;font:500 22px Lexend;color:#b5401c">+</button>
+                              </div>
+                            </sc-if>
+                            <sc-if value="{{ it.out }}"><div style="height:44px;border-radius:12px;background:#efe9e1;color:#6b5f55;display:flex;align-items:center;justify-content:center;font:500 13.5px Lexend">Sin stock por hoy</div></sc-if>
+                          </div>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+
+                <sc-if value="{{ sec.hasMore }}">
+                  <button onClick="{{ sec.seeAll }}" style="all:unset;cursor:pointer;height:48px;border-radius:14px;border:1.5px solid {{ sec.color }};color:{{ sec.color }};display:flex;align-items:center;justify-content:center;font:600 14.5px Lexend">{{ sec.moreLabel }}</button>
+                </sc-if>
+              </div>
+            </sc-for>
+            <div style="text-align:center;font:300 12px/1.6 Lexend;color:#8a7d70">Arenales 345, Barrio Juniors · En el barrio desde 1996</div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isProduct }}">
+          <div style="position:relative;height:330px;margin-top:-44px;background:{{ d.tint }}">
+            <sc-if value="{{ d.hasImg }}"><img src="{{ d.img }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></sc-if>
+            <sc-if value="{{ d.noImg }}"><div style="position:absolute;inset:0;display:grid;place-items:center"><img src="assets/logo.png" style="width:110px;height:110px;border-radius:50%;opacity:.28"></div></sc-if>
+            <button onClick="{{ goHome }}" style="all:unset;cursor:pointer;position:absolute;top:56px;left:16px;width:44px;height:44px;border-radius:50%;background:#fffdf9;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.15)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1c1916" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+          </div>
+          <div style="position:relative;margin-top:-24px;background:#f7f2ea;border-radius:24px 24px 0 0;padding:22px 20px 130px;display:flex;flex-direction:column;gap:20px">
+            <div>
+              <div style="font:500 12px Lexend;letter-spacing:.1em;color:{{ d.color }}">{{ d.catLabel }}</div>
+              <div style="font:600 30px/1.1 Oswald;text-transform:uppercase;letter-spacing:.02em;margin-top:6px">{{ d.name }}</div>
+              <div style="display:flex;align-items:baseline;gap:8px;margin-top:10px">
+                <span style="font:600 30px/1 Oswald">{{ d.price }}</span>
+                <span style="font:400 14px Lexend;color:#6b5f55">{{ d.suffix }}</span>
+                <sc-if value="{{ d.oferta }}"><span style="font:400 14px Lexend;color:#8a7d70;text-decoration:line-through">{{ d.old }}</span></sc-if>
+              </div>
+              <sc-if value="{{ d.hasDesc }}"><p style="margin:12px 0 0;font:400 15px/1.5 Lexend;color:#4a3f36">{{ d.desc }}</p></sc-if>
+            </div>
+            <sc-if value="{{ d.multi }}">
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <div style="font:600 15px Lexend">Presentación</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                  <sc-for list="{{ d.opts }}" as="o">
+                    <button onClick="{{ o.pick }}" style="all:unset;cursor:pointer;padding:12px 14px;border-radius:14px;background:#fffdf9;border:2px solid {{ o.bd }};display:flex;flex-direction:column;gap:2px">
+                      <span style="font:500 14.5px Lexend">{{ o.label }}</span>
+                      <span style="font:600 17px Oswald">{{ o.price }}</span>
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ d.canBuy }}">
+              <div style="display:flex;flex-direction:column;gap:12px">
+                <div style="font:600 15px Lexend">Cantidad</div>
+                <sc-if value="{{ d.isKg }}">
+                  <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+                    <sc-for list="{{ d.quick }}" as="qk">
+                      <button onClick="{{ qk.pick }}" style="all:unset;cursor:pointer;height:44px;border-radius:12px;display:grid;place-items:center;font:500 14px Lexend;background:{{ qk.bg }};color:{{ qk.fg }};border:1.5px solid {{ qk.bd }}">{{ qk.label }}</button>
+                    </sc-for>
+                  </div>
+                </sc-if>
+                <div style="height:60px;border-radius:16px;background:#fffdf9;border:1.5px solid #e3d9cc;display:flex;align-items:center;justify-content:space-between;padding:0 6px">
+                  <button onClick="{{ d.dec }}" style="all:unset;cursor:pointer;width:48px;height:48px;border-radius:12px;background:#f4e3da;display:grid;place-items:center;font:500 24px Lexend;color:#b5401c">−</button>
+                  <span style="font:600 22px Oswald">{{ d.qty }}</span>
+                  <button onClick="{{ d.inc }}" style="all:unset;cursor:pointer;width:48px;height:48px;border-radius:12px;background:#f4e3da;display:grid;place-items:center;font:500 24px Lexend;color:#b5401c">+</button>
+                </div>
+                <sc-if value="{{ d.isKg }}">
+                  <div style="display:flex;gap:12px;padding:14px;border-radius:14px;background:#efe6d8;font:400 13.5px/1.45 Lexend;color:#4a3f36">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7a5a1e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:1px"><path d="M12 3v18M5 21h14M5 7h14M7 7l-3 7a3 3 0 0 0 6 0zM17 7l-3 7a3 3 0 0 0 6 0z"></path></svg>
+                    <span>Lo pesamos al momento de armar tu pedido. El total final puede variar levemente según el peso.</span>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isCart }}">
+          <div style="height:60px;display:flex;align-items:center;gap:8px;padding:0 8px;border-bottom:1px solid #e9e0d3">
+            <button onClick="{{ goHome }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1c1916" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+            <div style="font:600 20px Oswald;text-transform:uppercase;letter-spacing:.03em">Tu carrito</div>
+          </div>
+          <sc-if value="{{ cartEmpty }}">
+            <div style="padding:80px 32px;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center">
+              <div style="font:600 22px Oswald;text-transform:uppercase">Tu carrito está vacío</div>
+              <div style="font:400 15px Lexend;color:#6b5f55">Agregá carne, verdura o un combo para empezar.</div>
+              <button onClick="{{ goHome }}" style="all:unset;cursor:pointer;height:52px;padding:0 28px;border-radius:14px;background:#b5401c;color:#fff;font:600 15px Lexend;display:flex;align-items:center">Ver productos</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ cartFull }}">
+            <div style="padding:16px 16px 140px;display:flex;flex-direction:column;gap:10px">
+              <sc-for list="{{ lines }}" as="l" hint-placeholder-count="2">
+                <div style="background:#fffdf9;border-radius:16px;padding:12px;display:flex;gap:12px;align-items:stretch">
+                  <div style="position:relative;width:72px;height:72px;flex:none;border-radius:12px;overflow:hidden;background:{{ l.tint }}">
+                    <sc-if value="{{ l.hasImg }}"><img src="{{ l.img }}" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover"></sc-if>
+                    <sc-if value="{{ l.noImg }}"><div style="position:absolute;inset:0;display:grid;place-items:center"><img src="assets/logo.png" style="width:34px;height:34px;border-radius:50%;opacity:.3"></div></sc-if>
+                  </div>
+                  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">
+                    <div style="display:flex;justify-content:space-between;gap:8px">
+                      <div>
+                        <div style="font:600 15px/1.2 Lexend">{{ l.name }}</div>
+                        <div style="font:400 12.5px Lexend;color:#6b5f55;margin-top:2px">{{ l.sub }}</div>
+                      </div>
+                      <div style="font:600 18px Oswald;white-space:nowrap">{{ l.total }}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between">
+                      <div style="height:40px;border-radius:10px;background:#f4e3da;display:flex;align-items:center">
+                        <button onClick="{{ l.dec }}" style="all:unset;cursor:pointer;width:44px;height:40px;display:grid;place-items:center;font:500 20px Lexend;color:#b5401c">−</button>
+                        <span style="min-width:56px;text-align:center;font:600 14px Lexend;color:#7a2a12">{{ l.qty }}</span>
+                        <button onClick="{{ l.inc }}" style="all:unset;cursor:pointer;width:44px;height:40px;display:grid;place-items:center;font:500 20px Lexend;color:#b5401c">+</button>
+                      </div>
+                      <button onClick="{{ l.remove }}" style="all:unset;cursor:pointer;height:40px;padding:0 6px;font:500 13px Lexend;color:#6b5f55;text-decoration:underline">Quitar</button>
+                    </div>
+                  </div>
+                </div>
+              </sc-for>
+              <button onClick="{{ goHome }}" style="all:unset;cursor:pointer;height:48px;display:flex;align-items:center;justify-content:center;font:500 14.5px Lexend;color:#b5401c">+ Seguir comprando</button>
+              <div style="background:#fffdf9;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;font:400 15px Lexend">
+                <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span style="font-weight:500">{{ subtotalF }}</span></div>
+                <div style="display:flex;justify-content:space-between;color:#6b5f55"><span>Envío</span><span>Según tu zona</span></div>
+                <div style="height:1px;background:#ece3d6"></div>
+                <div style="font:300 12.5px/1.5 Lexend;color:#6b5f55">Los productos por kilo se pesan al momento; el total puede variar levemente.</div>
+              </div>
+            </div>
+          </sc-if>
+        </sc-if>
+
+        <sc-if value="{{ isCheckout }}">
+          <div style="height:60px;display:flex;align-items:center;gap:8px;padding:0 8px">
+            <button onClick="{{ back }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1c1916" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+            <div style="font:600 20px Oswald;text-transform:uppercase;letter-spacing:.03em">Finalizar compra</div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 16px 4px">
+            <sc-for list="{{ steps }}" as="st" hint-placeholder-count="4">
+              <div style="display:flex;flex-direction:column;gap:7px">
+                <div style="height:5px;border-radius:3px;background:{{ st.bar }}"></div>
+                <span style="font:500 12px Lexend;color:{{ st.fg }}">{{ st.label }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="padding:20px 16px 150px;display:flex;flex-direction:column;gap:16px">
+            <sc-if value="{{ step1 }}">
+              <div style="font:600 24px Oswald;text-transform:uppercase">Tus datos</div>
+              <label style="display:flex;flex-direction:column;gap:6px">
+                <span style="font:500 14px Lexend">Nombre y apellido</span>
+                <input value="{{ form.name }}" onChange="{{ setName }}" placeholder="Ej: Anna Sclejsher" style="height:56px;padding:0 16px;border-radius:14px;border:1.5px solid {{ errName.bd }};background:#fffdf9;font:400 16px Lexend;color:#1c1916;outline:none">
+                <sc-if value="{{ errName.on }}"><span style="font:400 13px Lexend;color:#b3261e">Ingresá tu nombre.</span></sc-if>
+              </label>
+              <label style="display:flex;flex-direction:column;gap:6px">
+                <span style="font:500 14px Lexend">Celular (WhatsApp)</span>
+                <input value="{{ form.phone }}" onChange="{{ setPhone }}" inputMode="tel" placeholder="Ej: 351 380 0082" style="height:56px;padding:0 16px;border-radius:14px;border:1.5px solid {{ errPhone.bd }};background:#fffdf9;font:400 16px Lexend;color:#1c1916;outline:none">
+                <sc-if value="{{ errPhone.on }}"><span style="font:400 13px Lexend;color:#b3261e">Ingresá un celular válido.</span></sc-if>
+                <span style="font:300 12.5px Lexend;color:#6b5f55">Te avisamos por acá cuando tu pedido salga.</span>
+              </label>
+            </sc-if>
+            <sc-if value="{{ step2 }}">
+              <div style="font:600 24px Oswald;text-transform:uppercase">¿Dónde lo recibís?</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ zones }}" as="z" hint-placeholder-count="4">
+                  <button onClick="{{ z.pick }}" style="all:unset;cursor:pointer;min-height:68px;padding:12px 16px;border-radius:16px;background:#fffdf9;border:2px solid {{ z.bd }};display:flex;align-items:center;gap:14px">
+                    <span style="width:22px;height:22px;flex:none;border-radius:50%;border:2px solid {{ z.ring }};display:grid;place-items:center"><span style="width:10px;height:10px;border-radius:50%;background:{{ z.dot }}"></span></span>
+                    <span style="flex:1;display:flex;flex-direction:column;gap:2px"><span style="font:500 15px Lexend">{{ z.name }}</span><span style="font:300 12.5px Lexend;color:#6b5f55">{{ z.sub }}</span></span>
+                    <span style="font:600 17px Oswald;color:{{ z.priceFg }}">{{ z.price }}</span>
+                  </button>
+                </sc-for>
+              </div>
+              <sc-if value="{{ errZone }}"><span style="font:400 13px Lexend;color:#b3261e">Elegí una opción de envío.</span></sc-if>
+              <sc-if value="{{ needsAddress }}">
+                <label style="display:flex;flex-direction:column;gap:6px">
+                  <span style="font:500 14px Lexend">Dirección de entrega</span>
+                  <input value="{{ form.address }}" onChange="{{ setAddress }}" placeholder="Calle, número, piso/depto" style="height:56px;padding:0 16px;border-radius:14px;border:1.5px solid {{ errAddr.bd }};background:#fffdf9;font:400 16px Lexend;color:#1c1916;outline:none">
+                  <sc-if value="{{ errAddr.on }}"><span style="font:400 13px Lexend;color:#b3261e">Ingresá la dirección.</span></sc-if>
+                </label>
+                <label style="display:flex;flex-direction:column;gap:6px">
+                  <span style="font:500 14px Lexend">Indicaciones <span style="font-weight:300;color:#6b5f55">(opcional)</span></span>
+                  <input value="{{ form.notes }}" onChange="{{ setNotes }}" placeholder="Ej: timbre 2B, portón verde" style="height:56px;padding:0 16px;border-radius:14px;border:1.5px solid #e3d9cc;background:#fffdf9;font:400 16px Lexend;color:#1c1916;outline:none">
+                </label>
+              </sc-if>
+            </sc-if>
+            <sc-if value="{{ step3 }}">
+              <div style="font:600 24px Oswald;text-transform:uppercase">¿Cómo pagás?</div>
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ pays }}" as="p" hint-placeholder-count="2">
+                  <button onClick="{{ p.pick }}" style="all:unset;cursor:pointer;padding:16px;border-radius:16px;background:#fffdf9;border:2px solid {{ p.bd }};display:flex;align-items:flex-start;gap:14px">
+                    <span style="width:22px;height:22px;flex:none;margin-top:2px;border-radius:50%;border:2px solid {{ p.ring }};display:grid;place-items:center"><span style="width:10px;height:10px;border-radius:50%;background:{{ p.dot }}"></span></span>
+                    <span style="flex:1;display:flex;flex-direction:column;gap:4px"><span style="font:600 16px Lexend">{{ p.name }}</span><span style="font:300 13px/1.45 Lexend;color:#4a3f36">{{ p.sub }}</span></span>
+                    <sc-if value="{{ p.rec }}"><span style="font:600 10.5px Lexend;letter-spacing:.06em;padding:4px 8px;border-radius:999px;background:#e5f0dc;color:#245c27">ONLINE</span></sc-if>
+                  </button>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ step4 }}">
+              <div style="font:600 24px Oswald;text-transform:uppercase">Revisá tu pedido</div>
+              <div style="background:#fffdf9;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{ lines }}" as="l">
+                  <div style="display:flex;justify-content:space-between;gap:10px;font:400 14.5px Lexend"><span>{{ l.name }} <span style="color:#6b5f55">· {{ l.qty }}</span></span><span style="font-weight:500;white-space:nowrap">{{ l.total }}</span></div>
+                </sc-for>
+              </div>
+              <sc-for list="{{ summaryRows }}" as="r" hint-placeholder-count="3">
+                <div style="background:#fffdf9;border-radius:16px;padding:14px 16px;display:flex;gap:12px;align-items:center">
+                  <div style="flex:1;min-width:0">
+                    <div style="font:500 12px Lexend;letter-spacing:.08em;color:#8a7d70">{{ r.k }}</div>
+                    <div style="font:500 15px/1.35 Lexend;margin-top:3px">{{ r.v }}</div>
+                    <div style="font:300 13px Lexend;color:#6b5f55">{{ r.v2 }}</div>
+                  </div>
+                  <button onClick="{{ r.edit }}" style="all:unset;cursor:pointer;height:44px;padding:0 8px;display:flex;align-items:center;font:500 14px Lexend;color:#b5401c">Cambiar</button>
+                </div>
+              </sc-for>
+              <div style="background:#fffdf9;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;font:400 15px Lexend">
+                <div style="display:flex;justify-content:space-between"><span>Subtotal</span><span>{{ subtotalF }}</span></div>
+                <div style="display:flex;justify-content:space-between"><span>Envío</span><span>{{ shipF }}</span></div>
+                <div style="height:1px;background:#ece3d6"></div>
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-weight:600">Total</span><span style="font:600 24px Oswald">{{ totalF }}</span></div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isDone }}">
+          <div style="padding:70px 28px 40px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px">
+            <div style="width:88px;height:88px;border-radius:50%;background:#2c6e2f;display:grid;place-items:center"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></div>
+            <div style="font:600 30px/1.1 Oswald;text-transform:uppercase;margin-top:8px">¡Pedido confirmado!</div>
+            <div style="font:500 15px Lexend;color:#6b5f55">Pedido #{{ last.id }} · {{ last.totalF }}</div>
+            <div style="font:400 15px/1.5 Lexend;color:#4a3f36;max-width:300px;text-wrap:pretty">{{ last.payMsg }} Te escribimos por WhatsApp cuando salga.</div>
+            <div style="width:100%;display:flex;flex-direction:column;gap:10px;margin-top:20px">
+              <button onClick="{{ goOrders }}" style="all:unset;cursor:pointer;height:56px;border-radius:16px;background:#b5401c;color:#fff;display:flex;align-items:center;justify-content:center;font:600 16px Lexend">Ver mis pedidos</button>
+              <button onClick="{{ goHome }}" style="all:unset;cursor:pointer;height:56px;border-radius:16px;border:1.5px solid #d9cfc3;display:flex;align-items:center;justify-content:center;font:500 16px Lexend">Volver a la tienda</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isLogin }}">
+          <div style="height:60px;display:flex;align-items:center;padding:0 8px">
+            <button onClick="{{ goHome }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1c1916" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+          </div>
+          <div style="padding:8px 24px 48px;display:flex;flex-direction:column;gap:18px">
+            <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;margin-bottom:6px">
+              <img src="assets/logo.png" style="width:76px;height:76px;border-radius:50%;object-fit:cover">
+              <div style="font:600 28px/1.1 Oswald;text-transform:uppercase;letter-spacing:.02em;margin-top:4px">Iniciar sesión</div>
+              <div style="font:400 15px/1.45 Lexend;color:#6b5f55;max-width:280px;text-wrap:pretty">Entrá para ver tus pedidos y comprar más rápido.</div>
+            </div>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font:500 14px Lexend">Email</span>
+              <input value="{{ login.email }}" onChange="{{ setEmail }}" type="email" inputMode="email" autoComplete="email" placeholder="tuemail@ejemplo.com" style="height:56px;padding:0 16px;border-radius:14px;border:1.5px solid {{ errEmail.bd }};background:#fffdf9;font:400 16px Lexend;color:#1c1916;outline:none">
+              <sc-if value="{{ errEmail.on }}"><span style="font:400 13px Lexend;color:#b3261e">Ingresá un email válido.</span></sc-if>
+            </label>
+            <label style="display:flex;flex-direction:column;gap:6px">
+              <span style="font:500 14px Lexend">Contraseña</span>
+              <div style="height:56px;border-radius:14px;border:1.5px solid {{ errPass.bd }};background:#fffdf9;display:flex;align-items:center;padding:0 4px 0 16px">
+                <input value="{{ login.pass }}" onChange="{{ setPass }}" type="{{ passType }}" autoComplete="current-password" placeholder="Tu contraseña" style="all:unset;flex:1;min-width:0;font:400 16px Lexend;color:#1c1916">
+                <button onClick="{{ togglePass }}" style="all:unset;cursor:pointer;height:44px;padding:0 12px;display:flex;align-items:center;font:500 13.5px Lexend;color:#b5401c">{{ passToggleLabel }}</button>
+              </div>
+              <sc-if value="{{ errPass.on }}"><span style="font:400 13px Lexend;color:#b3261e">Ingresá tu contraseña.</span></sc-if>
+            </label>
+            <button onClick="{{ forgot }}" style="all:unset;cursor:pointer;align-self:flex-end;height:44px;margin-top:-10px;display:flex;align-items:center;font:500 14px Lexend;color:#b5401c">¿Olvidaste tu contraseña?</button>
+            <button onClick="{{ doLogin }}" style="all:unset;cursor:pointer;box-sizing:border-box;width:100%;height:58px;border-radius:16px;background:#b5401c;color:#fff;display:flex;align-items:center;justify-content:center;font:600 16.5px Lexend" style-active="transform:scale(.98)">Ingresar</button>
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:8px;padding-top:20px;border-top:1px solid #e9e0d3;font:400 15px Lexend;color:#4a3f36">
+              <span>¿No tenés cuenta?</span>
+              <button onClick="{{ register }}" style="all:unset;cursor:pointer;height:44px;display:flex;align-items:center;font:600 15px Lexend;color:#b5401c">Registrate</button>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ isOrders }}">
+          <div style="height:60px;display:flex;align-items:center;gap:8px;padding:0 8px;border-bottom:1px solid #e9e0d3">
+            <button onClick="{{ goHome }}" style="all:unset;cursor:pointer;width:44px;height:44px;display:grid;place-items:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1c1916" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"></path></svg></button>
+            <div style="font:600 20px Oswald;text-transform:uppercase;letter-spacing:.03em">Mis pedidos</div>
+          </div>
+          <div style="padding:16px 16px 140px;display:flex;flex-direction:column;gap:12px">
+            <sc-for list="{{ orderList }}" as="o" hint-placeholder-count="2">
+              <div style="background:#fffdf9;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:0 1px 2px rgba(60,40,20,.06)">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+                  <div>
+                    <div style="font:600 17px Oswald;letter-spacing:.02em">PEDIDO #{{ o.id }}</div>
+                    <div style="font:400 13px Lexend;color:#6b5f55;margin-top:2px">{{ o.date }}</div>
+                  </div>
+                  <span style="font:600 12px Lexend;padding:6px 10px;border-radius:999px;background:{{ o.pillBg }};color:{{ o.pillFg }}">{{ o.status }}</span>
+                </div>
+                <sc-if value="{{ o.active }}">
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">
+                      <sc-for list="{{ o.track }}" as="t"><div style="height:5px;border-radius:3px;background:{{ t.bg }}"></div></sc-for>
+                    </div>
+                    <div style="font:400 13px Lexend;color:#4a3f36">Recibido → <b style="font-weight:600">En preparación</b> → En camino → Entregado</div>
+                  </div>
+                </sc-if>
+                <div style="font:400 14px/1.45 Lexend;color:#4a3f36">{{ o.summary }}</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ece3d6;padding-top:12px">
+                  <span style="font:600 20px Oswald">{{ o.totalF }}</span>
+                  <button onClick="{{ o.repeat }}" style="all:unset;cursor:pointer;height:44px;padding:0 16px;border-radius:12px;border:1.5px solid #b5401c;color:#b5401c;display:flex;align-items:center;font:600 14px Lexend">Repetir pedido</button>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ showCartBar }}" hint-placeholder-val="{{ true }}">
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:24px 12px 26px;background:linear-gradient(rgba(247,242,234,0),#f7f2ea 40%);z-index:10">
+          <button onClick="{{ goCart }}" style="all:unset;cursor:pointer;box-sizing:border-box;width:100%;height:62px;border-radius:18px;padding:0 18px;display:flex;align-items:center;gap:12px;background:{{ bar.bg }};color:{{ bar.fg }};border:1.5px solid {{ bar.bd }};box-shadow:{{ bar.sh }}">
+            <span style="position:relative;display:grid;place-items:center">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1.2 11.2a2 2 0 0 1-2 1.8H8.2a2 2 0 0 1-2-1.8z"></path><path d="M9 8V6a3 3 0 0 1 6 0v2"></path></svg>
+              <sc-if value="{{ hasItems }}"><span style="position:absolute;top:-6px;right:-8px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#fff;color:#b5401c;font:700 12px/20px Lexend;text-align:center">{{ count }}</span></sc-if>
+            </span>
+            <span style="flex:1;font:600 16px Lexend">{{ bar.label }}</span>
+            <span style="font:600 22px Oswald">{{ subtotalF }}</span>
+          </button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ showAction }}">
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:12px 16px 28px;background:#fffdf9;border-top:1px solid #ece3d6;z-index:10;display:flex;flex-direction:column;gap:8px">
+          <sc-if value="{{ action.hasTotal }}"><div style="display:flex;justify-content:space-between;font:400 14px Lexend;color:#4a3f36"><span>{{ action.totalLabel }}</span><span style="font:600 18px Oswald;color:#1c1916">{{ action.total }}</span></div></sc-if>
+          <button onClick="{{ action.onClick }}" style="all:unset;cursor:pointer;box-sizing:border-box;width:100%;height:58px;border-radius:16px;background:{{ action.bg }};color:{{ action.fg }};display:flex;align-items:center;justify-content:center;gap:10px;font:600 16.5px Lexend" style-active="transform:scale(.98)">{{ action.label }}</button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasToast }}">
+        <div style="position:absolute;left:50%;bottom:104px;transform:translateX(-50%);z-index:20;background:#1c1916;color:#fff;padding:12px 18px;border-radius:999px;font:500 14px Lexend;white-space:nowrap;animation:toastIn .2s ease-out;box-shadow:0 6px 20px rgba(0,0,0,.2)">✓ {{ toast }}</div>
+      </sc-if>
+      <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:#1c1916;opacity:.85;z-index:40"></div>
+    </div>
+  </div>
+
+  <div style="width:370px;display:flex;flex-direction:column;gap:22px">
+    <div style="font:600 11px Lexend;letter-spacing:.1em;color:#8a7d70">ENCABEZADO · ESTADOS DE SESIÓN</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font:500 13px Lexend;color:#4a3f36">Sin sesión → lleva a “Iniciar sesión”</div>
+      <div style="background:#1c1916;color:#fff;padding:12px 16px 18px;border-radius:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <img src="assets/logo.png" style="width:46px;height:46px;border-radius:50%;object-fit:cover;flex:none">
+          <div style="flex:1;min-width:0"><div style="font:700 21px/1 Oswald;letter-spacing:.05em">MAR-CAL</div><div style="font:300 12.5px/1.2 Lexend;color:#d8cdbf;margin-top:4px">Carnicería y Verdulería</div></div>
+          <div style="flex:none;height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.22);display:flex;align-items:center;gap:8px;font:500 13.5px Lexend;white-space:nowrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"></path></svg>Iniciar sesión</div>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="font:500 13px Lexend;color:#4a3f36">Logueado → lleva a “Mis pedidos”</div>
+      <div style="background:#1c1916;color:#fff;padding:12px 16px 18px;border-radius:16px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <img src="assets/logo.png" style="width:46px;height:46px;border-radius:50%;object-fit:cover;flex:none">
+          <div style="flex:1;min-width:0"><div style="font:700 21px/1 Oswald;letter-spacing:.05em">MAR-CAL</div><div style="font:300 12.5px/1.2 Lexend;color:#d8cdbf;margin-top:4px">Carnicería y Verdulería</div></div>
+          <div style="flex:none;height:44px;padding:0 14px;border-radius:12px;border:1px solid rgba(255,255,255,.22);display:flex;align-items:center;gap:8px;font:500 13.5px Lexend;white-space:nowrap"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"></path><path d="M9 8h6M9 12h6"></path></svg>Pedidos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;layout&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;grilla&quot;,&quot;lista&quot;],&quot;default&quot;:&quot;grilla&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Catálogo&quot;},&quot;kgStep&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;0.5&quot;,&quot;0.25&quot;],&quot;default&quot;:&quot;0.5&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Catálogo&quot;}}">
+const P=[
+{id:'bife',cat:'carnes',name:'Bife ancho',img:'assets/carne.png',opts:[{l:'Por kilo',u:'kg',p:13500,s:'/ kg'}]},
+{id:'pollo',cat:'carnes',name:'Pollo entero',opts:[{l:'Por kilo',u:'kg',p:2900,s:'/ kg'}]},
+{id:'morcilla',cat:'carnes',name:'Morcilla',img:'assets/morcilla.png',opts:[{l:'Por kilo',u:'kg',p:4000,old:4500,s:'/ kg'}]},
+{id:'chin',cat:'carnes',name:'Chinchulines',img:'assets/chinchulines.png',opts:[{l:'Por kilo',u:'kg',p:5900,old:6000,s:'/ kg'}]},
+{id:'picada',cat:'carnes',name:'Carne picada',out:true,opts:[{l:'Por kilo',u:'kg',p:8500,s:'/ kg'}]},
+{id:'papa',cat:'verduras',name:'Papa',opts:[{l:'Por kilo',u:'kg',p:1000,s:'/ kg'},{l:'Bolsa 5 kg',u:'u',p:4000,s:'/ bolsa 5 kg'}]},
+{id:'tomate',cat:'verduras',name:'Tomate redondo',opts:[{l:'Por kilo',u:'kg',p:2400,s:'/ kg'}]},
+{id:'lechuga',cat:'verduras',name:'Lechuga criolla',opts:[{l:'Por unidad',u:'u',p:1200,s:'c/u'}]},
+{id:'zanahoria',cat:'verduras',name:'Zanahoria',opts:[{l:'Por kilo',u:'kg',p:1300,s:'/ kg'}]},
+{id:'huevo',cat:'almacen',name:'Huevos',opts:[{l:'Maple',u:'u',p:2200,s:'/ maple'},{l:'Unidad',u:'u',p:290,s:'c/u'}]},
+{id:'pan',cat:'almacen',name:'Pan',opts:[{l:'Por kilo',u:'kg',p:1700,s:'/ kg'}]},
+{id:'achuras',cat:'combos',name:'Combo Achuras',desc:'Incluye 1 kg de chinchulines, 1 kg de chorizo y 1 kg de morcilla.',opts:[{l:'Combo',u:'u',p:12000,s:'/ combo'}]}
+];
+const byId=Object.fromEntries(P.map(p=>[p.id,p]));
+const CATS={
+carnes:{title:'Carnicería',label:'CARNICERÍA',sub:'Carne fresca, de primera calidad.',img:'assets/carne.png',pos:'30% center',color:'#a8241d',tint:'#f8e4df',tint0:'rgba(248,228,223,0)'},
+verduras:{title:'Verdulería',label:'VERDULERÍA',sub:'Frutas y verduras frescas, directo del campo.',img:'assets/verdu.png',pos:'center bottom',color:'#2c6e2f',tint:'#e4efda',tint0:'rgba(228,239,218,0)'},
+almacen:{title:'Más productos',label:'ALMACÉN',sub:'Todo lo que necesitás, en un solo lugar.',img:'assets/mas.png',pos:'left center',color:'#7a3b12',tint:'#f5ead8',tint0:'rgba(245,234,216,0)'},
+combos:{title:'Combos',label:'COMBOS',sub:'Armados para ahorrar, listos para llevar.',img:'assets/promo.png',pos:'60% center',color:'#a8371a',tint:'#f7e6da',tint0:'rgba(247,230,218,0)'}
+};
+const ZONES=[
+{id:'retiro',name:'Retiro en el local',sub:'Arenales 345, Barrio Juniors',cost:0},
+{id:'juniors',name:'Barrio Juniors y alrededores',sub:'Envío a domicilio',cost:1500},
+{id:'centro',name:'Centro, Alberdi y General Paz',sub:'Envío a domicilio',cost:2500},
+{id:'otras',name:'Otros barrios',sub:'Envío a domicilio',cost:3500}
+];
+const fmt=n=>'$'+Math.round(n).toLocaleString('es-AR');
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const fq=(q,u)=>u==='kg'?(q<1?Math.round(q*1000)+' g':String(+q.toFixed(2)).replace('.',',')+' kg'):q+(q===1?' unidad':' unidades');
+const fqs=(q,u)=>u==='kg'?fq(q,u):q+' u.';
+
+class Component extends DCLogic {
+  state={loggedIn:false,login:{email:'',pass:''},lerr:{},showPass:false,screen:'home',cat:'todo',q:'',cart:{},detail:null,step:1,form:{name:'',phone:'',address:'',notes:''},zone:null,pay:'mp',err:{},toast:null,last:null,
+    orders:[
+      {id:1038,date:'12 de octubre',items:[['pollo|0',2],['papa|1',1],['huevo|0',1]],ship:1500,status:'Entregado'},
+      {id:1029,date:'3 de octubre',items:[['achuras|0',1],['tomate|0',1]],ship:1500,status:'Entregado'}
+    ]};
+  scrollRef=React.createRef();
+  doLogin(){const l=this.state.login,err={};if(!/^\S+@\S+\.\S+$/.test(l.email))err.email=1;if(!l.pass)err.pass=1;
+    if(Object.keys(err).length){this.setState({lerr:err});return}
+    this.setState({loggedIn:true,lerr:{},login:{email:'',pass:''}});this.go('home');this.flash('Sesión iniciada')}
+  step(){return parseFloat(this.props.kgStep??'0.5')}
+  go(screen,extra){this.setState({screen,...(extra||{})});const el=this.scrollRef.current;if(el)el.scrollTop=0}
+  flash(t){clearTimeout(this._t);this.setState({toast:t});this._t=setTimeout(()=>this.setState({toast:null}),1600)}
+  setQty(key,q){this.setState(s=>{const c={...s.cart};if(q<=0)delete c[key];else c[key]=+q.toFixed(2);return{cart:c}})}
+  bump(key,dir){const [id,oi]=key.split('|');const o=byId[id].opts[+oi];const st=o.u==='kg'?this.step():1;const q=(this.state.cart[key]||0)+dir*st;this.setQty(key,q<st-1e-9?0:q)}
+  addDefault(p){const o=p.opts[0];const q=o.u==='kg'?1:1;this.setQty(p.id+'|0',q);this.flash(p.name+' · '+fqs(q,o.u))}
+  openDetail(id){const p=byId[id];const key=id+'|0';const o=p.opts[0];this.go('product',{detail:{id,oi:0,qty:this.state.cart[key]||1}})}
+  seed(){if(!Object.keys(this.state.cart).length)this.setState({cart:{'pollo|0':1.5,'papa|1':1,'morcilla|0':1}})}
+  orderTotal(o){return o.items.reduce((a,[k,q])=>{const [id,oi]=k.split('|');return a+byId[id].opts[+oi].p*q},0)+o.ship}
+  next(){
+    const s=this.state,f=s.form,err={};
+    if(s.step===1){if(!f.name.trim())err.name=1;if(f.phone.replace(/\D/g,'').length<8)err.phone=1}
+    if(s.step===2){if(!s.zone)err.zone=1;else if(s.zone!=='retiro'&&!f.address.trim())err.addr=1}
+    if(Object.keys(err).length){this.setState({err});return}
+    if(s.step<4){this.setState({step:s.step+1,err:{}});const el=this.scrollRef.current;if(el)el.scrollTop=0;return}
+    const id=1044+s.orders.filter(o=>o.id>=1044).length;
+    const zone=ZONES.find(z=>z.id===s.zone);
+    const o={id,date:'Hoy, 14 de octubre',items:Object.entries(s.cart),ship:zone.cost,status:'En preparación',active:true};
+    this.setState({orders:[o,...s.orders],cart:{},last:{id,totalF:fmt(this.orderTotal(o)),payMsg:s.pay==='mp'?'Tu pago con Mercado Pago fue aprobado.':'Pagás en efectivo cuando lo recibís.'},step:1});
+    this.go('done');
+  }
+  renderVals(){
+    const s=this.state,kgS=this.step();
+    const isGrid=(this.props.layout??'grilla')!=='lista';
+    const lines=Object.entries(s.cart).map(([key,q])=>{const [id,oi]=key.split('|');const p=byId[id];const o=p.opts[+oi];const c=CATS[p.cat];
+      return{key,name:p.name,sub:fmt(o.p)+' '+o.s+(p.opts.length>1?' · '+o.l:''),qty:fqs(q,o.u),total:fmt(o.p*q),hasImg:!!p.img,noImg:!p.img,img:p.img,tint:c.tint,
+        inc:()=>this.bump(key,1),dec:()=>this.bump(key,-1),remove:()=>this.setQty(key,0),line:o.p*q}});
+    const subtotal=lines.reduce((a,l)=>a+l.line,0),count=lines.length;
+    const zone=ZONES.find(z=>z.id===s.zone);const ship=zone?zone.cost:0;const total=subtotal+ship;
+    const vm=p=>{const o=p.opts[0],key=p.id+'|0',q=s.cart[key],c=CATS[p.cat],multi=p.opts.length>1;
+      return{name:p.name,price:fmt(o.p),suffix:o.s,old:o.old?fmt(o.old):'',oferta:!!o.old,hasImg:!!p.img,noImg:!p.img,img:p.img,tint:c.tint,
+        multi,multiLabel:multi?'También: '+p.opts.slice(1).map(x=>x.l.toLowerCase()+' '+fmt(x.p)).join(', '):'',
+        out:!!p.out,op:p.out?.6:1,inCart:!!q&&!p.out,showAdd:!q&&!p.out,qty:q?fqs(q,o.u):'',
+        open:()=>this.openDetail(p.id),add:()=>multi?this.openDetail(p.id):this.addDefault(p),inc:()=>this.bump(key,1),dec:()=>this.bump(key,-1)}};
+    const qn=norm(s.q.trim());
+    let sections=[];
+    if(qn){const it=P.filter(p=>norm(p.name).includes(qn)||norm(CATS[p.cat].title).includes(qn));sections=[{title:it.length+(it.length===1?' resultado':' resultados'),plainTitle:true,hasBanner:false,empty:!it.length,items:it.map(vm),hasMore:false}]}
+    else if(s.cat==='ofertas'){const it=P.filter(p=>p.opts[0].old);sections=[{title:'Ofertas de la semana',plainTitle:true,items:it.map(vm)}]}
+    else{const keys=s.cat==='todo'?Object.keys(CATS):[s.cat];
+      sections=keys.map(k=>{const c=CATS[k];const all=P.filter(p=>p.cat===k);const lim=s.cat==='todo'?4:99;
+        return{...c,hasBanner:true,plainTitle:false,items:all.slice(0,lim).map(vm),hasMore:all.length>lim,moreLabel:'Ver los '+all.length+' productos de '+c.title.toLowerCase(),seeAll:()=>this.go('home',{cat:k})}})}
+    const chipDefs=[['todo','Todo'],['ofertas','Ofertas'],['carnes','Carnes'],['verduras','Verduras'],['almacen','Almacén'],['combos','Combos']];
+    const chips=chipDefs.map(([id,label])=>{const a=s.cat===id&&!qn;return{label,bg:a?'#1c1916':'#fffdf9',fg:a?'#fff':'#1c1916',bd:a?'#1c1916':'#e3d9cc',pick:()=>this.setState({cat:id,q:''})}});
+
+    let d={};
+    if(s.detail){const p=byId[s.detail.id],oi=s.detail.oi,o=p.opts[oi],c=CATS[p.cat],q=s.detail.qty;
+      const setD=x=>this.setState(st=>({detail:{...st.detail,...x}}));
+      const st=o.u==='kg'?kgS:1;
+      const quick=(kgS<0.5?[0.25,0.5,1,2]:[0.5,1,1.5,2]).map(v=>{const a=Math.abs(v-q)<1e-9;return{label:fq(v,'kg'),bg:a?'#1c1916':'#fffdf9',fg:a?'#fff':'#1c1916',bd:a?'#1c1916':'#e3d9cc',pick:()=>setD({qty:v})}});
+      d={name:p.name,catLabel:c.label,color:c.color,tint:c.tint,hasImg:!!p.img,noImg:!p.img,img:p.img,price:fmt(o.p),suffix:o.s,old:o.old?fmt(o.old):'',oferta:!!o.old,
+        hasDesc:!!p.desc,desc:p.desc,multi:p.opts.length>1,canBuy:!p.out,isKg:o.u==='kg',quick,qty:fq(q,o.u),
+        opts:p.opts.map((x,i)=>({label:x.l,price:fmt(x.p),bd:i===oi?'#b5401c':'#e3d9cc',pick:()=>setD({oi:i,qty:s.cart[p.id+'|'+i]||1})})),
+        inc:()=>setD({qty:+(q+st).toFixed(2)}),dec:()=>setD({qty:Math.max(st,+(q-st).toFixed(2))}),
+        out:!!p.out,line:o.p*q,key:p.id+'|'+oi,inCart:!!s.cart[p.id+'|'+oi],qRaw:q,u:o.u};
+    }
+
+    const sc=s.screen;
+    let action=null;
+    if(sc==='product'&&d.name){
+      action=d.out?{label:'Sin stock por hoy',bg:'#e6ded2',fg:'#6b5f55',onClick:()=>{}}:
+        {label:(d.inCart?'Actualizar carrito · ':'Agregar al carrito · ')+fmt(d.line),bg:'#b5401c',fg:'#fff',
+         onClick:()=>{this.setQty(d.key,d.qRaw);this.flash(d.name+' · '+fqs(d.qRaw,d.u));this.go('home')}};
+    }
+    if(sc==='cart'&&count)action={hasTotal:true,totalLabel:'Subtotal ('+count+(count===1?' producto)':' productos)'),total:fmt(subtotal),label:'Continuar con la compra',bg:'#b5401c',fg:'#fff',onClick:()=>this.go('checkout',{step:1,err:{}})};
+    if(sc==='checkout'){const lab=s.step<4?'Continuar':(s.pay==='mp'?'Pagar '+fmt(total)+' con Mercado Pago':'Confirmar pedido · '+fmt(total));
+      action={hasTotal:s.step<4,totalLabel:s.step>=2&&zone?'Total con envío':'Subtotal',total:fmt(s.step>=2&&zone?total:subtotal),label:lab,bg:s.step===4&&s.pay==='mp'?'#009ee3':'#b5401c',fg:'#fff',onClick:()=>this.next()}}
+
+    const stepNames=['Datos','Envío','Pago','Confirmar'];
+    const steps=stepNames.map((label,i)=>({label,bar:i+1<=s.step?'#b5401c':'#e3d9cc',fg:i+1===s.step?'#1c1916':'#8a7d70'}));
+    const zones=ZONES.map(z=>{const a=s.zone===z.id;return{name:z.name,sub:z.sub,price:z.cost?fmt(z.cost):'Gratis',priceFg:z.cost?'#1c1916':'#2c6e2f',bd:a?'#b5401c':'#e3d9cc',ring:a?'#b5401c':'#c9bdb0',dot:a?'#b5401c':'transparent',pick:()=>this.setState({zone:z.id,err:{}})}});
+    const pays=[{id:'mp',name:'Mercado Pago',sub:'Tarjeta de crédito, débito o dinero en cuenta. Al confirmar te llevamos a Mercado Pago.',rec:true},{id:'cash',name:'Efectivo al recibir',sub:'Pagás cuando llega tu pedido o al retirarlo.'}]
+      .map(p=>{const a=s.pay===p.id;return{...p,bd:a?'#b5401c':'#e3d9cc',ring:a?'#b5401c':'#c9bdb0',dot:a?'#b5401c':'transparent',pick:()=>this.setState({pay:p.id})}});
+    const f=s.form;
+    const summaryRows=[
+      {k:'DATOS',v:f.name||'—',v2:f.phone,edit:()=>this.setState({step:1})},
+      {k:'ENVÍO',v:zone?zone.name+' · '+(zone.cost?fmt(zone.cost):'Gratis'):'—',v2:zone&&zone.id!=='retiro'?f.address:(zone?zone.sub:''),edit:()=>this.setState({step:2})},
+      {k:'PAGO',v:s.pay==='mp'?'Mercado Pago':'Efectivo al recibir',v2:'',edit:()=>this.setState({step:3})}];
+    const setF=k=>e=>{const v=e.target.value;this.setState(st=>({form:{...st.form,[k]:v}}))};
+    const er=k=>({on:!!s.err[k],bd:s.err[k]?'#b3261e':'#e3d9cc'});
+
+    const PILL={'Entregado':['#ece6dd','#4a3f36'],'En preparación':['#fbe9c8','#7a5a1e']};
+    const orderList=s.orders.map(o=>({id:o.id,date:o.date,status:o.status,pillBg:PILL[o.status][0],pillFg:PILL[o.status][1],active:!!o.active,
+      track:[0,1,2,3].map(i=>({bg:i<=1?'#b5401c':'#e3d9cc'})),
+      summary:o.items.map(([k,q])=>{const [id,oi]=k.split('|');const p=byId[id];const op=p.opts[+oi];return p.name+(p.opts.length>1?' ('+op.l.toLowerCase()+')':'')+' '+fqs(q,op.u)}).join(' · '),
+      totalF:fmt(this.orderTotal(o)),
+      repeat:()=>{this.setState(st=>{const c={...st.cart};o.items.forEach(([k,q])=>{if(!byId[k.split('|')[0]].out)c[k]=q});return{cart:c}});this.go('cart')}}));
+
+    const jumpDefs=[['home','Inicio / catálogo',()=>this.go('home',{cat:'todo',q:''})],['product','Detalle de producto',()=>this.openDetail('pollo')],['cart','Carrito',()=>{this.seed();this.go('cart')}],['checkout','Checkout',()=>{this.seed();this.go('checkout',{step:1,err:{}})}],['orders','Mis pedidos',()=>this.go('orders')],['login','Iniciar sesión',()=>this.go('login')]];
+    const jumps=jumpDefs.map(([id,label,go],i)=>{const a=sc===id||(id==='checkout'&&sc==='done');return{n:'0'+(i+1),label,go,bg:a?'#1c1916':'transparent',fg:a?'#fff':'#1c1916'}});
+
+    const dark=sc==='home';
+    return{
+      scrollRef:this.scrollRef,jumps,statusBg:sc==='product'?'transparent':(dark?'#1c1916':'#f7f2ea'),statusFg:dark?'#fff':'#1c1916',
+      isHome:sc==='home',isProduct:sc==='product',isCart:sc==='cart',isCheckout:sc==='checkout',isDone:sc==='done',isOrders:sc==='orders',
+      q:s.q,hasQ:!!s.q,onSearch:e=>this.setState({q:e.target.value}),clearSearch:()=>this.setState({q:''}),
+      chips,sections,isGrid,isList:!isGrid,showPromo:s.cat==='todo'&&!qn,pickOfertas:()=>this.go('home',{cat:'ofertas'}),
+      d,lines,cartEmpty:!count,cartFull:!!count,subtotalF:fmt(subtotal),shipF:zone?(zone.cost?fmt(zone.cost):'Gratis'):'—',totalF:fmt(total),
+      count,hasItems:!!count,
+      showCartBar:sc==='home'||sc==='orders',
+      bar:count?{bg:'#b5401c',fg:'#fff',bd:'#b5401c',sh:'0 8px 20px rgba(181,64,28,.35)',label:'Ver carrito'}:{bg:'#fffdf9',fg:'#6b5f55',bd:'#e3d9cc',sh:'0 4px 14px rgba(60,40,20,.08)',label:'Tu carrito está vacío'},
+      showAction:!!action,action:action||{},
+      steps,step1:s.step===1,step2:s.step===2,step3:s.step===3,step4:s.step===4,
+      form:f,setName:setF('name'),setPhone:setF('phone'),setAddress:setF('address'),setNotes:setF('notes'),
+      errName:er('name'),errPhone:er('phone'),errAddr:er('addr'),errZone:!!s.err.zone,needsAddress:!!zone&&zone.id!=='retiro',
+      zones,pays,summaryRows,
+      back:()=>s.step>1?this.setState({step:s.step-1,err:{}}):this.go('cart'),
+      last:s.last||{},orderList,
+      goHome:()=>this.go('home'),goCart:()=>this.go('cart'),goOrders:()=>this.go('orders'),
+      hasToast:!!s.toast,toast:s.toast,
+      loggedIn:s.loggedIn,loggedOut:!s.loggedIn,goLogin:()=>this.go('login'),isLogin:sc==='login',
+      login:s.login,setEmail:e=>{const v=e.target.value;this.setState(st=>({login:{...st.login,email:v}}))},setPass:e=>{const v=e.target.value;this.setState(st=>({login:{...st.login,pass:v}}))},
+      errEmail:{on:!!s.lerr.email,bd:s.lerr.email?'#b3261e':'#e3d9cc'},errPass:{on:!!s.lerr.pass,bd:s.lerr.pass?'#b3261e':'#e3d9cc'},
+      passType:s.showPass?'text':'password',passToggleLabel:s.showPass?'Ocultar':'Mostrar',togglePass:()=>this.setState({showPass:!s.showPass}),
+      doLogin:()=>this.doLogin(),forgot:()=>this.flash('Te enviamos un email para recuperarla'),register:()=>this.flash('Registro: pantalla pendiente'),
+      setLoggedOut:()=>this.setState({loggedIn:false}),setLoggedIn:()=>this.setState({loggedIn:true}),
+      sessOut:{bg:s.loggedIn?'transparent':'#fffdf9',fg:'#1c1916'},sessIn:{bg:s.loggedIn?'#fffdf9':'transparent',fg:'#1c1916'}
+    };
+  }
+}
+</script>
+</body>
+</html>
