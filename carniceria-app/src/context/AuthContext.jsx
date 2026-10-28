@@ -8,6 +8,13 @@ export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null)
   const [cliente, setCliente] = useState(null)
   const [loading, setLoading] = useState(true)
+  // De qué usuario de Auth es el perfil (usuario/cliente) cargado ahora.
+  // Después de un login, `session` se actualiza ANTES de que loadPerfil
+  // termine -- comparando este id con session.user.id, ProtectedRoute
+  // sabe si `usuario` todavía es null porque no es staff o porque no
+  // terminó de cargar. Un refresh de token (mismo usuario) no lo cambia,
+  // así que no desmonta el panel cada hora como lo haría `loading`.
+  const [perfilDe, setPerfilDe] = useState(null)
 
   // Un mismo login puede ser personal (usuarios) o cliente de la tienda
   // (clientes_web) -- nunca ambos. Se prueba primero usuarios porque esas
@@ -75,6 +82,8 @@ export function AuthProvider({ children }) {
       setSession(data.session)
       if (data.session) {
         await loadPerfil(data.session.user)
+        if (!isMounted) return
+        setPerfilDe(data.session.user.id)
       }
       setLoading(false)
     }
@@ -86,9 +95,11 @@ export function AuthProvider({ children }) {
         setSession(newSession)
         if (newSession) {
           await loadPerfil(newSession.user)
+          setPerfilDe(newSession.user.id)
         } else {
           setUsuario(null)
           setCliente(null)
+          setPerfilDe(null)
         }
       },
     )
@@ -111,7 +122,9 @@ export function AuthProvider({ children }) {
     await supabase.auth.signOut()
   }
 
-  const value = { session, usuario, cliente, loading, signIn, signOut }
+  const perfilListo = !session || perfilDe === session.user.id
+
+  const value = { session, usuario, cliente, loading, perfilListo, signIn, signOut }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

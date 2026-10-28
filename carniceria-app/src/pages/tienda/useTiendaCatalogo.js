@@ -15,7 +15,10 @@ export function useTiendaCatalogo() {
   useEffect(() => {
     supabase
       .from('productos')
-      .select('*, unidades_venta_producto(*)')
+      // catalogo_unidades = unidades sin costo_vigente (ver
+      // schema_catalogo_unidades_publico.sql). El alias mantiene el nombre
+      // `unidades_venta_producto` que usan ProductoCard y la versión mobile.
+      .select('*, unidades_venta_producto:catalogo_unidades(*)')
       .eq('sucursal_id', SUCURSAL_ID)
       .eq('activo', true)
       .then(({ data, error }) => {

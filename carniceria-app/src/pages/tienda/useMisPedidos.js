@@ -54,7 +54,7 @@ export function useMisPedidos() {
       const { data: detalleData, error: errorDetalle } = await supabase
         .from('detalle_pedidos')
         .select(
-          'pedido_id, cantidad, precio_unitario, subtotal, producto_id, unidad_venta_id, combo_id, productos(nombre), combos(nombre), unidades_venta_producto(nombre_unidad)',
+          'pedido_id, cantidad, precio_unitario, subtotal, producto_id, unidad_venta_id, combo_id, productos(nombre), combos(nombre), unidades_venta_producto:catalogo_unidades(nombre_unidad)',
         )
         .in('pedido_id', ids)
 
