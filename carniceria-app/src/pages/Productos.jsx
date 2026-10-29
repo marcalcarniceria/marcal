@@ -723,11 +723,8 @@ export function Productos() {
                   return (
                   <tr
                     key={producto.id}
-                    style={{
-                      opacity: producto.activo === false ? 0.55 : 1,
-                      background: bajo ? '#f6dcd6' : undefined,
-                      boxShadow: bajo ? 'inset 3px 0 0 var(--color-error)' : undefined,
-                    }}
+                    className={bajo ? 'staff-fila-alerta' : undefined}
+                    style={{ opacity: producto.activo === false ? 0.55 : 1 }}
                   >
                     <td>{producto.nombre}</td>
                     <td>{producto.stock_actual_unidad_base}</td>

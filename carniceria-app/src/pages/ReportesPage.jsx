@@ -32,8 +32,14 @@ function inicioDeSemana(fecha) {
   return d
 }
 
+// Fecha LOCAL (YYYY-MM-DD). toISOString() la pasaba a UTC: desde las
+// 21:00 de Argentina "Hoy" ya era el día siguiente y los reportes del
+// día quedaban vacíos.
 function aISO(fecha) {
-  return fecha.toISOString().slice(0, 10)
+  const anio = fecha.getFullYear()
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0')
+  const dia = String(fecha.getDate()).padStart(2, '0')
+  return `${anio}-${mes}-${dia}`
 }
 
 // Calcula el rango de fechas (inclusive) según la opción elegida. Se

@@ -1,18 +1,34 @@
 .staff {
-  --color-bg: #f5f2ec;
+  /* Paleta de marca: naranja (acción), rojo (alertas/egresos), verde
+     (ingresos/ganancias), sobre neutros grises fríos. Los nombres de
+     variables se mantienen para no tocar ningún componente. */
+  --color-bg: #f4f6f8;
   --color-surface: #ffffff;
-  --color-dark: #1c1714;
-  --color-dark-alt: #2a211c;
-  --color-accent: #b0431f;
-  --color-accent-hover: #8f3517;
-  --color-gold: #b3862f;
-  --color-text: #241c17;
-  --color-text-muted: #7a6b5d;
-  --color-border: #e2dccf;
-  --color-success: #3f7d4f;
-  --color-error: #b0341f;
-  --shadow-sm: 0 1px 3px rgba(28, 23, 20, 0.07);
-  --shadow-md: 0 6px 18px rgba(28, 23, 20, 0.1);
+  --color-dark: #1e293b;          /* sidebar + títulos */
+  --color-dark-alt: #0f172a;
+  --color-accent: #ea580c;        /* naranja de marca */
+  --color-accent-hover: #c2410c;
+  --color-accent-soft: #fff7ed;   /* tinte de hover */
+  --color-accent-borde: #fdba74;
+  --color-gold: #f59e0b;          /* ámbar: avisos/pendientes */
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-border-fuerte: #cbd5e1;
+  --color-success: #15803d;       /* verde de marca (texto) */
+  --color-success-btn: #16a34a;
+  --color-success-soft: #f0fdf4;
+  --color-error: #dc2626;         /* rojo de marca */
+  --color-error-hover: #b91c1c;
+  --color-error-soft: #fef2f2;
+  --color-serie-secundaria: #475569; /* 2da serie de gráficos (online, menos vendidos) */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+  /* Alias que ya usa CompraProveedor.jsx en estilos inline (con
+     fallback); definirlos alinea esos dos elementos con la paleta. */
+  --color-exito: var(--color-success-btn);
+  --color-bg-suave: #f8fafc;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --font-display: 'Oswald', sans-serif;
   --font-body: 'Work Sans', sans-serif;
@@ -155,8 +171,8 @@
   height: 34px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: linear-gradient(145deg, var(--color-gold), #8a6423);
-  color: var(--color-dark);
+  background: linear-gradient(145deg, #f97316, var(--color-error));
+  color: #fff;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.05rem;
@@ -321,15 +337,40 @@
 }
 
 .staff-btn-secundario {
-  background: transparent;
+  background: var(--color-surface);
   color: var(--color-text);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-fuerte);
   box-shadow: none;
 }
 
 .staff-btn-secundario:hover {
-  background: var(--color-bg);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-borde);
+  color: var(--color-accent-hover);
   box-shadow: none;
+}
+
+.staff-btn-secundario:disabled {
+  background: var(--color-surface);
+  border-color: var(--color-border);
+}
+
+/* Variantes por tipo de acción, listas para usar sumando la clase al
+   botón (ej. className="staff-btn staff-btn-exito"). */
+.staff-btn-exito {
+  background: var(--color-success-btn);
+}
+
+.staff-btn-exito:hover {
+  background: var(--color-success);
+}
+
+.staff-btn-peligro {
+  background: var(--color-error);
+}
+
+.staff-btn-peligro:hover {
+  background: var(--color-error-hover);
 }
 
 /* Reportes (pantalla de inicio del dueño) */
@@ -343,17 +384,19 @@
   font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.82rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-fuerte);
   border-radius: 999px;
   padding: 0.45rem 1rem;
-  background: transparent;
+  background: var(--color-surface);
   color: var(--color-text);
   cursor: pointer;
   transition: background 0.15s var(--ease), border-color 0.15s var(--ease), color 0.15s var(--ease);
 }
 
 .reportes-rango-btn:hover {
-  background: var(--color-bg);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-borde);
+  color: var(--color-accent-hover);
 }
 
 .reportes-rango-btn.activo {
@@ -388,11 +431,29 @@
   margin-bottom: 0.85rem;
 }
 
+/* Máximo 2 reportes por fila: con auto-fill entraban 3+ columnas en
+   pantallas anchas y la vista quedaba sobrecargada. minmax(0, 1fr) (y no
+   1fr a secas) evita que una tabla ancha dentro de una tarjeta estire su
+   columna y descuadre la grilla. Las tarjetas de una misma fila se
+   estiran al alto de la más alta (stretch) para que los bordes alineen. */
 .reportes-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 0.85rem;
-  align-items: start;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: stretch;
+}
+
+.reportes-grid > .reportes-card {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Por debajo de ~1100px dos columnas quedan angostas (el sidebar se come
+   230px): una sola columna. Mismo corte que .reportes-card-ancha abajo. */
+@media (max-width: 1100px) {
+  .reportes-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .reportes-card {
@@ -427,14 +488,14 @@
    un vistazo -- se destaca con acento de color en vez de pesar igual
    que el resto de las tarjetas (todas compitiendo por atención). */
 .reportes-card-principal {
-  border-top: 3px solid var(--color-accent);
-  background: linear-gradient(180deg, rgba(176, 67, 31, 0.05), transparent 70%);
+  border-top: 3px solid var(--color-success-btn);
+  background: linear-gradient(180deg, rgba(22, 163, 74, 0.05), transparent 70%);
 }
 
 .reportes-card-principal .reportes-card-titulo {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--color-accent);
+  color: var(--color-dark);
 }
 
 .reportes-numero-mediano {
@@ -454,7 +515,7 @@
 .reportes-numero-grande {
   font-family: var(--font-display);
   font-size: 2.4rem;
-  color: var(--color-accent);
+  color: var(--color-success);
   margin: 0;
   line-height: 1;
 }
@@ -476,7 +537,9 @@
   grid-column: span 2;
 }
 
-@media (max-width: 720px) {
+/* Mismo corte que .reportes-grid: con 1 columna, un span 2 crearía una
+   segunda columna implícita. */
+@media (max-width: 1100px) {
   .reportes-card-ancha {
     grid-column: span 1;
   }
@@ -513,7 +576,7 @@
 }
 
 .reportes-barra-online {
-  background: var(--color-gold);
+  background: var(--color-serie-secundaria);
   transition: width 0.3s var(--ease);
 }
 
@@ -566,7 +629,7 @@
 }
 
 .reportes-bar-fill-bajo {
-  background: var(--color-gold);
+  background: var(--color-serie-secundaria);
 }
 
 .reportes-bar-valor {
@@ -623,11 +686,12 @@
 }
 
 .reportes-leyenda-online {
-  background: var(--color-gold);
+  background: var(--color-serie-secundaria);
 }
 
 .reportes-costo-subio {
   color: var(--color-error);
+  font-weight: 600;
 }
 
 .reportes-costo-bajo {
@@ -645,7 +709,7 @@
 }
 
 .staff-btn-ingreso:hover {
-  background: #dcefe0;
+  background: var(--color-success-soft);
   box-shadow: none;
 }
 
@@ -679,7 +743,9 @@
 }
 
 .staff-tab:hover {
-  background: var(--color-bg);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent-borde);
+  color: var(--color-accent-hover);
 }
 
 .staff-tab.activo {
@@ -699,7 +765,7 @@
 
 .staff-tab-secundaria:hover {
   background: var(--color-bg);
-  border-color: #c9beac;
+  border-color: var(--color-border-fuerte);
   color: var(--color-text);
 }
 
@@ -745,7 +811,7 @@
 }
 
 .staff-btn-egreso:hover {
-  background: #f6dcd6;
+  background: var(--color-error-soft);
   box-shadow: none;
 }
 
@@ -842,7 +908,7 @@
   padding: 0.45rem 0.6rem;
   border: 1px solid var(--color-border);
   border-radius: 5px;
-  background: #fff;
+  background: var(--color-surface);
   color: var(--color-text);
   transition: border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
 }
@@ -851,8 +917,8 @@
 .staff select:focus,
 .staff textarea:focus {
   outline: none;
-  border-color: var(--color-gold);
-  box-shadow: 0 0 0 3px rgba(179, 134, 47, 0.16);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.15);
 }
 
 /* Tamaño cómodo para tocar con el dedo (~44px), sin cambiar cómo se ven
@@ -884,7 +950,7 @@
   text-transform: uppercase;
   font-size: 0.72rem;
   letter-spacing: 0.03em;
-  color: var(--color-text-muted);
+  color: var(--color-text);
   border-bottom: 2px solid var(--color-border);
   padding: 0 0.5rem 0.5rem 0;
 }
@@ -899,7 +965,27 @@
 }
 
 .staff-table tbody tr:hover {
-  background: rgba(179, 134, 47, 0.05);
+  background: #f8fafc;
+}
+
+/* Fila en alerta (ej. stock bajo en Productos). El fondo va en cada <td>
+   -- no en el <tr> -- para que pinte el renglón completo de punta a punta
+   en todos los navegadores. El indicador lateral es un borde real en la
+   primera celda (un box-shadow sobre el <tr> se dibujaba encima del
+   texto), con padding propio para separarlo del nombre: el resto de las
+   celdas de .staff-table no tienen padding izquierdo. */
+.staff-table tbody tr.staff-fila-alerta td {
+  background: var(--color-error-soft);
+  border-bottom-color: #fecaca;
+}
+
+.staff-table tbody tr.staff-fila-alerta td:first-child {
+  border-left: 3px solid var(--color-error);
+  padding-left: 0.65rem;
+}
+
+.staff-table tbody tr.staff-fila-alerta:hover td {
+  background: #fee2e2;
 }
 
 /* Mobile: las tablas anchas (Productos, Cajero, Cierre de caja, Compras,
@@ -928,7 +1014,7 @@
    borde horizontal se oculta entre filas del mismo grupo, quedando
    únicamente al cierre de cada bloque. */
 .mov-stock-fila-agrupada td {
-  background: rgba(179, 134, 47, 0.035);
+  background: #f8fafc;
 }
 
 .mov-stock-sin-separador td {
@@ -971,21 +1057,22 @@
   color: var(--color-text-muted);
 }
 
-.staff-badge-pendiente { background: #f4e2ce; color: #8a5a1f; }
+.staff-badge-pendiente { background: #fef3c7; color: #92400e; }
 .staff-badge-pagado,
 .staff-badge-activa,
-.staff-badge-exito { background: #dcefe0; color: var(--color-success); }
+.staff-badge-exito { background: #dcfce7; color: var(--color-success); }
 .staff-badge-cancelado,
-.staff-badge-anulada { background: #f6dcd6; color: var(--color-error); }
+.staff-badge-anulada { background: #fee2e2; color: var(--color-error-hover); }
 .staff-badge-camino,
-.staff-badge-preparacion { background: #dbe6f4; color: #34588a; }
+.staff-badge-preparacion { background: #dbeafe; color: #1d4ed8; }
 
 .staff-alerta-stock {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  background: #f4e2ce;
-  color: #8a5a1f;
+  background: var(--color-error-soft);
+  color: var(--color-error-hover);
+  border: 1px solid #fecaca;
   font-weight: 600;
   font-size: 0.8rem;
   padding: 0.35rem 0.7rem;
@@ -994,7 +1081,7 @@
 }
 
 .staff-detalle-faltante {
-  color: #8a5a1f;
+  color: var(--color-error);
   font-weight: 600;
 }
 
@@ -1048,7 +1135,7 @@
 }
 
 .cajero-producto-btn:hover {
-  border-color: var(--color-gold);
+  border-color: var(--color-accent);
   box-shadow: var(--shadow-md);
 }
 
@@ -1059,13 +1146,13 @@
 /* Combos en la caja: fondo dorado suave + badge, para distinguirlos de
    un vistazo de los productos sueltos. */
 .cajero-combo-btn {
-  background: #faf3e3;
-  border-color: #e6d3a8;
+  background: var(--color-accent-soft);
+  border-color: #fed7aa;
 }
 
 .cajero-combo-badge {
   display: inline-block;
-  background: var(--color-gold);
+  background: var(--color-accent);
   color: #fff;
   font-size: 0.65rem;
   font-weight: 700;
@@ -1109,7 +1196,7 @@
 .cajero-numpad-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(28, 23, 20, 0.55);
+  background: rgba(15, 23, 42, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1122,7 +1209,7 @@
 .staff-confirm-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(28, 23, 20, 0.55);
+  background: rgba(15, 23, 42, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1162,7 +1249,7 @@
 .staff-drawer-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(28, 23, 20, 0.55);
+  background: rgba(15, 23, 42, 0.55);
   display: flex;
   justify-content: flex-end;
   z-index: 50;
@@ -1326,4 +1413,19 @@
   .staff-main {
     padding: 1.25rem;
   }
+}
+
+/* El botón de confirmar de ConfirmModal (Eliminar, Anular, etc.) es
+   .staff-btn-egreso: dentro del modal va rojo sólido para que la acción
+   destructiva se lea como tal; fuera del modal (Salida de stock) sigue
+   siendo el botón con borde rojo. */
+.staff-confirm-acciones .staff-btn-egreso {
+  background: var(--color-error);
+  border-color: var(--color-error);
+  color: #fff;
+}
+
+.staff-confirm-acciones .staff-btn-egreso:hover {
+  background: var(--color-error-hover);
+  border-color: var(--color-error-hover);
 }

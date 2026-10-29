@@ -45,6 +45,7 @@ function App() {
         <Route path="/cajero" element={<Cajero />} />
         <Route path="/cierre-caja" element={<CierreCaja />} />
         <Route path="/compras" element={<CompraProveedor />} />
+        <Route path="/compras/historial" element={<CompraProveedor />} />
         <Route path="/proveedores" element={<Proveedores />} />
         <Route path="/zonas-envio" element={<ZonasEnvio />} />
         <Route path="/plantillas-despiece" element={<PlantillasDespiece />} />

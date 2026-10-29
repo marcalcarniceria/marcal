@@ -8,6 +8,7 @@ import { ConfirmModal } from '../components/ConfirmModal'
 
 const TABS_COMPRAS = [
   { to: '/compras', label: 'Cargar compra' },
+  { to: '/compras/historial', label: 'Historial de compras' },
   { to: '/proveedores', label: 'Proveedores' },
   { to: '/plantillas-despiece', label: 'Plantillas de despiece' },
 ]

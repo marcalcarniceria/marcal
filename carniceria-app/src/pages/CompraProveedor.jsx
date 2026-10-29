@@ -6,6 +6,7 @@ import { SeccionTabs } from '../components/SeccionTabs'
 
 const TABS_COMPRAS = [
   { to: '/compras', label: 'Cargar compra' },
+  { to: '/compras/historial', label: 'Historial de compras' },
   { to: '/proveedores', label: 'Proveedores' },
   { to: '/plantillas-despiece', label: 'Plantillas de despiece' },
 ]
@@ -22,6 +23,14 @@ export function CompraProveedor() {
   const location = useLocation()
   const navigate = useNavigate()
 
+  // "Cargar compra" (/compras) e "Historial de compras" (/compras/historial)
+  // son dos rutas que renderizan ESTE mismo componente: React conserva la
+  // instancia al cambiar de pestaña, así que un pedido a medio armar no se
+  // pierde al ir a mirar el historial y volver. La vista sale de la URL
+  // (no de un useState) para que la pestaña activa, el link directo y el
+  // botón "atrás" funcionen igual que en el resto de las secciones.
+  const vistaHistorial = location.pathname === '/compras/historial'
+
   const [productos, setProductos] = useState([])
   const [proveedores, setProveedores] = useState([])
   const [proveedorId, setProveedorId] = useState('')
@@ -31,7 +40,7 @@ export function CompraProveedor() {
   const [loadingCatalogo, setLoadingCatalogo] = useState(true)
   const [catalogoError, setCatalogoError] = useState(null)
 
-  // ---------- Columna izquierda: Pedido (sin precio) ----------
+  // ---------- Pestaña "Cargar compra": Pedido (sin precio) ----------
   const [pedidoItems, setPedidoItems] = useState([])
   // Cada plantilla aplicada al pedido (ej. "media vaca") queda acá como UN
   // grupo, separado de pedidoItems (que son los productos sueltos cargados
@@ -47,7 +56,7 @@ export function CompraProveedor() {
   const [enviandoPedido, setEnviandoPedido] = useState(false)
   const [mensajePedido, setMensajePedido] = useState(null)
 
-  // ---------- Columna derecha: grilla de compras ----------
+  // ---------- Pestaña "Historial de compras": grilla de compras ----------
   const [compras, setCompras] = useState([])
   const [loadingCompras, setLoadingCompras] = useState(true)
   const [errorCompras, setErrorCompras] = useState(null)
@@ -130,7 +139,7 @@ export function CompraProveedor() {
   // Precarga desde "Repetir última compra" (Proveedores.jsx): llega por
   // location.state para no depender de una tabla/ruta nueva. Se limpia
   // el state después de aplicarlo para que un refresh no lo vuelva a
-  // pisar. Siempre alimenta el Pedido (columna izquierda, sin precio) —
+  // pisar. Siempre alimenta el Pedido (pestaña Cargar compra, sin precio) —
   // nunca escribe en la base por sí sola.
   useEffect(() => {
     if (location.state?.pedidoInicial) {
@@ -146,7 +155,7 @@ export function CompraProveedor() {
   }, [])
 
   // =========================================================
-  // Columna izquierda: Pedido
+  // Pestaña "Cargar compra": Pedido
   // =========================================================
 
   const pedidoProducto = productos.find((p) => p.id === pedidoProductoId)
@@ -323,7 +332,7 @@ export function CompraProveedor() {
 
     setEnviandoPedido(true)
 
-    const { data, error } = await supabase.rpc('crear_pedido_compra', {
+    const { error } = await supabase.rpc('crear_pedido_compra', {
       p_sucursal_id: SUCURSAL_ID,
       p_proveedor_id: proveedorId,
       p_items: pedidoItems.map((item) => ({
@@ -344,7 +353,12 @@ export function CompraProveedor() {
       return
     }
 
-    setMensajePedido({ tipo: 'exito', texto: `Pedido registrado (id ${data}).` })
+    // La grilla ya no está al lado del formulario: se indica dónde quedó
+    // el pedido para cargarle los precios cuando llegue la mercadería.
+    setMensajePedido({
+      tipo: 'exito',
+      texto: 'Pedido registrado. Cuando llegue la mercadería, confirmalo desde "Historial de compras".',
+    })
     setPedidoItems([])
     setPedidoGrupos([])
     fetchCompras()
@@ -542,26 +556,26 @@ export function CompraProveedor() {
   return (
     <div>
       <SeccionTabs tabs={TABS_COMPRAS} />
-      <h1>Compra a proveedor</h1>
+      <h1>{vistaHistorial ? 'Historial de compras' : 'Compra a proveedor'}</h1>
 
-      <div className="staff-card">
-        <label>
-          Proveedor:{' '}
-          <select value={proveedorId} onChange={(e) => setProveedorId(e.target.value)}>
-            <option value="">Seleccionar...</option>
-            {proveedores.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nombre}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      {/* ============ Pestaña "Cargar compra": formulario a ancho completo ============ */}
+      {!vistaHistorial && (
+        <div>
+          <div className="staff-card">
+            <label>
+              Proveedor:{' '}
+              <select value={proveedorId} onChange={(e) => setProveedorId(e.target.value)}>
+                <option value="">Seleccionar...</option>
+                {proveedores.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
 
-      <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-        {/* ============ Columna izquierda: Pedido ============ */}
-        <div style={{ flex: '1 1 480px', minWidth: 340 }}>
-          <h2 style={{ marginTop: 0 }}>Pedido</h2>
+          <h2>Pedido</h2>
 
           {!proveedorId && <p>Elegí un proveedor para armar el pedido.</p>}
 
@@ -770,10 +784,11 @@ export function CompraProveedor() {
             </>
           )}
         </div>
+      )}
 
-        {/* ============ Columna derecha: grilla de compras ============ */}
-        <div style={{ flex: '1 1 560px', minWidth: 380 }}>
-          <h2 style={{ marginTop: 0 }}>Compras</h2>
+      {/* ============ Pestaña "Historial de compras": tabla a ancho completo ============ */}
+      {vistaHistorial && (
+        <div>
 
           {errorCompras && (
             <div className="staff-card">
@@ -851,9 +866,9 @@ export function CompraProveedor() {
             </div>
           )}
         </div>
-      </div>
+      )}
 
-      {/* ============ Sidebar de confirmación ============ */}
+      {/* ============ Sidebar de confirmación (se abre desde el historial) ============ */}
       {sidebarAbierto && (
         <div className="staff-drawer-overlay" onClick={cerrarSidebar}>
           <div className="staff-drawer" onClick={(e) => e.stopPropagation()}>
