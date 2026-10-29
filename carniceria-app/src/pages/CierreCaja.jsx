@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
 import { SeccionTabs } from '../components/SeccionTabs'
 import { ConfirmModal } from '../components/ConfirmModal'
+import { ModalRetiro } from '../components/ModalRetiro'
 
 const TABS_CAJA = [
   { to: '/cajero', label: 'Vender' },
@@ -49,6 +50,10 @@ export function CierreCaja() {
   const [gastosDelDia, setGastosDelDia] = useState([])
   const [pagosFiadosDelDia, setPagosFiadosDelDia] = useState([])
   const [pagosProveedorDelDia, setPagosProveedorDelDia] = useState([])
+  // Retiros a caja fuerte (sangrías): NO son gastos, pero bajan el
+  // efectivo que tiene que haber en la gaveta (schema_retiros_caja.sql).
+  const [retirosDelDia, setRetirosDelDia] = useState([])
+  const [retiroAbierto, setRetiroAbierto] = useState(false)
   const [cierreExistente, setCierreExistente] = useState(null)
 
   const [montoApertura, setMontoApertura] = useState('')
@@ -161,7 +166,7 @@ export function CierreCaja() {
 
     fetchListado(inicio, fin)
 
-    const [ventasRes, gastosRes, pagosFiadosRes, pagosProveedorRes, cierreRes] = await Promise.all([
+    const [ventasRes, gastosRes, pagosFiadosRes, pagosProveedorRes, cierreRes, retirosRes] = await Promise.all([
       supabase
         .from('ventas')
         .select('id, total_neto, pagos_venta(monto, metodos_pago(nombre, porcentaje_comision))')
@@ -193,6 +198,13 @@ export function CierreCaja() {
         .eq('sucursal_id', SUCURSAL_ID)
         .eq('fecha', fecha)
         .maybeSingle(),
+      supabase
+        .from('retiros_caja')
+        .select('id, monto, motivo, fecha')
+        .eq('sucursal_id', SUCURSAL_ID)
+        .gte('fecha', inicio.toISOString())
+        .lt('fecha', fin.toISOString())
+        .order('fecha'),
     ])
 
     if (ventasRes.error) {
@@ -205,7 +217,10 @@ export function CierreCaja() {
       setError(pagosProveedorRes.error)
     } else if (cierreRes.error) {
       setError(cierreRes.error)
+    } else if (retirosRes.error) {
+      setError(retirosRes.error)
     } else {
+      setRetirosDelDia(retirosRes.data)
       setVentasDelDia(ventasRes.data)
       setGastosDelDia(gastosRes.data)
       setPagosFiadosDelDia(pagosFiadosRes.data)
@@ -292,12 +307,24 @@ export function CierreCaja() {
   const totalPagosFiadosEfectivo = useMemo(() => sumaEnEfectivo(pagosFiadosDelDia), [pagosFiadosDelDia])
   const totalPagosProveedorEfectivo = useMemo(() => sumaEnEfectivo(pagosProveedorDelDia), [pagosProveedorDelDia])
 
+  const totalRetiros = useMemo(
+    () => retirosDelDia.reduce((acc, r) => acc + Number(r.monto), 0),
+    [retirosDelDia],
+  )
+
+  // Misma fórmula que la vista historial_cierres_caja (schema_retiros_caja.sql).
   const totalEsperadoCaja =
     (Number(montoApertura) || 0) +
     totalEfectivo +
     totalPagosFiadosEfectivo -
     totalGastosEfectivo -
-    totalPagosProveedorEfectivo
+    totalPagosProveedorEfectivo -
+    totalRetiros
+
+  // Retiros: solo el día de hoy, con la caja abierta (la RPC también lo
+  // valida) y para quien maneja la caja.
+  const puedeRetirar =
+    ['dueño', 'cajero'].includes(usuario?.rol) && !cierreExistente && fecha === hoyLocal()
 
   const diferencia =
     montoCierreDeclarado === ''
@@ -494,7 +521,32 @@ export function CierreCaja() {
               <p style={{ margin: '0.2rem 0' }}>+ Cobros a fiados (efectivo): ${totalPagosFiadosEfectivo.toFixed(2)}</p>
               <p style={{ margin: '0.2rem 0' }}>− Gastos (efectivo): ${totalGastosEfectivo.toFixed(2)}</p>
               <p style={{ margin: '0.2rem 0' }}>− Pagos a proveedores (efectivo): ${totalPagosProveedorEfectivo.toFixed(2)}</p>
+              <p style={{ margin: '0.2rem 0' }}>
+                − Retiros parciales (a caja fuerte): ${totalRetiros.toFixed(2)}
+                {retirosDelDia.length > 0 && ` (${retirosDelDia.length})`}
+              </p>
+              {retirosDelDia.length > 0 && (
+                <ul style={{ margin: '0.1rem 0 0.3rem 1.1rem', padding: 0, fontSize: '0.82rem' }}>
+                  {retirosDelDia.map((r) => (
+                    <li key={r.id}>
+                      {new Date(r.fecha).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} — $
+                      {Number(r.monto).toFixed(2)}
+                      {r.motivo ? ` · ${r.motivo}` : ''}
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
+            {puedeRetirar && (
+              <button
+                type="button"
+                className="staff-btn staff-btn-secundario"
+                style={{ marginTop: '0.4rem' }}
+                onClick={() => setRetiroAbierto(true)}
+              >
+                Retiro de efectivo / Sangría
+              </button>
+            )}
             <p className="staff-total" style={{ marginTop: '0.5rem' }}>Total esperado en caja: ${totalEsperadoCaja.toFixed(2)}</p>
             <label style={{ display: 'block', marginTop: '0.5rem' }}>
               Monto de cierre declarado (contado a mano): $
@@ -616,6 +668,15 @@ export function CierreCaja() {
           )}
         </div>
       </div>
+
+      <ModalRetiro
+        abierto={retiroAbierto}
+        onCerrar={() => setRetiroAbierto(false)}
+        onRegistrado={async (texto) => {
+          await fetchDia()
+          setMensaje({ tipo: 'exito', texto })
+        }}
+      />
 
       <ConfirmModal
         abierto={!!ventaAAnular}

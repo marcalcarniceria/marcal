@@ -1104,6 +1104,8 @@
 
 .movimientos-ingreso { color: var(--color-success); }
 .movimientos-egreso { color: var(--color-error); }
+/* Retiro a caja fuerte: ni ganancia ni pérdida -> color neutro. */
+.movimientos-retiro { color: #1d4ed8; }
 
 /* Cajero: grilla de productos + numpad */
 .cajero-grid {
@@ -1322,6 +1324,16 @@
   border-top: 1px solid var(--color-border);
 }
 
+/* Botón cuadrado de WhatsApp (recordatorio de saldo en Fiados). */
+.staff-btn-whatsapp {
+  background: #25d366;
+  padding: 0.45rem 0.55rem;
+}
+
+.staff-btn-whatsapp:hover {
+  background: #1da851;
+}
+
 /* Campo de formulario apilado (etiqueta arriba, control abajo). */
 .staff-campo {
   display: flex;
@@ -1531,4 +1543,129 @@
 .staff-confirm-acciones .staff-btn-egreso:hover {
   background: var(--color-error-hover);
   border-color: var(--color-error-hover);
+}
+
+/* =========================================================
+   Tickets y comandas (impresora térmica 58/80mm).
+   El ticket (TicketImprimible) vive en un portal en <body>, fuera de
+   .staff -- por eso estas reglas no llevan el prefijo .staff. TODO lo de
+   impresión depende de body.modo-ticket (lo pone imprimirTicket() en
+   lib/ticket.js): un Ctrl+P normal del panel no se ve afectado.
+   ========================================================= */
+
+/* En pantalla, el ticket nunca se ve. */
+.ticket-print-root {
+  display: none;
+}
+
+@media print {
+  /* Ocultar el panel completo (sidebar, contenido, toasts, fondos). */
+  body.modo-ticket .no-print,
+  body.modo-ticket #root {
+    display: none !important;
+  }
+
+  body.modo-ticket {
+    margin: 0;
+    padding: 0;
+    background: #fff !important;
+  }
+
+  body.modo-ticket .ticket-print-root {
+    display: block;
+  }
+
+  /* Que el navegador no "ahorre tinta" quitando negritas/fondos. */
+  .ticket-print-root,
+  .ticket-print-root * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Ancho del rollo menos ~4mm por lado (zona no imprimible de la
+   térmica); centrado en el papel. */
+.ticket {
+  width: 72mm;
+  max-width: 72mm;
+  margin: 0 auto;
+  padding: 3mm 0 6mm;
+  color: #000;
+  background: #fff;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 12px;
+  line-height: 1.35;
+  word-wrap: break-word;
+}
+
+.ticket-58 .ticket {
+  width: 48mm;
+  max-width: 48mm;
+  font-size: 10.5px;
+}
+
+.ticket-centro {
+  text-align: center;
+}
+
+.ticket-negocio {
+  font-size: 1.35em;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.ticket-titulo,
+.ticket-destacado {
+  font-weight: 700;
+}
+
+.ticket-destacado {
+  font-size: 1.1em;
+}
+
+.ticket-separador {
+  border-top: 1px dashed #000;
+  margin: 2mm 0;
+}
+
+.ticket-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: 2mm;
+}
+
+.ticket-fila > span:last-child {
+  white-space: nowrap;
+}
+
+.ticket-item {
+  margin-bottom: 1.5mm;
+  break-inside: avoid;
+}
+
+.ticket-item-detalle {
+  font-size: 0.92em;
+}
+
+/* Comanda: la línea que se lee para preparar, grande. */
+.ticket-item-comanda {
+  font-size: 1.2em;
+  font-weight: 700;
+}
+
+.ticket-notas {
+  font-weight: 700;
+  margin-top: 1mm;
+}
+
+.ticket-total {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin-top: 1mm;
+}
+
+.ticket-legal {
+  font-size: 0.85em;
+  margin-top: 1mm;
 }

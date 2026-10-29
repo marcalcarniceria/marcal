@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
+import { flushSync } from 'react-dom'
 import { ConfirmModal } from '../components/ConfirmModal'
+import { TicketImprimible } from '../components/TicketImprimible'
+import { imprimirTicket, ticketDesdePedido } from '../lib/ticket'
 
 const FILAS_POR_PAGINA = 10
 
@@ -53,6 +56,14 @@ export function PedidosOnline() {
   const [cancelando, setCancelando] = useState(false)
   const [busqueda, setBusqueda] = useState('')
   const [pagina, setPagina] = useState(0)
+  const [comanda, setComanda] = useState(null)
+
+  // flushSync: el ticket tiene que estar en el DOM (con los datos de ESTE
+  // pedido) antes de abrir el diálogo de impresión.
+  function imprimirComanda(pedido) {
+    flushSync(() => setComanda(ticketDesdePedido(pedido)))
+    imprimirTicket()
+  }
 
   async function fetchPedidos() {
     setLoading(true)
@@ -255,6 +266,10 @@ export function PedidosOnline() {
                 Marcar cobrado
               </button>
             )}
+
+            <button type="button" className="staff-btn staff-btn-secundario" onClick={() => imprimirComanda(p)}>
+              🖨 Imprimir comanda
+            </button>
           </div>
 
           {erroresPorPedido[p.id] && (
@@ -314,6 +329,8 @@ export function PedidosOnline() {
         onConfirmar={confirmarCancelacion}
         onCancelar={() => setPedidoACancelar(null)}
       />
+
+      <TicketImprimible ticket={comanda} />
     </div>
   )
 }

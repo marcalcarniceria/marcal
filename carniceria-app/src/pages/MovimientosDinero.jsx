@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { SUCURSAL_ID } from '../config/sucursal'
 import { SeccionTabs } from '../components/SeccionTabs'
+import { ModalRetiro } from '../components/ModalRetiro'
+import { useAuth } from '../context/AuthContext'
 
 const TABS_DINERO = [
   { to: '/movimientos-dinero', label: 'Movimientos' },
@@ -9,6 +11,14 @@ const TABS_DINERO = [
 ]
 
 const FILAS_POR_PAGINA = 20
+
+// 'retiro' (sangría a caja fuerte) no es ingreso ni egreso: la plata
+// sigue en el negocio. movimientos_dinero_totales no lo suma.
+const TIPO_LABEL = {
+  ingreso: { texto: '↑ Ingreso', clase: 'movimientos-ingreso' },
+  egreso: { texto: '↓ Egreso', clase: 'movimientos-egreso' },
+  retiro: { texto: '⇄ Retiro a caja fuerte', clase: 'movimientos-retiro' },
+}
 
 function hoyLocal() {
   const d = new Date()
@@ -38,6 +48,10 @@ function rangoFechas(desde, hasta) {
 }
 
 export function MovimientosDinero() {
+  const { usuario } = useAuth()
+  const puedeRetirar = ['dueño', 'cajero'].includes(usuario?.rol)
+  const [retiroAbierto, setRetiroAbierto] = useState(false)
+  const [mensajeRetiro, setMensajeRetiro] = useState(null)
   const [desde, setDesde] = useState(haceDiasLocal(30))
   const [hasta, setHasta] = useState(hoyLocal())
   const [tipoFiltro, setTipoFiltro] = useState('todos')
@@ -143,7 +157,15 @@ export function MovimientosDinero() {
   return (
     <div>
       <SeccionTabs tabs={TABS_DINERO} />
-      <h1>Movimientos de dinero</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+        <h1>Movimientos de dinero</h1>
+        {puedeRetirar && (
+          <button type="button" className="staff-btn" onClick={() => setRetiroAbierto(true)}>
+            ⇄ Retiro de efectivo / Sangría
+          </button>
+        )}
+      </div>
+      {mensajeRetiro && <p className="staff-mensaje-exito">{mensajeRetiro}</p>}
 
       <div className="movimientos-resumen">
         <div className="staff-card movimientos-resumen-card">
@@ -199,6 +221,13 @@ export function MovimientosDinero() {
           >
             Egresos
           </button>
+          <button
+            type="button"
+            className={`staff-btn${tipoFiltro === 'retiro' ? '' : ' staff-btn-secundario'}`}
+            onClick={() => cambiarTipoFiltro('retiro')}
+          >
+            Retiros
+          </button>
         </div>
       </div>
 
@@ -226,18 +255,17 @@ export function MovimientosDinero() {
                   </tr>
                 </thead>
                 <tbody>
-                  {movimientos.map((m) => (
-                    <tr key={`${m.tipo}-${m.id}`}>
-                      <td>{new Date(m.fecha).toLocaleDateString('es-AR')}</td>
-                      <td className={m.tipo === 'ingreso' ? 'movimientos-ingreso' : 'movimientos-egreso'}>
-                        {m.tipo === 'ingreso' ? '↑ Ingreso' : '↓ Egreso'}
-                      </td>
-                      <td>{m.motivo}</td>
-                      <td className={m.tipo === 'ingreso' ? 'movimientos-ingreso' : 'movimientos-egreso'}>
-                        ${Number(m.monto).toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
+                  {movimientos.map((m) => {
+                    const tipo = TIPO_LABEL[m.tipo] ?? TIPO_LABEL.egreso
+                    return (
+                      <tr key={`${m.tipo}-${m.id}`}>
+                        <td>{new Date(m.fecha).toLocaleDateString('es-AR')}</td>
+                        <td className={tipo.clase}>{tipo.texto}</td>
+                        <td>{m.motivo}</td>
+                        <td className={tipo.clase}>${Number(m.monto).toFixed(2)}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
 
@@ -264,6 +292,15 @@ export function MovimientosDinero() {
           )}
         </div>
       )}
+
+      <ModalRetiro
+        abierto={retiroAbierto}
+        onCerrar={() => setRetiroAbierto(false)}
+        onRegistrado={(texto) => {
+          setMensajeRetiro(texto)
+          fetchMovimientos()
+        }}
+      />
     </div>
   )
 }

@@ -3,6 +3,8 @@ import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
 import { SeccionTabs } from '../components/SeccionTabs'
+import { TicketImprimible } from '../components/TicketImprimible'
+import { imprimirTicket, ticketDesdeVenta } from '../lib/ticket'
 
 const TABS_CAJA = [
   { to: '/cajero', label: 'Vender' },
@@ -46,6 +48,16 @@ export function Cajero() {
   const [esFiado, setEsFiado] = useState(false)
   const [clientesFiados, setClientesFiados] = useState([])
   const [clienteFiadoId, setClienteFiadoId] = useState('')
+  // Saldo actual del cliente fiado elegido (null = sin cliente o cargando),
+  // para avisar ANTES de confirmar si la venta supera su límite de
+  // crédito. La base valida igual (trigger ventas_validar_limite_credito).
+  // Se guarda junto con el id del cliente al que corresponde: si cambia
+  // el cliente, el saldo viejo deja de aplicar solo (sin resetear estado
+  // dentro del efecto).
+  const [saldoFiadoCargado, setSaldoFiadoCargado] = useState(null)
+  // Foto de la última venta confirmada, para "Imprimir ticket": el
+  // carrito se vacía al confirmar, así que se arma ANTES del reset.
+  const [ultimoTicket, setUltimoTicket] = useState(null)
   const [mostrarNuevoCliente, setMostrarNuevoCliente] = useState(false)
   const [nuevoClienteNombre, setNuevoClienteNombre] = useState('')
   const [nuevoClienteTelefono, setNuevoClienteTelefono] = useState('')
@@ -259,6 +271,37 @@ export function Cajero() {
 
   const diferenciaPago = Math.round((totalNeto - totalPagado) * 100) / 100
 
+  // Saldo del cliente fiado = ventas fiadas activas - pagos (mismo cálculo
+  // que Fiados.jsx y el trigger de la base).
+  useEffect(() => {
+    if (!esFiado || !clienteFiadoId) return
+    let cancelado = false
+    Promise.all([
+      supabase.from('ventas').select('total_neto').eq('cliente_fiado_id', clienteFiadoId).eq('estado', 'activa'),
+      supabase.from('pagos_fiados').select('monto').eq('cliente_fiado_id', clienteFiadoId),
+    ]).then(([ventasRes, pagosRes]) => {
+      if (cancelado || ventasRes.error || pagosRes.error) return
+      const deuda = ventasRes.data.reduce((acc, v) => acc + Number(v.total_neto), 0)
+      const pagado = pagosRes.data.reduce((acc, p) => acc + Number(p.monto), 0)
+      setSaldoFiadoCargado({ clienteId: clienteFiadoId, ticket: ultimoTicket, saldo: deuda - pagado })
+    })
+    return () => {
+      cancelado = true
+    }
+    // ultimoTicket: al confirmar una venta fiada el saldo cambia -> se recalcula.
+  }, [esFiado, clienteFiadoId, ultimoTicket])
+
+  // Vale solo si es del cliente elegido ahora y posterior a la última venta.
+  const saldoFiado =
+    esFiado && saldoFiadoCargado?.clienteId === clienteFiadoId && saldoFiadoCargado.ticket === ultimoTicket
+      ? saldoFiadoCargado.saldo
+      : null
+
+  const clienteFiadoSeleccionado = clientesFiados.find((c) => c.id === clienteFiadoId)
+  const limiteFiado = Number(clienteFiadoSeleccionado?.limite_credito) || 0
+  const superaLimiteFiado =
+    esFiado && limiteFiado > 0 && saldoFiado !== null && saldoFiado + totalNeto > limiteFiado + 0.009
+
   function agregarPago() {
     setPagos((prev) => [...prev, { metodo_pago_id: '', monto: '' }])
   }
@@ -275,6 +318,7 @@ export function Cajero() {
 
   async function confirmarVenta() {
     setMensaje(null)
+    setUltimoTicket(null)
 
     if (carrito.length === 0) {
       setMensaje({ tipo: 'error', texto: 'Agregá al menos un ítem a la venta.' })
@@ -333,6 +377,18 @@ export function Cajero() {
       return
     }
 
+    setUltimoTicket(
+      ticketDesdeVenta({
+        ventaId: data,
+        carrito,
+        totalBruto,
+        totalNeto,
+        pagos,
+        metodosPago,
+        clienteFiado: esFiado ? clientesFiados.find((c) => c.id === clienteFiadoId)?.nombre ?? 'Cliente' : null,
+        cajero: usuario?.nombre,
+      }),
+    )
     setMensaje({ tipo: 'exito', texto: `Venta registrada (id ${data}).` })
     setCarrito([])
     setDescuentoGeneral(0)
@@ -614,6 +670,19 @@ export function Cajero() {
             </button>
           </div>
 
+          {clienteFiadoId && saldoFiado !== null && (
+            <p style={{ margin: '0.6rem 0 0', fontSize: '0.88rem', color: 'var(--color-text-muted)' }}>
+              Saldo actual: ${saldoFiado.toFixed(2)}
+              {limiteFiado > 0 ? ` · Límite: $${limiteFiado.toFixed(2)}` : ' · Sin límite de crédito'}
+            </p>
+          )}
+          {superaLimiteFiado && (
+            <div className="staff-alerta-stock" role="alert">
+              ⚠ El cliente superará su límite de crédito de ${limiteFiado.toFixed(2)} (quedaría debiendo $
+              {(saldoFiado + totalNeto).toFixed(2)}).
+            </div>
+          )}
+
           {mostrarNuevoCliente && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '0.75rem' }}>
               <input
@@ -689,9 +758,24 @@ export function Cajero() {
         </p>
       )}
 
-      <button type="button" className="staff-btn" onClick={confirmarVenta} disabled={enviando}>
-        {enviando ? 'Registrando...' : 'Confirmar venta'}
-      </button>
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <button
+          type="button"
+          className="staff-btn"
+          onClick={confirmarVenta}
+          disabled={enviando || superaLimiteFiado}
+          title={superaLimiteFiado ? 'El cliente superaría su límite de crédito' : undefined}
+        >
+          {enviando ? 'Registrando...' : 'Confirmar venta'}
+        </button>
+        {ultimoTicket && (
+          <button type="button" className="staff-btn staff-btn-secundario" onClick={imprimirTicket}>
+            🖨 Imprimir ticket
+          </button>
+        )}
+      </div>
+
+      <TicketImprimible ticket={ultimoTicket} />
     </div>
   )
 }

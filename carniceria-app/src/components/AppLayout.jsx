@@ -44,7 +44,9 @@ function AppLayoutInner() {
   }
 
   return (
-    <div className="staff">
+    // no-print: al imprimir un ticket se oculta todo el panel (ver
+    // body.modo-ticket en staff.css).
+    <div className="staff no-print">
       <NotificacionesFlotantes />
       <div className="staff-shell">
         <aside className="staff-sidebar">
