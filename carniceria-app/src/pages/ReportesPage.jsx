@@ -791,7 +791,7 @@ function ReporteRanking({ desde, hasta }) {
 }
 
 export function ReportesPage() {
-  const [rango, setRango] = useState('hoy')
+  const [rango, setRango] = useState('mes')
   const [desdePersonalizado, setDesdePersonalizado] = useState('')
   const [hastaPersonalizado, setHastaPersonalizado] = useState('')
 

@@ -2,6 +2,11 @@ import { useEffect } from 'react'
 
 // Modal de confirmación genérico para acciones destructivas (eliminar,
 // cancelar, etc.) -- reemplaza window.confirm en todo el panel.
+//
+// `children` (opcional) se muestra entre el mensaje y los botones, para
+// acciones que necesitan un dato antes de confirmar (ej. el motivo de
+// una anulación); `confirmarDeshabilitado` bloquea el botón hasta que
+// ese dato sea válido.
 export function ConfirmModal({
   abierto,
   titulo = '¿Estás seguro?',
@@ -9,8 +14,10 @@ export function ConfirmModal({
   textoConfirmar = 'Eliminar',
   textoCancelar = 'Cancelar',
   procesando = false,
+  confirmarDeshabilitado = false,
   onConfirmar,
   onCancelar,
+  children,
 }) {
   useEffect(() => {
     if (!abierto) return
@@ -36,11 +43,17 @@ export function ConfirmModal({
           {titulo}
         </h2>
         <p className="staff-confirm-mensaje">{mensaje}</p>
+        {children}
         <div className="staff-confirm-acciones">
           <button type="button" className="staff-btn staff-btn-secundario" onClick={onCancelar} disabled={procesando}>
             {textoCancelar}
           </button>
-          <button type="button" className="staff-btn staff-btn-egreso" onClick={onConfirmar} disabled={procesando}>
+          <button
+            type="button"
+            className="staff-btn staff-btn-egreso"
+            onClick={onConfirmar}
+            disabled={procesando || confirmarDeshabilitado}
+          >
             {procesando ? 'Procesando...' : textoConfirmar}
           </button>
         </div>

@@ -11,9 +11,12 @@
 -- Fix sin reescribir ninguna función: SET timezone a nivel FUNCIÓN. Rige
 -- solo mientras corre cada reporte (no cambia la zona de la base, ni de
 -- otras consultas, ni el formato en que la API devuelve timestamps).
--- Las funciones nuevas que se creen con `create or replace` conservan
--- este setting; si alguna se DROPEA y recrea, hay que volver a correr
--- esto.
+-- OJO: un `create or replace` de cualquiera de estas funciones BORRA
+-- este setting (Postgres reemplaza los SET de la función con los del
+-- nuevo create). Si se redefine un reporte, hay que poner
+-- `set timezone = 'America/Argentina/Cordoba'` en su definición (como
+-- hace schema_precios_masivo.sql con reporte_costos_producto) o volver
+-- a correr este archivo.
 --
 -- Idempotente: se puede correr más de una vez.
 -- =========================================================

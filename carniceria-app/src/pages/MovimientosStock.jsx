@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
+import { ModalMerma } from '../components/ModalMerma'
+import { ModalTransformacion } from '../components/ModalTransformacion'
 
 const FILAS_A_TRAER = 500
 const FILAS_POR_PAGINA = 20
@@ -30,7 +32,7 @@ function truncarReferencia(texto) {
 
 export function MovimientosStock() {
   const { usuario } = useAuth()
-  console.log('[DEBUG MovimientosStock] usuario del AuthContext:', usuario)
+  ('[DEBUG MovimientosStock] usuario del AuthContext:', usuario)
   const rolNormalizado = usuario?.rol?.trim().toLowerCase()
   const puedeAjustar = ROLES_PUEDEN_AJUSTAR.includes(rolNormalizado)
 
@@ -57,6 +59,15 @@ export function MovimientosStock() {
   const [mensajeModal, setMensajeModal] = useState(null)
 
   const [toast, setToast] = useState(null)
+
+  // ---------- Modales de merma tipificada y transformación ----------
+  const [mermaAbierta, setMermaAbierta] = useState(false)
+  const [transformacionAbierta, setTransformacionAbierta] = useState(false)
+
+  function alRegistrarOperacion(texto) {
+    setToast({ tipo: 'exito', texto })
+    fetchMovimientos()
+  }
 
   async function fetchMovimientos() {
     setLoading(true)
@@ -227,12 +238,18 @@ export function MovimientosStock() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
         <h1>Movimientos de stock</h1>
         {puedeAjustar && (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             <button type="button" className="staff-btn staff-btn-ingreso" onClick={() => abrirModal('entrada')}>
               ↑ Registrar Ingreso
             </button>
             <button type="button" className="staff-btn staff-btn-egreso" onClick={() => abrirModal('salida')}>
               ↓ Registrar Egreso
+            </button>
+            <button type="button" className="staff-btn staff-btn-secundario" onClick={() => setTransformacionAbierta(true)}>
+              ⇄ Registrar Transformación
+            </button>
+            <button type="button" className="staff-btn staff-btn-secundario" onClick={() => setMermaAbierta(true)}>
+              Registrar Merma
             </button>
           </div>
         )}
@@ -442,6 +459,17 @@ export function MovimientosStock() {
           </div>
         </div>
       )}
+
+      <ModalMerma
+        abierto={mermaAbierta}
+        onCerrar={() => setMermaAbierta(false)}
+        onRegistrado={alRegistrarOperacion}
+      />
+      <ModalTransformacion
+        abierto={transformacionAbierta}
+        onCerrar={() => setTransformacionAbierta(false)}
+        onRegistrado={alRegistrarOperacion}
+      />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
 import { validarImagen, subirImagen, borrarImagenAnterior } from '../lib/imagenesStorage'
+import { ActualizarPreciosMasivo } from '../components/ActualizarPreciosMasivo'
 
 const UNIDADES_COMUNES = ['Kilo', 'Unidad', 'Docena', 'Bandeja', 'Atado', 'Bolsa', 'Cajón']
 
@@ -91,6 +92,11 @@ export function Productos() {
 
   const [guardando, setGuardando] = useState(false)
   const [mensaje, setMensaje] = useState(null)
+
+  // Actualización masiva de precios (solo dueño). Mensaje propio: `mensaje`
+  // se muestra dentro del formulario de producto, que puede estar cerrado.
+  const [mostrarMasivo, setMostrarMasivo] = useState(false)
+  const [mensajeMasivo, setMensajeMasivo] = useState(null)
 
   async function fetchProductos() {
     setLoading(true)
@@ -461,6 +467,26 @@ export function Productos() {
           {mostrarForm ? 'Cancelar' : '+ Nuevo producto'}
         </button>
 
+        {esDueno && !mostrarForm && (
+          <button
+            type="button"
+            className="staff-btn staff-btn-secundario"
+            style={{ marginLeft: '0.5rem' }}
+            onClick={() => {
+              setMensajeMasivo(null)
+              setMostrarMasivo(true)
+            }}
+          >
+            Actualización masiva de precios
+          </button>
+        )}
+
+        {mensajeMasivo && (
+          <p className="staff-mensaje-exito" style={{ margin: '0.75rem 0 0' }}>
+            {mensajeMasivo}
+          </p>
+        )}
+
         {mostrarForm && (
           <div style={{ marginTop: '1rem' }}>
             {editandoId && <p className="staff-badge staff-badge-pendiente">Editando producto existente</p>}
@@ -786,6 +812,19 @@ export function Productos() {
           )}
         </div>
       )}
+
+      <ActualizarPreciosMasivo
+        abierto={mostrarMasivo}
+        productos={productos}
+        onCerrar={() => setMostrarMasivo(false)}
+        onActualizado={(cantidad) => {
+          setMostrarMasivo(false)
+          setMensajeMasivo(
+            cantidad === 1 ? 'Se actualizó 1 precio.' : `Se actualizaron ${cantidad} precios.`,
+          )
+          fetchProductos()
+        }}
+      />
     </div>
   )
 }
