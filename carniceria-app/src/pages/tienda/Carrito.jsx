@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useCarrito } from './CarritoContext'
 import { TiendaHeader } from './TiendaHeader'
+import { formatoPrecio } from './formatoPrecio'
 
 export function Carrito() {
   const { items, actualizarCantidad, quitarItem, totalCarrito } = useCarrito()
@@ -9,7 +10,7 @@ export function Carrito() {
   return (
     <>
       <TiendaHeader />
-      <div className="tienda-contenido" style={{ maxWidth: 640 }}>
+      <div className="tienda-contenido" style={{ maxWidth: 880 }}>
         <h1>Carrito</h1>
 
         {items.length === 0 && (
@@ -37,13 +38,13 @@ export function Carrito() {
               ← Seguir comprando
             </button>
 
-            <table className="tienda-tabla">
+            <table className="tienda-tabla tienda-tabla-carrito">
               <thead>
                 <tr>
                   <th>Producto</th>
                   <th>Cant.</th>
-                  <th>Precio</th>
-                  <th>Subtotal</th>
+                  <th className="tienda-tabla-num">Precio</th>
+                  <th className="tienda-tabla-num">Subtotal</th>
                   <th></th>
                 </tr>
               </thead>
@@ -64,8 +65,10 @@ export function Carrito() {
                         }
                       />
                     </td>
-                    <td>${item.precio_venta.toFixed(2)}</td>
-                    <td>${(item.cantidad * item.precio_venta).toFixed(2)}</td>
+                    <td className="tienda-tabla-num">{formatoPrecio(item.precio_venta)}</td>
+                    <td className="tienda-tabla-num tienda-tabla-subtotal">
+                      {formatoPrecio(item.cantidad * item.precio_venta)}
+                    </td>
                     <td>
                       <button
                         type="button"
@@ -83,7 +86,7 @@ export function Carrito() {
             <div className="tienda-resumen">
               <p className="tienda-total-row">
                 <span>Total productos</span>
-                <span>${totalCarrito.toFixed(2)}</span>
+                <span>{formatoPrecio(totalCarrito)}</span>
               </p>
             </div>
             <p style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>

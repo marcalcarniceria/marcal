@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { CarritoProvider } from './CarritoContext'
+import { TiendaToastProvider } from './TiendaToast'
 import { WhatsAppButton } from './WhatsAppButton'
 import { TiendaFooter } from './TiendaFooter'
 import { useIsMobile } from '../../mobile/useIsMobile'
@@ -18,9 +19,13 @@ export function TiendaLayout() {
   return (
     <div className={`tienda${esMobile ? '' : ' tienda-desktop-layout'}`}>
       <CarritoProvider>
-        <Outlet />
-        {!esMobile && <TiendaFooter />}
-        {!esMobile && <WhatsAppButton />}
+        {/* Toast "Se añadió X al carrito" solo en compu: mobile ya tiene
+            el suyo en CatalogoMobile (habría dos). */}
+        <TiendaToastProvider habilitado={!esMobile}>
+          <Outlet />
+          {!esMobile && <TiendaFooter />}
+          {!esMobile && <WhatsAppButton />}
+        </TiendaToastProvider>
       </CarritoProvider>
     </div>
   )

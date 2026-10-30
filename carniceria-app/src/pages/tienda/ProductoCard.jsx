@@ -1,4 +1,5 @@
 import { esStockBajo } from './stock'
+import { BotonAgregar } from './BotonAgregar'
 
 // null = sin promo. Misma regla que crear_pedido_online
 // (coalesce(precio_promocional, precio_venta)): lo que se muestra acá es
@@ -53,10 +54,9 @@ export function ProductoCard({ producto, agregarItem, className = '' }) {
                   <div className="tienda-card-precio">${precioNormal.toFixed(2)}</div>
                 )}
               </div>
-              <button
-                type="button"
-                className="tienda-btn"
-                onClick={() =>
+              <BotonAgregar
+                nombre={producto.nombre}
+                onAgregar={() =>
                   agregarItem({
                     producto_id: producto.id,
                     producto_nombre: producto.nombre,
@@ -66,9 +66,7 @@ export function ProductoCard({ producto, agregarItem, className = '' }) {
                     precio_venta: promo ?? precioNormal,
                   })
                 }
-              >
-                Agregar
-              </button>
+              />
             </div>
           )
         })

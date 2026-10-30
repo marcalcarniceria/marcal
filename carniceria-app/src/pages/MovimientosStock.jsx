@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { SUCURSAL_ID } from '../config/sucursal'
 import { ModalMerma } from '../components/ModalMerma'
 import { ModalTransformacion } from '../components/ModalTransformacion'
+import { LimiteDeError } from '../components/LimiteDeError'
 
 const FILAS_A_TRAER = 500
 const FILAS_POR_PAGINA = 20
@@ -25,6 +26,14 @@ const ORIGEN_LABEL = {
 // columna de motivo -- se truncan a los primeros 8 caracteres del hash.
 const REGEX_HASH_LARGO = /\b([a-f0-9]{8})[a-f0-9-]{6,}\b/gi
 
+// Fecha defensiva: un registro sin fecha (o con una inválida) muestra "—"
+// en vez de "Invalid Date".
+function formatearFecha(valor) {
+  if (!valor) return '—'
+  const d = new Date(valor)
+  return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString('es-AR')
+}
+
 function truncarReferencia(texto) {
   if (!texto) return texto
   return texto.replace(REGEX_HASH_LARGO, '$1…')
@@ -32,7 +41,6 @@ function truncarReferencia(texto) {
 
 export function MovimientosStock() {
   const { usuario } = useAuth()
-  ('[DEBUG MovimientosStock] usuario del AuthContext:', usuario)
   const rolNormalizado = usuario?.rol?.trim().toLowerCase()
   const puedeAjustar = ROLES_PUEDEN_AJUSTAR.includes(rolNormalizado)
 
@@ -80,7 +88,7 @@ export function MovimientosStock() {
       .limit(FILAS_A_TRAER)
 
     if (error) setError(error)
-    else setMovimientos(data)
+    else setMovimientos(Array.isArray(data) ? data : [])
     setLoading(false)
   }
 
@@ -101,10 +109,11 @@ export function MovimientosStock() {
     const nombreBuscado = filtroProducto.trim().toLowerCase()
 
     return movimientos.filter((m) => {
+      if (!m) return false
       if (filtroTipo !== 'todos' && m.tipo !== filtroTipo) return false
       if (nombreBuscado && !m.nombre_producto?.toLowerCase().includes(nombreBuscado)) return false
 
-      const fechaMov = new Date(m.fecha)
+      const fechaMov = new Date(m.fecha ?? 0)
       if (desde && fechaMov < desde) return false
       if (hasta && fechaMov > hasta) return false
 
@@ -127,7 +136,7 @@ export function MovimientosStock() {
   // dónde caiga el corte de paginación.
   const movimientosConGrupo = useMemo(() => {
     return movimientosFiltrados.map((m, i, arr) => {
-      const claveDe = (x) => `${x.origen_tabla}::${x.motivo_o_referencia}`
+      const claveDe = (x) => `${x?.origen_tabla ?? ''}::${x?.motivo_o_referencia ?? ''}`
       const anterior = arr[i - 1]
       const siguiente = arr[i + 1]
       const agrupadoArriba = Boolean(anterior && claveDe(anterior) === claveDe(m))
@@ -162,7 +171,7 @@ export function MovimientosStock() {
         .order('nombre')
 
       if (error) setMensajeModal({ tipo: 'error', texto: error.message })
-      else setProductos(data)
+      else setProductos(Array.isArray(data) ? data : [])
     }
   }
 
@@ -173,7 +182,7 @@ export function MovimientosStock() {
   const productosFiltrados = useMemo(() => {
     const buscado = buscadorProducto.trim().toLowerCase()
     if (!buscado) return productos
-    return productos.filter((p) => p.nombre.toLowerCase().includes(buscado))
+    return productos.filter((p) => (p.nombre ?? '').toLowerCase().includes(buscado))
   }, [productos, buscadorProducto])
 
   async function confirmarAjuste() {
@@ -331,7 +340,7 @@ export function MovimientosStock() {
                   </tr>
                 </thead>
                 <tbody>
-                  {movimientosPagina.map((m) => {
+                  {movimientosPagina.map((m, i) => {
                     const claseGrupo = [
                       m._agrupadoArriba || m._agrupadoAbajo ? 'mov-stock-fila-agrupada' : '',
                       m._agrupadoAbajo ? 'mov-stock-sin-separador' : '',
@@ -340,14 +349,16 @@ export function MovimientosStock() {
                       .join(' ')
 
                     return (
-                      <tr key={`${m.origen_tabla}-${m.id_movimiento}`} className={claseGrupo || undefined}>
-                        <td>{new Date(m.fecha).toLocaleString('es-AR')}</td>
-                        <td>{m.nombre_producto}</td>
+                      // El índice evita keys repetidas si dos filas de la vista
+                      // comparten origen e id (ej. ingredientes de un combo).
+                      <tr key={`${m.origen_tabla}-${m.id_movimiento}-${i}`} className={claseGrupo || undefined}>
+                        <td>{formatearFecha(m.fecha)}</td>
+                        <td>{m.nombre_producto ?? '—'}</td>
                         <td className={m.tipo === 'entrada' ? 'movimientos-ingreso' : 'movimientos-egreso'}>
                           {m.tipo === 'entrada' ? '↑ Entrada' : '↓ Salida'}
                         </td>
-                        <td>{Number(m.cantidad).toLocaleString('es-AR', { maximumFractionDigits: 3 })}</td>
-                        <td>{ORIGEN_LABEL[m.origen_tabla] ?? m.origen_tabla}</td>
+                        <td>{(Number(m.cantidad) || 0).toLocaleString('es-AR', { maximumFractionDigits: 3 })}</td>
+                        <td>{ORIGEN_LABEL[m.origen_tabla] ?? m.origen_tabla ?? '—'}</td>
                         <td title={m.motivo_o_referencia}>{truncarReferencia(m.motivo_o_referencia)}</td>
                       </tr>
                     )
@@ -460,16 +471,22 @@ export function MovimientosStock() {
         </div>
       )}
 
-      <ModalMerma
-        abierto={mermaAbierta}
-        onCerrar={() => setMermaAbierta(false)}
-        onRegistrado={alRegistrarOperacion}
-      />
-      <ModalTransformacion
-        abierto={transformacionAbierta}
-        onCerrar={() => setTransformacionAbierta(false)}
-        onRegistrado={alRegistrarOperacion}
-      />
+      {/* Si un modal falla, se muestra el aviso en su lugar: el historial
+          sigue visible (antes un error ahí dejaba la pantalla en blanco). */}
+      <LimiteDeError nombre="el formulario de mermas">
+        <ModalMerma
+          abierto={mermaAbierta}
+          onCerrar={() => setMermaAbierta(false)}
+          onRegistrado={alRegistrarOperacion}
+        />
+      </LimiteDeError>
+      <LimiteDeError nombre="el formulario de transformaciones">
+        <ModalTransformacion
+          abierto={transformacionAbierta}
+          onCerrar={() => setTransformacionAbierta(false)}
+          onRegistrado={alRegistrarOperacion}
+        />
+      </LimiteDeError>
     </div>
   )
 }

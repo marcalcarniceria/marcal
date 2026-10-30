@@ -8,8 +8,15 @@ import { useProductosConUnidades } from '../lib/inventario'
 // o un vacío -> milanesas + recortes. El costo de los orígenes pasa a los
 // destinos en el servidor.
 
+// Key con contador, NO crypto.randomUUID(): randomUUID solo existe en
+// contextos seguros (HTTPS o localhost). Abriendo el panel por la IP de la
+// red (http://192.168...) o en iOS < 15.4 tiraba "crypto.randomUUID is not
+// a function" al montar MovimientosStock -- este modal se monta aunque
+// esté cerrado -- y la pantalla quedaba en blanco.
+let contadorLineas = 0
 function lineaVacia() {
-  return { key: crypto.randomUUID(), productoId: '', unidadId: '', cantidad: '' }
+  contadorLineas += 1
+  return { key: `linea-${contadorLineas}`, productoId: '', unidadId: '', cantidad: '' }
 }
 
 function formatoCantidad(n) {

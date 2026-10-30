@@ -611,14 +611,18 @@
   color: var(--color-text);
 }
 
+/* track y fill son <span>: sin display:block el navegador ignora
+   width/height en el fill (elemento inline) y la barra se veía vacía. */
 .reportes-bar-track {
+  display: block;
   height: 8px;
   border-radius: 999px;
-  background: var(--color-bg);
+  background: var(--color-border);
   overflow: hidden;
 }
 
 .reportes-bar-fill {
+  display: block;
   height: 100%;
   border-radius: 999px;
   transition: width 0.3s var(--ease);

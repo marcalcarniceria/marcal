@@ -1,3 +1,5 @@
+import { BotonAgregar } from './BotonAgregar'
+
 // Tarjeta de combo para la vidriera. `combo` es una fila de
 // obtener_combos_tienda (schema_combos.sql): precio_fijo, imagen_url e
 // ingredientes [{ producto_nombre, unidad_nombre, cantidad }]. La tienda
@@ -25,10 +27,9 @@ export function ComboCard({ item: combo, agregarItem, className = '' }) {
       )}
       <div className="tienda-card-unidad">
         <div className="tienda-card-precio">${Number(combo.precio_fijo).toFixed(2)}</div>
-        <button
-          type="button"
-          className="tienda-btn"
-          onClick={() =>
+        <BotonAgregar
+          nombre={combo.nombre}
+          onAgregar={() =>
             agregarItem({
               combo_id: combo.id,
               producto_nombre: combo.nombre,
@@ -36,9 +37,7 @@ export function ComboCard({ item: combo, agregarItem, className = '' }) {
               precio_venta: Number(combo.precio_fijo),
             })
           }
-        >
-          Agregar
-        </button>
+        />
       </div>
     </div>
   )

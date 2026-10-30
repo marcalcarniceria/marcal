@@ -143,8 +143,11 @@ function ReporteGanancias({ desde, hasta }) {
   )
 }
 
-function BarraRanking({ titulo, filas, variante }) {
-  const maxValor = Math.max(1, ...filas.map((f) => Number(f.cantidad_total)))
+// `maximo`: la cantidad del producto MÁS vendido del período. Las dos
+// listas usan la misma escala -- si "Menos movimiento" se midiera contra
+// su propio máximo, el menos vendido de todos aparecería con la barra llena.
+function BarraRanking({ titulo, filas, variante, maximo }) {
+  const maxValor = Math.max(1, Number(maximo) || 0)
 
   return (
     <div>
@@ -155,7 +158,7 @@ function BarraRanking({ titulo, filas, variante }) {
         <div className="reportes-bar-lista">
           {filas.map((fila) => {
             const cantidad = Number(fila.cantidad_total)
-            const pct = (cantidad / maxValor) * 100
+            const pct = Math.min(100, Math.max(0, (cantidad / maxValor) * 100))
             return (
               <div className="reportes-bar-fila" key={fila.producto_id}>
                 <span className="reportes-bar-nombre" title={fila.producto_nombre}>
@@ -164,7 +167,8 @@ function BarraRanking({ titulo, filas, variante }) {
                 <span className="reportes-bar-track">
                   <span
                     className={`reportes-bar-fill reportes-bar-fill-${variante}`}
-                    style={{ width: `${pct}%` }}
+                    // Con alguna venta, al menos 3px para que se vea; con 0, vacía.
+                    style={{ width: pct > 0 ? `max(3px, ${pct}%)` : 0 }}
                   />
                 </span>
                 <span className="reportes-bar-valor">{cantidad.toLocaleString('es-AR')}</span>
@@ -757,6 +761,8 @@ function ReporteRanking({ desde, hasta }) {
 
   const top10 = filas?.slice(0, 10) ?? []
   const menos10 = filas ? [...filas].reverse().slice(0, 10) : []
+  // filas viene ordenado de más a menos vendido: el primero es el máximo.
+  const maximoRanking = Number(top10[0]?.cantidad_total) || 0
 
   function exportar() {
     descargarExcel(`ranking_${desde}_a_${hasta}.xlsx`, [
@@ -782,8 +788,8 @@ function ReporteRanking({ desde, hasta }) {
 
       {filas && !loading && !error && (
         <div className="reportes-ranking-columnas">
-          <BarraRanking titulo="Más vendidos" filas={top10} variante="top" />
-          <BarraRanking titulo="Menos movimiento" filas={menos10} variante="bajo" />
+          <BarraRanking titulo="Más vendidos" filas={top10} variante="top" maximo={maximoRanking} />
+          <BarraRanking titulo="Menos movimiento" filas={menos10} variante="bajo" maximo={maximoRanking} />
         </div>
       )}
     </div>

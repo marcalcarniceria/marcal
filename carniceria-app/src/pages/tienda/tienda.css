@@ -778,9 +778,45 @@
   padding-bottom: 0.5rem;
 }
 
+/* Padding horizontal entre columnas: con 0 a los costados, el precio y el
+   subtotal quedaban pegados ("$4840.00$24200.00") con montos largos. La
+   primera y la última columna van al ras del borde de la tabla. */
+.tienda-tabla th,
 .tienda-tabla td {
-  padding: 0.6rem 0;
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+}
+
+.tienda-tabla th:first-child,
+.tienda-tabla td:first-child {
+  padding-left: 0;
+}
+
+.tienda-tabla th:last-child,
+.tienda-tabla td:last-child {
+  padding-right: 0;
+}
+
+.tienda-tabla td {
+  padding-top: 0.6rem;
+  padding-bottom: 0.6rem;
   border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+/* Columnas de montos: a la derecha (los dígitos quedan alineados entre
+   filas), sin cortar el número en dos renglones y con un ancho mínimo
+   que no colapsa con montos de 6 cifras. */
+.tienda-tabla .tienda-tabla-num {
+  text-align: right;
+  white-space: nowrap;
+  min-width: 7.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tienda-tabla-carrito .tienda-tabla-subtotal {
+  font-weight: 600;
+  color: var(--color-dark);
 }
 
 .tienda-tabla input[type='number'] {
@@ -1892,4 +1928,77 @@
   border-color: var(--color-accent);
   color: var(--color-accent);
   background: rgba(176, 67, 31, 0.06);
+}
+
+/* =========================================================
+   Feedback al agregar al carrito (compu): botón "¡Agregado! ✓" y toast.
+   ========================================================= */
+
+/* Ancho mínimo: que el botón no "salte" al cambiar de "Agregar" a
+   "¡Agregado! ✓" (texto más largo). */
+.tienda-btn-agregar {
+  min-width: 7.5rem;
+}
+
+.tienda-btn.tienda-btn-agregado,
+.tienda-btn.tienda-btn-agregado:hover {
+  background: #3f7d4f;
+  color: #fff;
+  transform: none;
+  animation: tienda-pop 0.3s var(--ease) both;
+}
+
+/* Abajo al centro: no choca con el botón flotante de WhatsApp (abajo a
+   la derecha) y queda por encima del header sticky (z-index 50). */
+.tienda-toast-zona {
+  position: fixed;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  z-index: 60;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
+  pointer-events: none;
+}
+
+.tienda-toast {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--color-dark);
+  color: #fff;
+  padding: 0.8rem 1rem 0.8rem 0.9rem;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.9rem;
+  pointer-events: auto;
+  animation: tienda-fade-up 0.3s var(--ease) both;
+}
+
+.tienda-toast-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: #3f7d4f;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.tienda-toast-texto {
+  min-width: 0;
+}
+
+.tienda-toast-link {
+  color: var(--color-gold);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  margin-left: 0.25rem;
+}
+
+.tienda-toast-link:hover {
+  text-decoration: underline;
 }
