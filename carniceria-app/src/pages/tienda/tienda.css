@@ -198,6 +198,14 @@
   background: var(--color-primario-oscuro);
 }
 
+/* insta.png es negro con fondo transparente: el filtro lo pasa a blanco. */
+.tienda-instagram-logo {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  filter: brightness(0) invert(1);
+}
+
 /* Curva: radio horizontal de 50% y vertical fijo. Con un 50% también en
    vertical (0 0 50% 50%), el fondo no llegaría a cubrir el logo y el
    carrito, que están en los extremos. El padding de abajo los deja por
@@ -1375,6 +1383,11 @@
 
 .tienda-footer-datos a:hover {
   text-decoration: underline;
+}
+
+.tienda-footer-datos .tienda-instagram-logo {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 /* Botón flotante de WhatsApp */

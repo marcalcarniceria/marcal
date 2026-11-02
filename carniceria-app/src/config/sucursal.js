@@ -6,9 +6,9 @@ export const SUCURSAL_ID = '558eecf8-6ade-4cb9-866d-3f9e25e3d263'
 // botón flotante de la tienda y la página de confirmación.
 export const WHATSAPP_LOCAL = '5493513866592'
 
-// Redes de la barra superior de la tienda. Con la URL vacía, el ícono no se
-// muestra: un ícono sin destino real sería un link roto.
-export const INSTAGRAM_URL = ''
+// Redes de la tienda. Instagram va en la barra superior y en el footer.
+// Facebook, sin URL, no aparece.
+export const INSTAGRAM_URL = 'https://www.instagram.com/marcal.juniors/?hl=es-la'
 export const FACEBOOK_URL = ''
 
 // Datos que se imprimen en el encabezado de tickets y comandas.

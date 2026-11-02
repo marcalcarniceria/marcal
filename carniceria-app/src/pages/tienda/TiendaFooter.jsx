@@ -1,3 +1,5 @@
+import { INSTAGRAM_URL } from '../../config/sucursal'
+
 export function TiendaFooter() {
   return (
     <footer className="tienda-footer">
@@ -24,6 +26,11 @@ export function TiendaFooter() {
               <path d="M20.5 17.3c0 .4-.1.8-.3 1.1-.2.4-.5.7-.9.9-.5.3-1.1.4-1.7.3-2.6-.5-5-1.9-6.9-3.8-1.9-1.9-3.3-4.3-3.8-6.9-.1-.6 0-1.2.3-1.7.2-.4.5-.7.9-.9.3-.2.7-.3 1.1-.3h1.6c.5 0 1 .3 1.1.8l.7 2.1c.1.4 0 .8-.3 1.1l-.8.8c.6 1.4 1.7 2.5 3.1 3.1l.8-.8c.3-.3.7-.4 1.1-.3l2.1.7c.5.1.8.6.8 1.1v1.6Z" />
             </svg>
             <a href="https://wa.me/5493513866592">351 386-6592 (WhatsApp)</a>
+          </p>
+          <p>
+            <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram">
+              <img src="/images/insta.png" alt="" className="tienda-instagram-logo" />
+            </a>
           </p>
         </div>
       </div>

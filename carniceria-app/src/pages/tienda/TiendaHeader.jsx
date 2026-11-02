@@ -4,17 +4,10 @@ import { useAuth } from '../../context/AuthContext'
 import { useCarrito } from './CarritoContext'
 import { AccesoModal } from './AccesoModal'
 import { MisPedidosModal } from './MisPedidos'
-import { FACEBOOK_URL, INSTAGRAM_URL, WHATSAPP_LOCAL } from '../../config/sucursal'
-import { linkWhatsApp } from '../../lib/whatsapp'
-import { IconFacebook, IconInstagram, IconUsuario, IconWhatsApp } from './iconos'
+import { FACEBOOK_URL, INSTAGRAM_URL } from '../../config/sucursal'
+import { IconFacebook, IconUsuario } from './iconos'
 
 const SCROLL_COMPACTO = 50
-
-const REDES = [
-  { nombre: 'Instagram', url: INSTAGRAM_URL, Icono: IconInstagram },
-  { nombre: 'Facebook', url: FACEBOOK_URL, Icono: IconFacebook },
-  { nombre: 'WhatsApp', url: linkWhatsApp(WHATSAPP_LOCAL, 'Hola, quiero hacer un pedido'), Icono: IconWhatsApp },
-].filter((red) => red.url)
 
 export function TiendaHeader() {
   const { cantidadTotal } = useCarrito()
@@ -85,11 +78,14 @@ export function TiendaHeader() {
         <div className="tienda-topbar">
           <span>Seguinos</span>
           <div className="tienda-topbar-redes">
-            {REDES.map(({ nombre, url, Icono }) => (
-              <a key={nombre} href={url} target="_blank" rel="noreferrer" aria-label={nombre}>
-                <Icono width={15} height={15} aria-hidden="true" />
+            <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram">
+              <img src="/images/insta.png" alt="" className="tienda-instagram-logo" />
+            </a>
+            {FACEBOOK_URL && (
+              <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" aria-label="Facebook">
+                <IconFacebook width={15} height={15} aria-hidden="true" />
               </a>
-            ))}
+            )}
           </div>
         </div>
 
