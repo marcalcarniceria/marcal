@@ -1,16 +1,24 @@
 .tienda {
   --color-bg: #faf5ec;
-  --color-surface: #fffdfa;
+  --color-surface: #ffffff;
   --color-dark: #1c1714;
   --color-dark-alt: #2a211c;
-  --color-accent: #b0431f;
-  --color-accent-hover: #8f3517;
+  /* Verde: acciones, selección activa y precios. #15803d y no un verde más
+     claro: con texto blanco da 5:1 (#16a34a da 3,3:1 y no llega a 4,5:1). */
+  --color-primario: #15803d;
+  --color-primario-hover: #166534;
+  --color-primario-oscuro: #14532d;
+  --color-primario-suave: #ecf7ef;
+  --color-primario-borde: #86c79c;
+  /* Rojo institucional: ofertas, descuentos, errores y Carnicería. */
+  --color-accent: #c8102e;
+  --color-accent-hover: #a30d25;
   --color-gold: #b3862f;
   --color-text: #241c17;
   --color-text-muted: #7a6b5d;
   --color-border: #e6dac7;
-  --shadow-sm: 0 1px 3px rgba(28, 23, 20, 0.08);
-  --shadow-md: 0 6px 20px rgba(28, 23, 20, 0.12);
+  --shadow-sm: 0 1px 2px rgba(28, 23, 20, 0.04), 0 2px 8px rgba(28, 23, 20, 0.05);
+  --shadow-md: 0 6px 18px rgba(28, 23, 20, 0.1);
   --shadow-lg: 0 16px 40px rgba(28, 23, 20, 0.18);
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
   --font-display: 'Oswald', sans-serif;
@@ -119,7 +127,7 @@
 .tienda-logo {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  gap: 0.85rem;
   text-decoration: none;
   color: #fff;
 }
@@ -141,13 +149,10 @@
 }
 
 .tienda-logo-marca-img {
-  width: 46px;
-  height: 46px;
+  display: block;
+  height: 3.25rem;
+  width: auto;
   flex-shrink: 0;
-  border-radius: 50%;
-  background: #fff;
-  object-fit: cover;
-  box-shadow: var(--shadow-sm);
 }
 
 .tienda-logo-texto {
@@ -200,7 +205,7 @@
 }
 
 .tienda-carrito-link {
-  background: var(--color-accent);
+  background: var(--color-primario);
   color: #fff;
   padding: 0.55rem 1.1rem;
   border-radius: 999px;
@@ -215,7 +220,7 @@
 }
 
 .tienda-carrito-link:hover {
-  background: var(--color-accent-hover);
+  background: var(--color-primario-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
@@ -412,8 +417,8 @@
 }
 
 .tienda-modal-tab.activo {
-  color: var(--color-accent);
-  border-bottom-color: var(--color-accent);
+  color: var(--color-primario);
+  border-bottom-color: var(--color-primario);
 }
 
 /* Contenido */
@@ -538,7 +543,7 @@
 }
 
 .tienda-volver:hover {
-  color: var(--color-accent);
+  color: var(--color-primario);
   transform: translateX(-3px);
 }
 
@@ -551,8 +556,8 @@
 
 .tienda-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 8px;
+  border: 1px solid rgba(28, 23, 20, 0.07);
+  border-radius: 12px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
@@ -570,7 +575,7 @@
 .tienda-card-imagen {
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: 6px;
+  border-radius: 8px;
   overflow: hidden;
   background: var(--color-bg);
   display: flex;
@@ -595,7 +600,7 @@
 .tienda-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-md);
-  border-color: var(--color-gold);
+  border-color: var(--color-primario-borde);
 }
 
 .tienda-grid > .tienda-card:nth-child(1) { animation-delay: 0.02s; }
@@ -624,7 +629,7 @@
 
 .tienda-card-precio {
   font-family: var(--font-display);
-  color: var(--color-gold);
+  color: var(--color-primario-hover);
   font-size: 1rem;
   white-space: nowrap;
 }
@@ -719,19 +724,27 @@
   letter-spacing: 0.03em;
   font-size: 0.8rem;
   border: none;
-  border-radius: 5px;
+  border-radius: 10px;
   padding: 0.55rem 1rem;
   cursor: pointer;
-  background: var(--color-accent);
+  background: var(--color-primario);
   color: #fff;
   box-shadow: var(--shadow-sm);
   transition: background 0.2s var(--ease), transform 0.15s var(--ease), box-shadow 0.2s var(--ease);
 }
 
 .tienda-btn:hover {
-  background: var(--color-accent-hover);
+  background: var(--color-primario-hover);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 6px 16px rgba(21, 128, 61, 0.28);
+}
+
+.tienda-btn:focus-visible,
+.tienda-vidriera-cta:focus-visible,
+.tienda-categoria-vertodos:focus-visible,
+.tienda-filtro:focus-visible {
+  outline: 2px solid var(--color-primario-oscuro);
+  outline-offset: 2px;
 }
 
 .tienda-btn:active {
@@ -755,7 +768,9 @@
 }
 
 .tienda-btn-secundario:hover {
-  background: var(--color-bg);
+  background: var(--color-primario-suave);
+  border-color: var(--color-primario-borde);
+  color: var(--color-primario-oscuro);
   box-shadow: none;
 }
 
@@ -895,8 +910,8 @@
 .tienda-form select:focus,
 .tienda-form textarea:focus {
   outline: none;
-  border-color: var(--color-gold);
-  box-shadow: 0 0 0 3px rgba(179, 134, 47, 0.18);
+  border-color: var(--color-primario);
+  box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.16);
 }
 
 /* Tamaño cómodo para tocar con el dedo (~44px), sin cambiar cómo se ven
@@ -956,7 +971,7 @@
   border: none;
   padding: 0;
   margin: 0.75rem 0;
-  color: var(--color-accent);
+  color: var(--color-primario-hover);
   font-weight: 600;
   font-size: 0.85rem;
 }
@@ -967,7 +982,7 @@
 }
 
 .tienda-mensaje-exito {
-  color: #3f7d4f;
+  color: var(--color-primario-hover);
   font-weight: 600;
 }
 
@@ -1298,7 +1313,7 @@
 }
 
 .tienda-tabla tbody tr:hover {
-  background: rgba(179, 134, 47, 0.06);
+  background: rgba(21, 128, 61, 0.05);
 }
 
 /* =====================================================================
@@ -1373,10 +1388,10 @@
 
 .tienda-vidriera-cta {
   margin-top: 1.25rem;
-  background: var(--color-accent);
+  background: var(--color-primario);
   color: #fff;
   border: none;
-  border-radius: 999px;
+  border-radius: 12px;
   padding: 0.8rem 2.2rem;
   font-family: var(--font-body);
   font-weight: 700;
@@ -1385,12 +1400,13 @@
   letter-spacing: 0.04em;
   cursor: pointer;
   box-shadow: var(--shadow-md);
-  transition: background 0.2s var(--ease), transform 0.2s var(--ease);
+  transition: background 0.2s var(--ease), transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
 
 .tienda-vidriera-cta:hover {
-  background: var(--color-accent-hover);
+  background: var(--color-primario-hover);
   transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(21, 128, 61, 0.35);
 }
 
 .tienda-vidriera-inner {
@@ -1430,17 +1446,20 @@
   border-radius: 999px;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease), background 0.2s var(--ease),
+    transform 0.2s var(--ease);
 }
 
 .tienda-filtro svg {
   width: 30px;
   height: 30px;
-  color: var(--color-accent);
+  color: var(--color-primario);
 }
 
 .tienda-filtro:hover {
-  border-color: var(--color-gold);
+  border-color: var(--color-primario);
+  background: var(--color-primario-suave);
+  transform: translateY(-1px);
   box-shadow: var(--shadow-md);
 }
 
@@ -1477,26 +1496,26 @@
 
 .tienda-categoria-verduleria {
   background: #eef6e9;
-  --tono: #2f7a2b;
-  --tono-hover: #256222;
+  --tono: var(--color-primario);
+  --tono-hover: var(--color-primario-hover);
 }
 
 .tienda-categoria-mas-productos {
   background: #f7f0e0;
-  --tono: var(--color-gold);
-  --tono-hover: #8a6423;
+  --tono: var(--color-primario-hover);
+  --tono-hover: var(--color-primario-oscuro);
 }
 
 .tienda-categoria-promociones {
   background: #fdeee6;
-  --tono: #d9480f;
-  --tono-hover: #b33a0b;
+  --tono: var(--color-accent);
+  --tono-hover: var(--color-accent-hover);
 }
 
 .tienda-categoria-combos {
   background: #fbf5e1;
-  --tono: #b45309;
-  --tono-hover: #8f4207;
+  --tono: var(--color-primario);
+  --tono-hover: var(--color-primario-hover);
 }
 
 /* Destino de la botonera de filtros: deja lugar para el header sticky. */
@@ -1571,18 +1590,20 @@
   background: var(--tono);
   color: #fff;
   border: none;
-  border-radius: 999px;
+  border-radius: 10px;
   padding: 0.6rem 1.2rem;
   font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.9rem;
   cursor: pointer;
   box-shadow: var(--shadow-md);
-  transition: background 0.2s var(--ease);
+  transition: background 0.2s var(--ease), transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
 
 .tienda-categoria-vertodos:hover {
   background: var(--tono-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
 }
 
 .tienda-categoria-productos {
@@ -1611,7 +1632,7 @@
   scroll-snap-align: start;
   padding: 1rem;
   gap: 0.6rem;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .tienda-card-fila h3 {
@@ -1738,7 +1759,7 @@
   left: 0;
   right: 0;
   height: 5px;
-  background: var(--color-accent);
+  background: var(--color-primario);
 }
 
 .tienda-confianza-item:hover {
@@ -1756,7 +1777,7 @@
   margin-bottom: 1.5rem;
   border-radius: 50%;
   background: #fbeeea;
-  color: var(--color-accent);
+  color: var(--color-primario);
 }
 
 .tienda-confianza-icono svg {
@@ -1778,7 +1799,7 @@
   font-weight: 700;
   font-size: clamp(2.2rem, 3.5vw, 3.1rem);
   line-height: 1.1;
-  color: var(--color-accent);
+  color: var(--color-primario);
   text-wrap: balance;
 }
 
@@ -1872,12 +1893,12 @@
 }
 
 .checkout-toggle-btn:hover {
-  border-color: var(--color-accent);
+  border-color: var(--color-primario);
 }
 
 .checkout-toggle-btn.activo {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--color-primario);
+  color: var(--color-primario);
   background: rgba(176, 67, 31, 0.06);
 }
 
@@ -1915,18 +1936,18 @@
 }
 
 .checkout-pago-card:hover {
-  border-color: var(--color-accent);
+  border-color: var(--color-primario);
 }
 
 .checkout-pago-card input[type="radio"] {
   width: auto;
   margin: 0;
-  accent-color: var(--color-accent);
+  accent-color: var(--color-primario);
 }
 
 .checkout-pago-card.activo {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--color-primario);
+  color: var(--color-primario);
   background: rgba(176, 67, 31, 0.06);
 }
 
@@ -1942,7 +1963,7 @@
 
 .tienda-btn.tienda-btn-agregado,
 .tienda-btn.tienda-btn-agregado:hover {
-  background: #3f7d4f;
+  background: var(--color-primario-oscuro);
   color: #fff;
   transform: none;
   animation: tienda-pop 0.3s var(--ease) both;
@@ -1982,7 +2003,7 @@
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 50%;
-  background: #3f7d4f;
+  background: var(--color-primario);
   font-weight: 700;
   flex-shrink: 0;
 }

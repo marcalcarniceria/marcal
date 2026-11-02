@@ -59,7 +59,6 @@ export function TiendaHeader() {
       <Link to="/tienda" className="tienda-logo">
         <img src="/images/logo-marcal.png" alt="Mar-Cal" className="tienda-logo-marca-img" />
         <span className="tienda-logo-texto">
-          Mar-Cal
           <small>Carnicería y Verdulería</small>
         </span>
       </Link>
