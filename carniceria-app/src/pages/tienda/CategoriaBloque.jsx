@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ProductoCard } from './ProductoCard'
+import { Revelar, RevelarGrupo, RevelarItem } from './Revelar'
 
 // tono: 'carniceria' | 'verduleria' | ... (solo cambia el color de acentos).
 // El botón "Ver todos" es solo visual por ahora: sin onClick a propósito.
@@ -55,7 +56,7 @@ export function CategoriaBloque({
 
   return (
     <div id={id} className={`tienda-categoria tienda-categoria-${tono}`}>
-      <div className="tienda-categoria-imagen">
+      <Revelar className="tienda-categoria-imagen">
         <img src={imagen} alt={alt} loading="lazy" />
         {titulo && (
           <div className="tienda-categoria-rotulo" aria-hidden="true">
@@ -69,27 +70,24 @@ export function CategoriaBloque({
         <button type="button" className="tienda-categoria-vertodos">
           Ver todos →
         </button>
-      </div>
+      </Revelar>
 
       <div className={`tienda-categoria-productos${estado.desborda ? ' con-flecha' : ''}`}>
         {productos.length === 0 ? (
           <p className="tienda-categoria-vacia">Todavía no hay productos en esta categoría.</p>
         ) : (
           <>
-            <div className="tienda-categoria-fila" ref={filaRef} onScroll={actualizarEstado}>
-              {productos.map((producto) =>
-                Card ? (
-                  <Card key={producto.id} item={producto} agregarItem={agregarItem} className="tienda-card-fila" />
-                ) : (
-                  <ProductoCard
-                    key={producto.id}
-                    producto={producto}
-                    agregarItem={agregarItem}
-                    className="tienda-card-fila"
-                  />
-                ),
-              )}
-            </div>
+            <RevelarGrupo className="tienda-categoria-fila" ref={filaRef} onScroll={actualizarEstado}>
+              {productos.map((producto, indice) => (
+                <RevelarItem key={producto.id} indice={indice}>
+                  {Card ? (
+                    <Card item={producto} agregarItem={agregarItem} className="tienda-card-fila" />
+                  ) : (
+                    <ProductoCard producto={producto} agregarItem={agregarItem} className="tienda-card-fila" />
+                  )}
+                </RevelarItem>
+              ))}
+            </RevelarGrupo>
             {estado.desborda && !estado.alFinal && (
               <button
                 type="button"

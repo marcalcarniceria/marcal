@@ -1,6 +1,9 @@
 .tienda {
   --color-bg: #faf5ec;
   --color-surface: #ffffff;
+  --alto-topbar: 1.75rem;
+  --alto-navbar: 6.5rem;
+  --curva-navbar: 1.75rem;
   --color-dark: #1c1714;
   --color-dark-alt: #2a211c;
   /* Verde: acciones, selección activa y precios. #15803d y no un verde más
@@ -10,6 +13,9 @@
   --color-primario-oscuro: #14532d;
   --color-primario-suave: #ecf7ef;
   --color-primario-borde: #86c79c;
+  /* Para texto sobre fotos oscuras: --color-primario da 1,1:1 sobre las
+     zonas claras del hero, este da 3:1 en el peor caso. */
+  --color-primario-claro: #86cf4a;
   /* Rojo institucional: ofertas, descuentos, errores y Carnicería. */
   --color-accent: #c8102e;
   --color-accent-hover: #a30d25;
@@ -83,6 +89,28 @@
   }
 }
 
+/* Una foto dura 6s (5s fija + 1s de fundido) de un ciclo de 18s. */
+@keyframes tienda-hero-fundido {
+  0%, 28% {
+    opacity: 1;
+  }
+  33.33%, 94.44% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes tienda-rebote {
+  0%, 100% {
+    transform: translateY(-6px);
+  }
+  50% {
+    transform: translateY(6px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tienda * {
     animation: none !important;
@@ -110,18 +138,82 @@
 
 /* Header */
 .tienda-header {
-  background: var(--color-dark);
-  color: #fff;
-  padding: 0.85rem 1.5rem;
-  position: sticky;
+  position: fixed;
   top: 0;
+  left: 0;
+  right: 0;
   z-index: 10;
+  color: #fff;
+}
+
+.tienda-header-compacto {
+  --alto-navbar: 4.25rem;
+  --curva-navbar: 1rem;
+}
+
+.tienda-header-espacio {
+  flex-shrink: 0;
+  height: calc(var(--alto-topbar) + var(--alto-navbar));
+}
+
+.tienda-topbar {
+  height: var(--alto-topbar);
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  background: var(--color-primario);
+  font-size: 0.75rem;
+  font-weight: 600;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+/* visibility: para que el teclado no pase por links que no se ven. */
+.tienda-header-compacto .tienda-topbar {
+  height: 0;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.tienda-topbar-redes {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.tienda-topbar-redes a {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  color: #fff;
+  transition: all 0.3s ease;
+}
+
+.tienda-topbar-redes a:hover {
+  background: var(--color-primario-oscuro);
+}
+
+/* Curva: radio horizontal de 50% y vertical fijo. Con un 50% también en
+   vertical (0 0 50% 50%), el fondo no llegaría a cubrir el logo y el
+   carrito, que están en los extremos. El padding de abajo los deja por
+   encima de donde empieza la curva. */
+.tienda-navbar {
+  position: relative;
+  height: var(--alto-navbar);
+  padding: 0 1.5rem var(--curva-navbar);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
   gap: 0.75rem;
+  background: var(--color-dark);
+  border-radius: 0 0 50% 50% / 0 0 var(--curva-navbar) var(--curva-navbar);
   box-shadow: var(--shadow-md);
+  transition: all 0.3s ease;
 }
 
 .tienda-logo {
@@ -148,11 +240,17 @@
   box-shadow: var(--shadow-sm);
 }
 
-.tienda-logo-marca-img {
+.tienda-logo-img {
   display: block;
-  height: 2.5rem;
-  width: auto;
   flex-shrink: 0;
+  height: 4.25rem;
+  width: auto;
+  aspect-ratio: 3339 / 1308;
+  transition: all 0.3s ease;
+}
+
+.tienda-header-compacto .tienda-logo-img {
+  height: 3rem;
 }
 
 .tienda-logo-texto {
@@ -168,10 +266,11 @@
 .tienda-logo-texto small {
   font-family: var(--font-body);
   text-transform: none;
-  letter-spacing: normal;
-  font-size: 0.68rem;
-  color: rgba(255, 255, 255, 0.6);
-  font-weight: 400;
+  letter-spacing: 0.5px;
+  font-size: 1rem;
+  color: #f8f9fa;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .tienda-header nav {
@@ -431,62 +530,120 @@
 .tienda-hero-full {
   position: relative;
   width: 100%;
-  /* aspect-ratio (sin max-height) hace que el contenedor SIEMPRE
-     tenga la misma proporción que banner-marcal.png (1983x793) en
-     cualquier ancho de escritorio -- con background-size: cover,
-     "cover" y "contain" dan el mismo resultado cuando la proporción
-     coincide exactamente, así que nunca recorta arriba/abajo y el
-     logo (centrado en la imagen) queda siempre completo. Antes había
-     un max-height fijo que, en pantallas anchas, hacía que el
-     contenedor quedara más "achatado" que la imagen real y por eso
-     recortaba el logo por arriba y por abajo.
-     min-height es solo para mobile: ahí la proporción real daría un
-     banner demasiado bajo (~150px), así que se lo deja más alto a
-     propósito -- en ese caso sí recorta, pero de los COSTADOS de la
-     foto (paisaje ancho), nunca del centro donde está el logo. */
-  aspect-ratio: 1983 / 793;
-  min-height: 280px;
-  background-size: cover;
-  background-position: center;
+  /* Sube debajo del navbar para que se vea la foto en las esquinas de la curva. */
+  margin-top: calc(-1 * var(--curva-navbar));
+  /* Pantalla completa: lo visible menos lo que ocupa el header arriba del hero. */
+  min-height: calc(100vh - var(--alto-topbar) - var(--alto-navbar) + var(--curva-navbar));
+  background: var(--color-dark);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
 }
 
+/* Fundido en cadena. Los delays negativos arrancan cada foto en otro punto
+   del ciclo, y el opacity de la primera es lo que queda fijo si el cliente
+   pidió menos movimiento (ahí no corre ninguna animación). */
+.tienda-hero-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  opacity: 0;
+  animation: tienda-hero-fundido 18s linear infinite;
+}
+
+.tienda-hero-slide:nth-child(1) {
+  opacity: 1;
+}
+
+.tienda-hero-slide:nth-child(2) {
+  animation-delay: -12s;
+}
+
+.tienda-hero-slide:nth-child(3) {
+  animation-delay: -6s;
+}
+
+/* Con este negro, aun sobre una zona blanca de la foto el fondo queda en
+   #666: el texto blanco tiene por lo menos 5,7:1 de contraste. */
 .tienda-hero-overlay {
   position: absolute;
   inset: 0;
-  /* El banner ya trae su propio texto y buen contraste -- esto solo
-     lo funde suavemente con el fondo de la página en el borde
-     inferior, no lo oscurece entero como antes (esa oscurecida era
-     para que el texto superpuesto se leyera sobre una foto genérica). */
-  background: linear-gradient(180deg, rgba(28, 23, 20, 0) 75%, var(--color-bg));
+  background: rgba(0, 0, 0, 0.6);
 }
 
+/* El padding de arriba deja afuera la parte del hero que tapa el navbar. */
 .tienda-hero-inner {
   position: relative;
   z-index: 1;
-  max-width: 640px;
-  text-align: center;
+  width: min(1200px, 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  /* El padding de abajo deja lugar para el indicador de scroll. */
+  padding: calc(var(--curva-navbar) + 1.5rem) clamp(1.5rem, 4vw, 3rem) 5rem;
   color: #fff;
-  padding: 3rem 1.5rem;
   animation: tienda-fade-up 0.6s var(--ease) both;
 }
 
 .tienda-hero-inner h1 {
+  padding-left: clamp(0.9rem, 1.6vw, 1.5rem);
+  border-left: 5px solid var(--color-primario-claro);
   color: #fff;
-  font-size: clamp(1.8rem, 4vw, 2.6rem);
-  position: relative;
+  font-size: clamp(2rem, 4.4vw, 4rem);
+  line-height: 1.12;
+}
+
+.tienda-hero-inner h1 span {
+  display: block;
+  color: var(--color-primario-claro);
 }
 
 .tienda-hero-inner p {
-  color: rgba(255, 255, 255, 0.75);
-  margin-top: 0.5rem;
+  margin: 1rem 0 0;
+  color: rgba(255, 255, 255, 0.92);
   font-family: var(--font-body);
-  text-transform: none;
-  letter-spacing: normal;
-  position: relative;
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+/* Centrado con márgenes y no con transform: el rebote ya usa transform. */
+.tienda-hero-scroll {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  right: 0;
+  bottom: 1.25rem;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  animation: tienda-rebote 1.6s ease-in-out infinite;
+}
+
+.tienda-hero-scroll:hover {
+  color: var(--color-primario-claro);
+}
+
+.tienda-hero-scroll:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+.tienda-hero-logo {
+  flex-shrink: 0;
+  width: clamp(170px, 26vw, 360px);
+  height: auto;
+  filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.45));
 }
 
 .tienda-badge-calidad {
@@ -564,7 +721,16 @@
   gap: 0.75rem;
   box-shadow: var(--shadow-sm);
   transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease), border-color 0.25s var(--ease);
-  animation: tienda-fade-up 0.5s var(--ease) both;
+}
+
+/* Celda animada de Revelar.jsx: la tarjeta de adentro ocupa toda la celda
+   para que las de una misma fila sigan teniendo la misma altura. */
+.tienda-revelar-celda {
+  display: flex;
+}
+
+.tienda-revelar-celda > * {
+  flex: 1 1 auto;
 }
 
 /* Imagen de producto: proporción fija y recortada (object-fit cover)
@@ -602,13 +768,6 @@
   box-shadow: var(--shadow-md);
   border-color: var(--color-primario-borde);
 }
-
-.tienda-grid > .tienda-card:nth-child(1) { animation-delay: 0.02s; }
-.tienda-grid > .tienda-card:nth-child(2) { animation-delay: 0.06s; }
-.tienda-grid > .tienda-card:nth-child(3) { animation-delay: 0.1s; }
-.tienda-grid > .tienda-card:nth-child(4) { animation-delay: 0.14s; }
-.tienda-grid > .tienda-card:nth-child(5) { animation-delay: 0.18s; }
-.tienda-grid > .tienda-card:nth-child(n + 6) { animation-delay: 0.22s; }
 
 .tienda-card h3 {
   font-size: 1.15rem;
@@ -740,7 +899,7 @@
 }
 
 .tienda-btn:focus-visible,
-.tienda-vidriera-cta:focus-visible,
+.tienda-hero-cta:focus-visible,
 .tienda-categoria-vertodos:focus-visible,
 .tienda-filtro:focus-visible {
   outline: 2px solid var(--color-primario-oscuro);
@@ -986,13 +1145,14 @@
   font-weight: 600;
 }
 
-/* Sobre nosotros -- texto suelto (sin tarjeta) sobre el fondo claro de
-   la página: título grande con un divisor dorado y párrafos en tamaño
-   cómodo de lectura, centrados. El ancho de los párrafos está limitado
-   (max-width) para que no se estiren de borde a borde. */
+/* Sobre nosotros -- tarjeta verde pastel centrada sobre el fondo crema de
+   la página: título grande con un divisor verde oscuro y párrafos en
+   tamaño cómodo de lectura. El max-width de la tarjeta evita que el texto
+   se estire de borde a borde. */
 .tienda-nosotros {
   width: 100%;
-  animation: tienda-fade-up 0.5s var(--ease) both;
+  /* Destino del indicador de scroll: deja lugar para el header compacto. */
+  scroll-margin-top: 4.25rem;
 }
 
 .tienda-nosotros-inner {
@@ -1003,7 +1163,13 @@
 }
 
 .tienda-nosotros-card {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 3rem;
   text-align: center;
+  background: #cce0c5;
+  border-radius: 16px;
+  box-shadow: var(--shadow-md);
 }
 
 .tienda-nosotros-card h2 {
@@ -1018,7 +1184,7 @@
   width: 72px;
   height: 3px;
   border-radius: 2px;
-  background: var(--color-gold);
+  background: var(--color-primario-oscuro);
   margin: 1rem auto 1.75rem;
 }
 
@@ -1026,8 +1192,7 @@
   color: var(--color-text);
   font-size: clamp(1.05rem, 1.6vw, 1.25rem);
   line-height: 1.75;
-  max-width: 980px;
-  margin: 0 auto 1.1rem;
+  margin: 0 0 1.1rem;
 }
 
 .tienda-nosotros-card p:last-child {
@@ -1037,6 +1202,10 @@
 @media (max-width: 640px) {
   .tienda-nosotros-inner {
     padding: 2.25rem 1rem;
+  }
+
+  .tienda-nosotros-card {
+    padding: 2rem 1.25rem;
   }
 }
 
@@ -1093,7 +1262,6 @@
   padding: 1.75rem;
   box-shadow: var(--shadow-md);
   transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
-  animation: tienda-fade-up 0.5s var(--ease) both;
 }
 
 .tienda-resena-card:hover {
@@ -1317,7 +1485,7 @@
 }
 
 /* =====================================================================
-   Vidriera: banner + filtros de categoría (solo visuales por ahora) +
+   Vidriera: filtros de categoría (solo visuales por ahora) +
    un bloque por categoría (imagen a la izquierda, fila de productos con
    scroll horizontal a la derecha).
    ===================================================================== */
@@ -1325,68 +1493,7 @@
   width: 100%;
 }
 
-/* La imagen (tienda-banner.png) no trae texto: el título, la bajada y el
-   botón son HTML centrados sobre su zona central, que es la más oscura y
-   despejada. Un degradado radial detrás del bloque (no sobre toda la
-   imagen) asegura el contraste donde el texto se sale de esa zona. */
-.tienda-vidriera-banner {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 2149 / 732;
-  min-height: 340px;
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem 1rem;
-  overflow: hidden;
-}
-
-.tienda-vidriera-banner-contenido {
-  position: relative;
-  isolation: isolate;
-  width: min(44%, 640px);
-  min-width: 280px;
-  text-align: center;
-  color: #fff;
-}
-
-.tienda-vidriera-banner-contenido::before {
-  content: '';
-  position: absolute;
-  inset: -22% -32%;
-  z-index: -1;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(12, 9, 7, 0.78) 0%,
-    rgba(12, 9, 7, 0.55) 45%,
-    rgba(12, 9, 7, 0) 72%
-  );
-}
-
-.tienda-vidriera-banner-contenido h2 {
-  color: #fff;
-  font-size: clamp(1.7rem, 3.4vw, 3.3rem);
-  line-height: 1.08;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
-}
-
-.tienda-vidriera-banner-contenido h2 span {
-  display: block;
-  color: #86cf4a;
-}
-
-.tienda-vidriera-banner-contenido p {
-  margin: 0.9rem 0 0;
-  color: rgba(255, 255, 255, 0.92);
-  font-size: clamp(0.95rem, 1.4vw, 1.25rem);
-  line-height: 1.4;
-  text-wrap: balance;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
-}
-
-.tienda-vidriera-cta {
+.tienda-hero-cta {
   margin-top: 1.25rem;
   background: var(--color-primario);
   color: #fff;
@@ -1403,7 +1510,7 @@
   transition: background 0.2s var(--ease), transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
 }
 
-.tienda-vidriera-cta:hover {
+.tienda-hero-cta:hover {
   background: var(--color-primario-hover);
   transform: translateY(-2px);
   box-shadow: 0 10px 24px rgba(21, 128, 61, 0.35);
@@ -1619,6 +1726,7 @@
   display: flex;
   gap: 0.75rem;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-snap-type: x proximity;
   padding: 0.5rem 0.25rem 1rem;
   scrollbar-width: thin;
@@ -1627,9 +1735,12 @@
 /* Tarjetas dentro de los bloques de categoría: tamaño compacto para que
    entren varias sin scrollear demasiado (en mobile se achican más abajo,
    para que se vea más de una tarjeta a la vez). */
-.tienda-card-fila {
+.tienda-categoria-fila > .tienda-revelar-celda {
   flex: 0 0 200px;
   scroll-snap-align: start;
+}
+
+.tienda-card-fila {
   padding: 1rem;
   gap: 0.6rem;
   border-radius: 12px;
@@ -1699,8 +1810,11 @@
    -- señal de que hay más para scrollear, en vez de sentir que cada swipe
    cambia de producto por completo. */
 @media (max-width: 640px) {
-  .tienda-card-fila {
+  .tienda-categoria-fila > .tienda-revelar-celda {
     flex-basis: 58%;
+  }
+
+  .tienda-card-fila {
     padding: 0.85rem;
     gap: 0.5rem;
   }
@@ -1711,8 +1825,8 @@
 }
 
 /* =====================================================================
-   Franja de confianza: pausa clara entre las reseñas (foto) y el banner
-   de la vidriera (foto). Criterio de diseño:
+   Franja de confianza: pausa clara entre las reseñas (foto) y los
+   productos. Criterio de diseño:
    - Fondo beige de la página + 4 tarjetas blancas iguales (borde suave,
      radio grande, sombra) con una barra roja arriba: ordenan la fila en
      vez de líneas divisorias.

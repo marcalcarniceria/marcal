@@ -6,6 +6,11 @@ export const SUCURSAL_ID = '558eecf8-6ade-4cb9-866d-3f9e25e3d263'
 // botón flotante de la tienda y la página de confirmación.
 export const WHATSAPP_LOCAL = '5493513866592'
 
+// Redes de la barra superior de la tienda. Con la URL vacía, el ícono no se
+// muestra: un ícono sin destino real sería un link roto.
+export const INSTAGRAM_URL = ''
+export const FACEBOOK_URL = ''
+
 // Datos que se imprimen en el encabezado de tickets y comandas.
 export const NEGOCIO_NOMBRE = 'Carnicería Mar-Cal'
 export const NEGOCIO_DIRECCION = 'Arenales 345 - B° Juniors, Córdoba'

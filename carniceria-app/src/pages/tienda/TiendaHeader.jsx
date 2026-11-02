@@ -4,7 +4,17 @@ import { useAuth } from '../../context/AuthContext'
 import { useCarrito } from './CarritoContext'
 import { AccesoModal } from './AccesoModal'
 import { MisPedidosModal } from './MisPedidos'
-import { IconUsuario } from './iconos'
+import { FACEBOOK_URL, INSTAGRAM_URL, WHATSAPP_LOCAL } from '../../config/sucursal'
+import { linkWhatsApp } from '../../lib/whatsapp'
+import { IconFacebook, IconInstagram, IconUsuario, IconWhatsApp } from './iconos'
+
+const SCROLL_COMPACTO = 50
+
+const REDES = [
+  { nombre: 'Instagram', url: INSTAGRAM_URL, Icono: IconInstagram },
+  { nombre: 'Facebook', url: FACEBOOK_URL, Icono: IconFacebook },
+  { nombre: 'WhatsApp', url: linkWhatsApp(WHATSAPP_LOCAL, 'Hola, quiero hacer un pedido'), Icono: IconWhatsApp },
+].filter((red) => red.url)
 
 export function TiendaHeader() {
   const { cantidadTotal } = useCarrito()
@@ -17,6 +27,16 @@ export function TiendaHeader() {
   // toca menuAbierto (el dropdown de cuenta), que sigue igual.
   const [menuMobileAbierto, setMenuMobileAbierto] = useState(false)
   const cuentaRef = useRef(null)
+  const [compacto, setCompacto] = useState(() => window.scrollY > SCROLL_COMPACTO)
+
+  useEffect(() => {
+    function alScrollear() {
+      setCompacto(window.scrollY > SCROLL_COMPACTO)
+    }
+
+    window.addEventListener('scroll', alScrollear, { passive: true })
+    return () => window.removeEventListener('scroll', alScrollear)
+  }, [])
 
   // Cerrar el dropdown al clickear afuera (comportamiento estándar de
   // cualquier menú desplegable).
@@ -55,62 +75,82 @@ export function TiendaHeader() {
   }
 
   return (
-    <header className="tienda-header">
-      <Link to="/tienda" className="tienda-logo">
-        <img src="/images/logo-marcal.png" alt="Mar-Cal" className="tienda-logo-marca-img" />
-        <span className="tienda-logo-texto">
-          <small>Carnicería y Verdulería</small>
-        </span>
-      </Link>
+    <>
+      {/* El header es fixed: este espacio tiene siempre la misma altura, así
+          achicar el navbar no mueve la página (si la moviera, el scroll podría
+          volver a cruzar el umbral de 50px y el header parpadearía). */}
+      <div className="tienda-header-espacio" aria-hidden="true" />
 
-      {/* Solo visible en mobile (CSS) -- despliega el mismo <nav> de
-          siempre, no cambia qué opciones hay adentro. */}
-      <button
-        type="button"
-        className="tienda-menu-toggle"
-        onClick={() => setMenuMobileAbierto((abierto) => !abierto)}
-        aria-label={menuMobileAbierto ? 'Cerrar menú' : 'Abrir menú'}
-        aria-expanded={menuMobileAbierto}
-      >
-        <span />
-        <span />
-        <span />
-      </button>
+      <header className={`tienda-header${compacto ? ' tienda-header-compacto' : ''}`}>
+        <div className="tienda-topbar">
+          <span>Seguinos</span>
+          <div className="tienda-topbar-redes">
+            {REDES.map(({ nombre, url, Icono }) => (
+              <a key={nombre} href={url} target="_blank" rel="noreferrer" aria-label={nombre}>
+                <Icono width={15} height={15} aria-hidden="true" />
+              </a>
+            ))}
+          </div>
+        </div>
 
-      <nav className={menuMobileAbierto ? 'abierto' : ''}>
-        {!loading && (
-          <div className="tienda-cuenta" ref={cuentaRef}>
-            <button type="button" className="tienda-cuenta-btn" onClick={clickCuenta}>
-              <IconUsuario width={18} height={18} />
-              {cliente ? cliente.nombre : 'Iniciar sesión'}
-            </button>
+        <div className="tienda-navbar">
+          <Link to="/tienda" className="tienda-logo">
+            <img src="/images/logo-marcal.png" alt="Mar-Cal" className="tienda-logo-img" />
+            <span className="tienda-logo-texto">
+              <small>Carnicería y Verdulería</small>
+            </span>
+          </Link>
 
-            {menuAbierto && (
-              <div className="tienda-cuenta-menu">
-                <button type="button" className="tienda-cuenta-menu-item" onClick={abrirMisPedidos}>
-                  Mis pedidos
+          {/* Solo visible en mobile (CSS) -- despliega el mismo <nav> de
+              siempre, no cambia qué opciones hay adentro. */}
+          <button
+            type="button"
+            className="tienda-menu-toggle"
+            onClick={() => setMenuMobileAbierto((abierto) => !abierto)}
+            aria-label={menuMobileAbierto ? 'Cerrar menú' : 'Abrir menú'}
+            aria-expanded={menuMobileAbierto}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+
+          <nav className={menuMobileAbierto ? 'abierto' : ''}>
+            {!loading && (
+              <div className="tienda-cuenta" ref={cuentaRef}>
+                <button type="button" className="tienda-cuenta-btn" onClick={clickCuenta}>
+                  <IconUsuario width={18} height={18} />
+                  {cliente ? cliente.nombre : 'Iniciar sesión'}
                 </button>
-                <button type="button" className="tienda-cuenta-menu-item" onClick={cerrarSesion}>
-                  Cerrar sesión
-                </button>
+
+                {menuAbierto && (
+                  <div className="tienda-cuenta-menu">
+                    <button type="button" className="tienda-cuenta-menu-item" onClick={abrirMisPedidos}>
+                      Mis pedidos
+                    </button>
+                    <button type="button" className="tienda-cuenta-menu-item" onClick={cerrarSesion}>
+                      Cerrar sesión
+                    </button>
+                  </div>
+                )}
               </div>
             )}
-          </div>
-        )}
-        <Link
-          to="/tienda/carrito"
-          className="tienda-carrito-link"
-          data-cantidad={cantidadTotal}
-          onClick={() => setMenuMobileAbierto(false)}
-        >
-          Carrito ({cantidadTotal})
-        </Link>
-      </nav>
+            <Link
+              to="/tienda/carrito"
+              className="tienda-carrito-link"
+              data-cantidad={cantidadTotal}
+              onClick={() => setMenuMobileAbierto(false)}
+            >
+              Carrito ({cantidadTotal})
+            </Link>
+          </nav>
+        </div>
 
-      {modalAbierto && <AccesoModal onClose={() => setModalAbierto(false)} />}
-      {misPedidosAbierto && cliente && (
-        <MisPedidosModal clienteId={cliente.id} onClose={() => setMisPedidosAbierto(false)} />
-      )}
-    </header>
+        {modalAbierto && <AccesoModal onClose={() => setModalAbierto(false)} />}
+        {misPedidosAbierto && cliente && (
+          <MisPedidosModal clienteId={cliente.id} onClose={() => setMisPedidosAbierto(false)} />
+        )}
+      </header>
+    </>
   )
 }
