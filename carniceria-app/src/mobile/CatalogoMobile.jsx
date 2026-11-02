@@ -5,13 +5,31 @@ import { useCarrito } from '../pages/tienda/CarritoContext'
 import { useTiendaCatalogo } from '../pages/tienda/useTiendaCatalogo'
 import { esStockBajo } from '../pages/tienda/stock'
 import { IconCarne, IconVerdura, IconGrilla, IconEtiqueta, IconCaja } from '../pages/tienda/iconos'
+import { TiendaHero } from '../pages/tienda/TiendaHero'
+import { TiendaTopbar } from '../pages/tienda/TiendaTopbar'
+import { SobreMarCal } from '../pages/tienda/SobreMarCal'
+import { RevelarProvider } from '../pages/tienda/Revelar'
+import { useHeaderCompacto } from '../pages/tienda/useHeaderCompacto'
 import { fmtPrecio, sufijoUnidad, esUnidadKg, normalizar } from './mobileFormato'
 import './mobile.css'
 
+// Estas imágenes ya traen el título dibujado: sub es solo su texto alternativo.
+// ancho/alto: tamaño real, para reservar el lugar antes de que cargue.
 const CATEGORIAS = {
-  carniceria: { titulo: 'Carnicería', sub: 'Carne fresca, de primera calidad.', img: '/images/carniceria.png', color: '#a8241d' },
-  verduleria: { titulo: 'Verdulería', sub: 'Frutas y verduras frescas, directo del campo.', img: '/images/verduelria.png', color: '#2c6e2f' },
-  mas_productos: { titulo: 'Más productos', sub: 'Todo lo que necesitás, en un solo lugar.', img: '/images/mas-productos.png', color: '#7a3b12' },
+  carniceria: { titulo: 'Carnicería', sub: 'Carne fresca, de primera calidad.', img: '/images/carniceria.png', ancho: 1361, alto: 1046, color: '#a8241d' },
+  verduleria: { titulo: 'Verdulería', sub: 'Frutas y verduras frescas, directo del campo.', img: '/images/verduelria.png', ancho: 1443, alto: 1090, color: '#2c6e2f' },
+  mas_productos: { titulo: 'Más productos', sub: 'Todo lo que necesitás, en un solo lugar.', img: '/images/mas-productos.png', ancho: 1444, alto: 1089, color: '#7a3b12' },
+}
+
+// combos.jpg es solo fondo: el título va en HTML, igual que en compu.
+const BANNER_COMBOS = {
+  titulo: 'Combos',
+  sub: 'Armados para ahorrar, listos para llevar.',
+  img: '/images/combos.jpg',
+  ancho: 1024,
+  alto: 1024,
+  color: 'var(--color-primario)',
+  Icono: IconCaja,
 }
 
 const CHIPS = [
@@ -81,6 +99,35 @@ function vmCombo(c, items) {
   }
 }
 
+function BannerCategoria({ banner, verTodos }) {
+  const { titulo, sub, img, ancho, alto, color, Icono } = banner
+
+  return (
+    <div className="mob-section-banner" style={{ '--tono': color }}>
+      <img src={img} alt={Icono ? '' : `${titulo}: ${sub}`} width={ancho} height={alto} loading="lazy" />
+      {Icono && (
+        <div className="tienda-categoria-rotulo">
+          <Icono className="tienda-categoria-rotulo-icono" aria-hidden="true" />
+          <div>
+            <div className="tienda-categoria-rotulo-titulo">{titulo}</div>
+            <p className="tienda-categoria-rotulo-subtitulo">{sub}</p>
+          </div>
+        </div>
+      )}
+      {verTodos && (
+        <button
+          type="button"
+          className="mob-section-banner-vertodos"
+          onClick={verTodos}
+          aria-label={`Ver todos los productos de ${titulo.toLowerCase()}`}
+        >
+          Ver todos →
+        </button>
+      )}
+    </div>
+  )
+}
+
 function TarjetaProducto({ vm, onAbrir, onAgregar, onCambiarCantidad }) {
   return (
     <div className="mob-card">
@@ -133,6 +180,7 @@ export function CatalogoMobile() {
   const [busqueda, setBusqueda] = useState('')
   const [categoria, setCategoria] = useState('todo')
   const [toast, setToast] = useState(null)
+  const compacto = useHeaderCompacto()
 
   function avisar(texto) {
     setToast(texto)
@@ -202,7 +250,7 @@ export function CatalogoMobile() {
     bloques.push({
       key: 'combos',
       titulo: 'Combos',
-      banner: { titulo: 'Combos', sub: 'Armados para ahorrar, listos para llevar.', img: '/images/combos.jpg', color: '#a8371a' },
+      banner: BANNER_COMBOS,
       items: vmsCombos(combosDisponibles.slice(0, 4)),
       verTodos: combosDisponibles.length > 4 ? () => setCategoria('combos') : null,
       vacio: combosDisponibles.length === 0,
@@ -212,19 +260,34 @@ export function CatalogoMobile() {
 
   return (
     <div className="mob-app">
-      <div className="mob-home-header">
-        <div className="mob-home-header-top">
-          <img src="/images/logo-marcal.png" alt="" className="mob-home-logo" />
-          <div className="mob-home-titulo">
-            <div className="mob-home-marca">MAR-CAL</div>
-            <div className="mob-home-subtitulo">Carnicería y Verdulería</div>
-          </div>
+      {/* Mismo header que compu (estilos en tienda.css), con los accesos de mobile. */}
+      <div className="tienda-header-espacio" aria-hidden="true" />
+
+      <header className={`tienda-header${compacto ? ' tienda-header-compacto' : ''}`}>
+        <TiendaTopbar />
+
+        <div className="tienda-navbar">
+          <Link to="/tienda" className="tienda-logo">
+            <img src="/images/logo-marcal.png" alt="Mar-Cal" className="tienda-logo-img" />
+            <span className="tienda-logo-texto">
+              <small>Carnicería y Verdulería</small>
+            </span>
+          </Link>
           {!loadingAuth && (
             <Link to={cliente ? '/tienda/mis-pedidos' : '/tienda/login'} className="mob-header-btn">
               {cliente ? 'Pedidos' : 'Iniciar sesión'}
             </Link>
           )}
         </div>
+      </header>
+
+      <TiendaHero idProductos="mob-productos" />
+
+      <RevelarProvider>
+        <SobreMarCal />
+      </RevelarProvider>
+
+      <div className="mob-home-header">
         <div className="mob-home-tagline">
           <span>Pesado al momento</span>
           <span>•</span>
@@ -234,7 +297,7 @@ export function CatalogoMobile() {
         </div>
       </div>
 
-      <div className="mob-search-wrap">
+      <div id="mob-productos" className="mob-search-wrap">
         <label className="mob-search">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b5f55" strokeWidth="2" strokeLinecap="round">
             <circle cx="11" cy="11" r="7" />
@@ -278,14 +341,7 @@ export function CatalogoMobile() {
           !error &&
           secciones.map((sec) => (
             <div key={sec.key} className="mob-section">
-              {sec.banner && (
-                <div className="mob-section-banner" style={{ backgroundImage: `url('${sec.banner.img}')` }}>
-                  <div className="mob-section-banner-overlay" style={{ color: sec.banner.color }}>
-                    <div className="mob-section-banner-titulo">{sec.titulo}</div>
-                    <div className="mob-section-banner-sub">{sec.banner.sub}</div>
-                  </div>
-                </div>
-              )}
+              {sec.banner && <BannerCategoria banner={sec.banner} verTodos={sec.verTodos} />}
               {!sec.banner && <div className="mob-section-titulo-plano">{sec.titulo}</div>}
 
               {sec.vacio ? (
@@ -309,16 +365,8 @@ export function CatalogoMobile() {
                   ))}
                 </div>
               )}
-
-              {sec.verTodos && (
-                <button type="button" className="mob-ver-todos" onClick={sec.verTodos}>
-                  Ver todos los productos de {sec.titulo.toLowerCase()}
-                </button>
-              )}
             </div>
           ))}
-
-        <p className="mob-pie">Arenales 345, Barrio Juniors · En el barrio desde 1998</p>
       </div>
 
       <Link to="/tienda/carrito" className={`mob-cart-bar${cantidadTotal ? ' con-items' : ''}`}>

@@ -5,12 +5,13 @@ import { ProductoCard } from './ProductoCard'
 import { ComboCard } from './ComboCard'
 import { CategoriaBloque } from './CategoriaBloque'
 import { Revelar, RevelarGrupo, RevelarItem, RevelarProvider } from './Revelar'
+import { TiendaHero } from './TiendaHero'
+import { SobreMarCal } from './SobreMarCal'
 import {
   IconCarne,
   IconVerdura,
   IconEtiqueta,
   IconCaja,
-  IconChevronAbajo,
   IconGrilla,
   IconCalendario,
   IconEstrella,
@@ -27,18 +28,6 @@ const FILTROS_CATEGORIA = [
   { nombre: 'Más productos', Icono: IconGrilla, seccion: 'seccion-mas-productos' },
   { nombre: 'Promociones', Icono: IconEtiqueta, seccion: 'seccion-promociones' },
   { nombre: 'Combos', Icono: IconCaja, seccion: 'seccion-combos' },
-]
-
-// Fondos del hero. posicion: qué parte de la foto queda visible con el
-// recorte de "cover". tamano: reemplaza a "cover" -- en 2.png agranda la foto
-// lo justo para que, alineada abajo, la pizarra con texto (el 30% de arriba)
-// quede fuera del hero en cualquier pantalla. El 100vh - 6.5rem es la altura
-// del hero, y el 2.2 sale de la proporción 3:2 de la foto dividida por el 68%
-// que queda visible.
-const HERO_SLIDES = [
-  { imagen: '/images/1.png', posicion: 'center 55%' },
-  { imagen: '/images/tienda-banner.png', posicion: 'center' },
-  { imagen: '/images/2.png', posicion: 'center bottom', tamano: 'max(100%, calc(2.2 * (100vh - 6.5rem)))' },
 ]
 
 const ANIO_INICIO = 1998
@@ -76,14 +65,6 @@ export function Tienda() {
   const { agregarItem } = useCarrito()
   const { productos, loading, error, combosDisponibles, sinCategoria, enPromocion } = useTiendaCatalogo()
 
-  function irAProductos() {
-    document.getElementById('vidriera-productos')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
-  function irANosotros() {
-    document.getElementById('seccion-nosotros')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
   // Mientras cargan los productos los bloques todavía no existen: el ?.
   // evita el error si el cliente toca un botón antes de tiempo.
   function irASeccion(id) {
@@ -94,51 +75,9 @@ export function Tienda() {
     <RevelarProvider>
       <TiendaHeader />
 
-      <div className="tienda-hero-full">
-        <div className="tienda-hero-slides" aria-hidden="true">
-          {HERO_SLIDES.map(({ imagen, posicion, tamano }) => (
-            <div
-              key={imagen}
-              className="tienda-hero-slide"
-              style={{ backgroundImage: `url('${imagen}')`, backgroundPosition: posicion, backgroundSize: tamano }}
-            />
-          ))}
-        </div>
-        <div className="tienda-hero-overlay" />
-        <div className="tienda-hero-inner">
-          <div className="tienda-hero-texto">
-            <h1>
-              Calidad y frescura
-              <span>en un solo lugar</span>
-            </h1>
-            <p>Hacé tu pedido y recibilo en tu zona.</p>
-            <button type="button" className="tienda-hero-cta" onClick={irAProductos}>
-              Ver productos
-            </button>
-          </div>
-          <img src="/images/logo-animado-sin-fondo.webp" alt="Mar-Cal" className="tienda-hero-logo" />
-        </div>
-        <button type="button" className="tienda-hero-scroll" onClick={irANosotros} aria-label="Ir a Sobre Mar-Cal">
-          <IconChevronAbajo width={36} height={36} aria-hidden="true" />
-        </button>
-      </div>
+      <TiendaHero idProductos="vidriera-productos" />
 
-      <div id="seccion-nosotros" className="tienda-nosotros">
-        <div className="tienda-nosotros-inner">
-          <Revelar className="tienda-nosotros-card">
-            <h2>Sobre Mar-Cal</h2>
-            <p>
-              Somos una carnicería y verdulería de barrio en Arenales 345, Barrio Juniors.
-              Trabajamos todos los días para ofrecerte carne, frutas y verduras de primera
-              calidad, con el trato de siempre.
-            </p>
-            <p>
-              Hacé tu pedido por WhatsApp o directo acá en la tienda, y coordinamos la entrega
-              por tu zona.
-            </p>
-          </Revelar>
-        </div>
-      </div>
+      <SobreMarCal />
 
       <div className="tienda-resenas" style={{ backgroundImage: "url('/images/2.png')" }}>
         <div className="tienda-resenas-overlay" />

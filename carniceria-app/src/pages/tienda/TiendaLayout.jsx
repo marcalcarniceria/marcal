@@ -8,9 +8,8 @@ import './tienda.css'
 
 export function TiendaLayout() {
   // La versión mobile tiene sus propias barras flotantes abajo (carrito,
-  // agregar, checkout) que chocarían con el botón de WhatsApp -- y, como
-  // el diseño de referencia, no lleva footer (es una experiencia tipo
-  // app, de pantalla completa). En compu no cambia nada.
+  // agregar, checkout) que chocarían con el botón de WhatsApp. El footer sí
+  // va en las dos: en mobile deja lugar para esas barras (ver tienda.css).
   const esMobile = useIsMobile()
 
   // Clase extra SOLO para compu (el sticky footer de abajo nunca debe
@@ -23,7 +22,7 @@ export function TiendaLayout() {
             el suyo en CatalogoMobile (habría dos). */}
         <TiendaToastProvider habilitado={!esMobile}>
           <Outlet />
-          {!esMobile && <TiendaFooter />}
+          <TiendaFooter />
           {!esMobile && <WhatsAppButton />}
         </TiendaToastProvider>
       </CarritoProvider>

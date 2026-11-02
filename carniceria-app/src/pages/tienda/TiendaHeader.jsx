@@ -4,10 +4,9 @@ import { useAuth } from '../../context/AuthContext'
 import { useCarrito } from './CarritoContext'
 import { AccesoModal } from './AccesoModal'
 import { MisPedidosModal } from './MisPedidos'
-import { FACEBOOK_URL, INSTAGRAM_URL } from '../../config/sucursal'
-import { IconFacebook, IconUsuario } from './iconos'
-
-const SCROLL_COMPACTO = 50
+import { TiendaTopbar } from './TiendaTopbar'
+import { useHeaderCompacto } from './useHeaderCompacto'
+import { IconUsuario } from './iconos'
 
 export function TiendaHeader() {
   const { cantidadTotal } = useCarrito()
@@ -20,16 +19,7 @@ export function TiendaHeader() {
   // toca menuAbierto (el dropdown de cuenta), que sigue igual.
   const [menuMobileAbierto, setMenuMobileAbierto] = useState(false)
   const cuentaRef = useRef(null)
-  const [compacto, setCompacto] = useState(() => window.scrollY > SCROLL_COMPACTO)
-
-  useEffect(() => {
-    function alScrollear() {
-      setCompacto(window.scrollY > SCROLL_COMPACTO)
-    }
-
-    window.addEventListener('scroll', alScrollear, { passive: true })
-    return () => window.removeEventListener('scroll', alScrollear)
-  }, [])
+  const compacto = useHeaderCompacto()
 
   // Cerrar el dropdown al clickear afuera (comportamiento estándar de
   // cualquier menú desplegable).
@@ -75,19 +65,7 @@ export function TiendaHeader() {
       <div className="tienda-header-espacio" aria-hidden="true" />
 
       <header className={`tienda-header${compacto ? ' tienda-header-compacto' : ''}`}>
-        <div className="tienda-topbar">
-          <span>Seguinos</span>
-          <div className="tienda-topbar-redes">
-            <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer" aria-label="Instagram">
-              <img src="/images/insta.png" alt="" className="tienda-instagram-logo" />
-            </a>
-            {FACEBOOK_URL && (
-              <a href={FACEBOOK_URL} target="_blank" rel="noreferrer" aria-label="Facebook">
-                <IconFacebook width={15} height={15} aria-hidden="true" />
-              </a>
-            )}
-          </div>
-        </div>
+        <TiendaTopbar />
 
         <div className="tienda-navbar">
           <Link to="/tienda" className="tienda-logo">

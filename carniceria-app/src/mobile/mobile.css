@@ -72,42 +72,13 @@
   color: var(--mob-dark);
 }
 
-/* ---------- Home: header oscuro + buscador + chips ---------- */
+/* ---------- Home: franja de datos + buscador + chips. El header y el hero
+   son los de la tienda (tienda.css, con su ajuste para mobile al final). ---------- */
 
 .mob-home-header {
   background: var(--mob-dark);
   color: #fff;
-  padding: 12px 16px 18px;
-}
-
-.mob-home-header-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.mob-home-logo {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex: none;
-}
-
-.mob-home-titulo {
-  flex: 1;
-  min-width: 0;
-}
-
-.mob-home-marca {
-  font: 700 21px/1 var(--mob-font-display);
-  letter-spacing: 0.05em;
-}
-
-.mob-home-subtitulo {
-  font: 300 12.5px/1.2 var(--mob-font-body);
-  color: #d8cdbf;
-  margin-top: 4px;
+  padding: 12px 16px;
 }
 
 .mob-header-btn {
@@ -129,8 +100,8 @@
 .mob-home-tagline {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 4px 8px;
-  margin-top: 14px;
   font: 400 11.5px var(--mob-font-body);
   color: #e3c98f;
 }
@@ -141,6 +112,8 @@
 
 .mob-search-wrap {
   padding: 14px 16px 4px;
+  /* Destino de "Ver productos": deja lugar para el header compacto. */
+  scroll-margin-top: 3.25rem;
 }
 
 .mob-search {
@@ -206,39 +179,47 @@
 /* ---------- Secciones + grilla de productos ---------- */
 
 .mob-secciones {
-  padding: 6px 16px 140px;
+  padding: 6px 16px 32px;
   display: flex;
   flex-direction: column;
   gap: 28px;
 }
 
+/* La imagen entera, escalada al ancho de la pantalla. container-type es la
+   base de las unidades cqw del rótulo de Combos (tienda-categoria-rotulo). */
 .mob-section-banner {
   position: relative;
-  min-height: 132px;
   border-radius: 20px;
   overflow: hidden;
-  background-size: cover;
-  background-position: center;
+  container-type: inline-size;
+}
+
+.mob-section-banner img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.mob-section-banner-vertodos {
+  all: unset;
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  height: 40px;
+  padding: 0 14px;
   display: flex;
   align-items: center;
+  border-radius: 10px;
+  background: var(--tono);
+  color: #fff;
+  font: 600 13.5px var(--mob-font-body);
+  box-shadow: 0 4px 14px rgba(60, 40, 20, 0.25);
+  cursor: pointer;
 }
 
-.mob-section-banner-overlay {
-  position: relative;
-  padding: 18px 20px;
-  max-width: 64%;
-  background: linear-gradient(90deg, rgba(247, 242, 234, 0.92) 55%, rgba(247, 242, 234, 0));
-  border-radius: 20px;
-}
-
-.mob-section-banner-titulo {
-  font: 700 24px/1.05 var(--mob-font-body);
-}
-
-.mob-section-banner-sub {
-  font: 400 13px/1.35 var(--mob-font-body);
-  color: #4a3f36;
-  margin-top: 6px;
+.mob-section-banner-vertodos:focus-visible {
+  outline: 2px solid var(--mob-dark);
+  outline-offset: 2px;
 }
 
 .mob-section-titulo-plano {
@@ -402,28 +383,6 @@
   color: #7a2a12;
 }
 
-.mob-ver-todos {
-  all: unset;
-  cursor: pointer;
-  height: 48px;
-  border-radius: 14px;
-  border: 1.5px solid var(--mob-accent);
-  color: var(--mob-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font: 600 14.5px var(--mob-font-body);
-  width: 100%;
-  margin-top: 14px;
-  box-sizing: border-box;
-}
-
-.mob-pie {
-  text-align: center;
-  font: 300 12px/1.6 var(--mob-font-body);
-  color: #8a7d70;
-}
-
 /* ---------- Barra flotante de carrito ---------- */
 
 .mob-cart-bar {
@@ -538,7 +497,7 @@
   margin-top: -24px;
   background: var(--mob-bg);
   border-radius: 24px 24px 0 0;
-  padding: 22px 20px 150px;
+  padding: 22px 20px 32px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -760,7 +719,7 @@
 }
 
 .mob-cart-lista {
-  padding: 16px 16px 150px;
+  padding: 16px 16px 32px;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -1119,7 +1078,7 @@
 }
 
 .mob-checkout-body {
-  padding: 20px 16px 150px;
+  padding: 20px 16px 32px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1479,7 +1438,7 @@
 /* ---------- Mis pedidos ---------- */
 
 .mob-pedidos-lista {
-  padding: 16px 16px 140px;
+  padding: 16px 16px 32px;
   display: flex;
   flex-direction: column;
   gap: 12px;

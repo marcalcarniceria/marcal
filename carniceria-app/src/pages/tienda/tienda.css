@@ -1211,10 +1211,6 @@
   .tienda-nosotros-inner {
     padding: 2.25rem 1rem;
   }
-
-  .tienda-nosotros-card {
-    padding: 2rem 1.25rem;
-  }
 }
 
 /* Reseñas de Google -- foto de fondo (2.png) a pantalla completa con un
@@ -2149,4 +2145,154 @@
 
 .tienda-toast-link:hover {
   text-decoration: underline;
+}
+
+/* =====================================================================
+   Header, hero y "Sobre Mar-Cal" en mobile. Mismo corte que useIsMobile:
+   de 768px para abajo la tienda es CatalogoMobile, y estas reglas no
+   llegan nunca a la versión de compu.
+   ===================================================================== */
+@media (max-width: 768px) {
+  .tienda {
+    --alto-topbar: 1.5rem;
+    --alto-navbar: 4rem;
+    --curva-navbar: 0.75rem;
+  }
+
+  .tienda-header-compacto {
+    --alto-navbar: 3.25rem;
+    --curva-navbar: 0.5rem;
+  }
+
+  .tienda-topbar {
+    justify-content: center;
+    padding: 0 1rem;
+  }
+
+  .tienda-navbar {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .tienda-logo {
+    gap: 0.6rem;
+    min-width: 0;
+  }
+
+  .tienda-logo-img {
+    height: 2.75rem;
+  }
+
+  .tienda-header-compacto .tienda-logo-img {
+    height: 2.25rem;
+  }
+
+  .tienda-logo-texto small {
+    font-size: 0.8rem;
+    line-height: 1.15;
+    letter-spacing: normal;
+    white-space: normal;
+  }
+
+  /* dvh: la altura real visible, con o sin la barra del navegador. */
+  .tienda-hero-full {
+    min-height: calc(100dvh - var(--alto-topbar) - var(--alto-navbar) + var(--curva-navbar));
+  }
+
+  /* El padding de abajo deja lugar para el indicador y la barra del carrito. */
+  .tienda-hero-inner {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 1.25rem;
+    padding: calc(var(--curva-navbar) + 1rem) 1.25rem 9rem;
+  }
+
+  .tienda-hero-logo {
+    align-self: center;
+    width: clamp(130px, 42vw, 200px);
+  }
+
+  .tienda-hero-inner h1 {
+    padding-left: 0.85rem;
+    border-left-width: 4px;
+    font-size: clamp(1.6rem, 8.2vw, 2.75rem);
+  }
+
+  .tienda-hero-inner p {
+    margin-top: 0.75rem;
+    font-size: 1.05rem;
+  }
+
+  /* Por encima de la barra flotante del carrito. */
+  .tienda-hero-scroll {
+    bottom: 5.25rem;
+  }
+
+  .tienda-nosotros {
+    scroll-margin-top: 3.25rem;
+  }
+
+  .tienda-nosotros-card {
+    padding: 1.5rem;
+  }
+
+  .tienda-header-compacto .mob-header-btn {
+    height: 2.5rem;
+  }
+
+  /* Footer al pie: en una página corta, la pantalla llena el espacio libre. */
+  .tienda {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .tienda > .mob-app {
+    flex: 1 0 auto;
+    min-height: 0;
+  }
+
+  /* El padding de abajo deja el contenido por encima de las barras fijas de
+     mobile (carrito, agregar, checkout). */
+  .tienda-footer {
+    margin-top: 0;
+    padding: 2rem 1.25rem 150px;
+  }
+
+  .tienda-footer-inner {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .tienda-footer-marca p {
+    max-width: none;
+  }
+
+  /* Área de toque cómoda para los enlaces del footer. */
+  .tienda-footer-datos a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+
+  .tienda-footer-datos p {
+    margin: 0;
+  }
+}
+
+/* Pantallas bajas: un logo más chico para que el contenido del hero entre sin
+   pisar el indicador con la barra del carrito. */
+@media (max-width: 768px) and (max-height: 620px) {
+  .tienda-hero-logo {
+    width: 110px;
+  }
+}
+
+/* Sin lugar para los tres elementos del navbar: queda el logo y el acceso. */
+@media (max-width: 374px) {
+  .tienda-logo-texto {
+    display: none;
+  }
 }
