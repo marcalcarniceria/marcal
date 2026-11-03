@@ -528,6 +528,106 @@
   border-bottom-color: var(--color-primario);
 }
 
+/* Modal "Ver todos" de un bloque de categoría -- misma base que el modal
+   de acceso (.tienda-modal-overlay/.tienda-modal), pero más ancho y con
+   su propio scroll interno en vez de crecer con el contenido. */
+.tienda-vertodos-overlay {
+  z-index: 60;
+}
+
+.tienda-vertodos-modal {
+  max-width: 1200px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.tienda-vertodos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-right: 1.75rem;
+}
+
+.tienda-vertodos-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tienda-vertodos-buscador {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+
+.tienda-vertodos-buscador:focus {
+  outline: 2px solid var(--color-primario-oscuro);
+  outline-offset: 1px;
+}
+
+.tienda-vertodos-body {
+  margin-top: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.tienda-vertodos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .tienda-vertodos-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .tienda-vertodos-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .tienda-vertodos-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Celular: el modal ocupa toda la pantalla en vez de quedar como un
+   recuadro chico flotando. */
+@media (max-width: 767px) {
+  .tienda-vertodos-overlay {
+    padding: 0;
+  }
+
+  .tienda-vertodos-modal {
+    max-width: none;
+    max-height: none;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    padding: 1rem 1rem 1.25rem;
+  }
+
+  .tienda-vertodos-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+
 /* Contenido */
 .tienda-contenido {
   max-width: 1280px;
@@ -783,11 +883,62 @@
 
 .tienda-card-unidad {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0;
   border-top: 1px solid var(--color-border);
-  gap: 0.75rem;
+  gap: 0.5rem 0.75rem;
+}
+
+/* Cantidad y botón de agregar, en su propia línea debajo del precio. */
+.tienda-card-compra {
+  display: flex;
+  align-items: center;
+  flex-basis: 100%;
+  gap: 0.5rem;
+}
+
+.tienda-card-cantidad {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.tienda-card-cantidad input {
+  width: 3.4rem;
+  padding: 0.35rem 0.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  font: inherit;
+  color: var(--color-text);
+  background: #fff;
+}
+
+.tienda-card-compra .tienda-btn-agregar {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.tienda-carrito-promo {
+  color: var(--color-accent);
+  font-size: 0.8rem;
+}
+
+.tienda-card-promo-volumen {
+  display: inline-block;
+  margin-top: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-accent) 10%, #fff);
+  color: var(--color-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .tienda-card-unidad:first-of-type {
@@ -813,6 +964,11 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.2rem 0.5rem;
+}
+
+/* Oferta directa: el precio anterior en su propia línea, arriba del actual. */
+.tienda-card-precios-directa .tienda-card-precio-original {
+  flex-basis: 100%;
 }
 
 .tienda-card-precio-original {
@@ -1761,6 +1917,16 @@
 
 .tienda-card-fila .tienda-card-unidad {
   padding: 0.4rem 0;
+}
+
+/* En 200px no entran cantidad y botón en la misma línea. Si el botón empuja el
+   ancho, la tarjeta crece según la unidad y al pasar a "¡Agregado!". */
+.tienda-card-fila .tienda-card-compra {
+  flex-wrap: wrap;
+}
+
+.tienda-card-fila .tienda-card-compra .tienda-btn-agregar {
+  flex-basis: 100%;
 }
 
 .tienda-card-fila .tienda-card-unidad-nombre {

@@ -281,7 +281,7 @@
   position: absolute;
   top: 10px;
   left: 10px;
-  background: var(--mob-accent);
+  background: var(--color-accent);
   color: #fff;
   font: 600 11px var(--mob-font-body);
   letter-spacing: 0.06em;
@@ -315,9 +315,21 @@
   color: var(--mob-dark);
 }
 
+.mob-card-precio-oferta {
+  color: var(--color-accent);
+}
+
 .mob-card-sufijo {
   font: 400 12px var(--mob-font-body);
   color: var(--mob-muted);
+}
+
+.mob-card-descuento {
+  background: var(--color-accent);
+  color: #fff;
+  font: 600 11px var(--mob-font-body);
+  padding: 2px 7px;
+  border-radius: 999px;
 }
 
 .mob-card-precio-viejo {
@@ -326,9 +338,57 @@
   text-decoration: line-through;
 }
 
+.mob-card-promo {
+  align-self: flex-start;
+  margin-top: 3px;
+  padding: 3px 7px;
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-accent) 10%, #fff);
+  font: 700 12px/1.25 var(--mob-font-body);
+  color: var(--color-accent);
+}
+
 .mob-card-accion {
   margin-top: auto;
   padding-top: 10px;
+}
+
+.mob-card-cantidad {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font: 400 13px var(--mob-font-body);
+  color: var(--mob-muted);
+}
+
+.mob-card-cantidad input {
+  width: 64px;
+  height: 36px;
+  padding: 0 6px;
+  border: 1px solid #d9d0c5;
+  border-radius: 8px;
+  background: #fff;
+  /* Con menos de 16px iOS hace zoom al enfocar. */
+  font: 400 16px var(--mob-font-body);
+  color: var(--mob-dark);
+}
+
+.mob-cart-linea-promo {
+  font: 400 12px var(--mob-font-body);
+  color: var(--color-accent);
+}
+
+.mob-detail-promo {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 4px 9px;
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-accent) 10%, #fff);
+  font: 700 14px/1.25 var(--mob-font-body);
+  color: var(--color-accent);
 }
 
 .mob-card-sinstock {

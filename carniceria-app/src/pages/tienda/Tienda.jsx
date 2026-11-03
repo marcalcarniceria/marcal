@@ -149,6 +149,7 @@ export function Tienda() {
                 tono="carniceria"
                 imagen="/images/carniceria.png"
                 alt="Carnicería: carne fresca, de primera calidad"
+                tituloModal="Carnicería"
                 productos={productos.filter((p) => p.categoria === 'carniceria')}
                 agregarItem={agregarItem}
               />
@@ -157,6 +158,7 @@ export function Tienda() {
                 tono="verduleria"
                 imagen="/images/verduelria.png"
                 alt="Verdulería: frutas y verduras frescas, directo del campo"
+                tituloModal="Verdulería"
                 productos={productos.filter((p) => p.categoria === 'verduleria')}
                 agregarItem={agregarItem}
               />
@@ -165,6 +167,7 @@ export function Tienda() {
                 tono="mas-productos"
                 imagen="/images/mas-productos.png"
                 alt="Más Productos: todo lo que necesitás, en un solo lugar"
+                tituloModal="Más productos"
                 productos={productos.filter((p) => p.categoria === 'mas_productos')}
                 agregarItem={agregarItem}
               />
@@ -176,6 +179,7 @@ export function Tienda() {
                 Icono={IconEtiqueta}
                 titulo="Promociones"
                 subtitulo="Las mejores ofertas de la semana."
+                tituloModal="Promociones"
                 productos={enPromocion}
                 agregarItem={agregarItem}
               />
@@ -187,6 +191,7 @@ export function Tienda() {
                 Icono={IconCaja}
                 titulo="Combos"
                 subtitulo="Armados para ahorrar, listos para llevar."
+                tituloModal="Combos"
                 productos={combosDisponibles}
                 Card={ComboCard}
                 agregarItem={agregarItem}

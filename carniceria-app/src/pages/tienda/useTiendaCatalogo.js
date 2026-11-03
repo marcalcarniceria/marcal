@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../../supabaseClient'
 import { SUCURSAL_ID } from '../../config/sucursal'
 import { esStockBajo } from './stock'
+import { preciosDeUnidad, promoDeUnidad } from './precios'
 
 // Extraído de Tienda.jsx tal cual estaba (mismo fetch, mismas
 // derivaciones) para que la versión mobile use exactamente los mismos
@@ -47,13 +48,13 @@ export function useTiendaCatalogo() {
   const sinCategoria = productos.filter((p) => !p.categoria)
 
   // Promociones no depende de la categoría: entra cualquier producto con al
-  // menos una unidad con precio_promocional (ver schema_precio_promocional.sql).
-  // Los que están bajo el stock mínimo no entran: en una vidriera de ofertas
-  // no suman.
+  // menos una unidad en oferta (precio_promocional o precio_anterior) o con
+  // promo por volumen vigente. Los que están bajo el stock mínimo no entran:
+  // en una vidriera de ofertas no suman.
   const enPromocion = productos.filter(
     (p) =>
       !esStockBajo(p) &&
-      p.unidades_venta_producto?.some((u) => u.precio_promocional != null),
+      p.unidades_venta_producto?.some((u) => preciosDeUnidad(u).tachado !== null || promoDeUnidad(u) !== null),
   )
 
   return { productos, loading, error, combos, combosDisponibles, sinCategoria, enPromocion }

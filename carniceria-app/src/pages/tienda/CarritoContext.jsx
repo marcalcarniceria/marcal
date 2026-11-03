@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { redondearCantidad, subtotalItem } from './precios'
 
 const CarritoContext = createContext(undefined)
 
@@ -34,8 +35,9 @@ export function CarritoProvider({ children }) {
 
   // item: producto { producto_id, unidad_venta_id, ... } o combo
   // { combo_id, ... }. En los dos casos precio_venta es el precio a cobrar
-  // y producto_nombre/unidad_nombre lo que se muestra. `cantidad` es
-  // opcional (default 1, el botón "Agregar" de cada card) -- "Repetir
+  // y producto_nombre/unidad_nombre lo que se muestra; cantidad_promocion y
+  // precio_promocion_volumen, si tiene promo por volumen. `cantidad` es
+  // opcional (default 1, el botón "Agregar" de cada combo) -- "Repetir
   // pedido" en Mis Pedidos lo usa para sumar de una la cantidad exacta
   // de cada línea del pedido viejo.
   function agregarItem(item, cantidad = 1) {
@@ -43,14 +45,18 @@ export function CarritoProvider({ children }) {
     setItems((prev) => {
       const existente = prev.find((i) => i.clave === clave)
       if (existente) {
-        return prev.map((i) => (i.clave === clave ? { ...i, cantidad: i.cantidad + cantidad } : i))
+        // Con decimales la suma puede dar 0.30000000000000004, y esa cantidad
+        // es la que llega a crear_pedido_online.
+        return prev.map((i) =>
+          i.clave === clave ? { ...i, cantidad: redondearCantidad(i.cantidad + cantidad) } : i,
+        )
       }
       return [...prev, { ...item, clave, cantidad }]
     })
   }
 
   function actualizarCantidad(clave, cantidad) {
-    setItems((prev) => prev.map((i) => (i.clave === clave ? { ...i, cantidad } : i)))
+    setItems((prev) => prev.map((i) => (i.clave === clave ? { ...i, cantidad: redondearCantidad(cantidad) } : i)))
   }
 
   function quitarItem(clave) {
@@ -61,11 +67,11 @@ export function CarritoProvider({ children }) {
     setItems([])
   }
 
-  const cantidadTotal = useMemo(() => items.reduce((acc, i) => acc + i.cantidad, 0), [items])
-  const totalCarrito = useMemo(
-    () => items.reduce((acc, i) => acc + i.cantidad * i.precio_venta, 0),
+  const cantidadTotal = useMemo(
+    () => redondearCantidad(items.reduce((acc, i) => acc + i.cantidad, 0)),
     [items],
   )
+  const totalCarrito = useMemo(() => items.reduce((acc, i) => acc + subtotalItem(i), 0), [items])
 
   const value = {
     items,
