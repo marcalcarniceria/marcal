@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useCarrito } from '../pages/tienda/CarritoContext'
 import { useTiendaCatalogo } from '../pages/tienda/useTiendaCatalogo'
+import { camposPromoDeUnidad, etiquetaCantidad, preciosDeUnidad, promoDeUnidad, subtotalLinea } from '../pages/tienda/precios'
 import { MobileScreenHeader } from './MobileScreenHeader'
 import { fmtPrecio, sufijoUnidad, esUnidadKg, fmtCantidad } from './mobileFormato'
 import './mobile.css'
@@ -34,9 +35,11 @@ export function ProductoDetalleMobile() {
   const clave = esCombo ? `combo:${combo?.id}` : unidad?.id
   const cantidadDefault = cantidad ?? (items.find((i) => i.clave === clave)?.cantidad || 1)
 
-  const precioUnitario = esCombo ? Number(combo?.precio_fijo ?? 0) : Number(unidad?.precio_promocional ?? unidad?.precio_venta ?? 0)
-  const precioNormal = esCombo ? null : Number(unidad?.precio_venta ?? 0)
-  const enOferta = !esCombo && unidad?.precio_promocional != null
+  const precios = !esCombo && unidad ? preciosDeUnidad(unidad) : null
+  const precioUnitario = esCombo ? Number(combo?.precio_fijo ?? 0) : precios?.cobrar ?? 0
+  const precioTachado = precios?.tachado ?? null
+  const promo = !esCombo && unidad ? promoDeUnidad(unidad) : null
+  const totalLinea = subtotalLinea(cantidadDefault, precioUnitario, promo?.cantidad, promo?.precio)
 
   const quickPicks = kg ? [0.5, 1, 1.5, 2] : []
 
@@ -82,6 +85,7 @@ export function ProductoDetalleMobile() {
           unidad_venta_id: unidad.id,
           unidad_nombre: unidad.nombre_unidad,
           precio_venta: precioUnitario,
+          ...camposPromoDeUnidad(unidad),
           imagen_url: producto.imagen_url ?? null,
         },
         cantidadDefault,
@@ -111,8 +115,13 @@ export function ProductoDetalleMobile() {
         <div className="mob-detail-precio-fila">
           <span className="mob-detail-precio">{fmtPrecio(precioUnitario)}</span>
           {!esCombo && <span className="mob-detail-sufijo">{sufijoUnidad(unidad.nombre_unidad)}</span>}
-          {enOferta && <span className="mob-detail-precioviejo">{fmtPrecio(precioNormal)}</span>}
+          {precioTachado !== null && <span className="mob-detail-precioviejo">{fmtPrecio(precioTachado)}</span>}
         </div>
+        {promo && (
+          <div className="mob-detail-promo">
+            Promo: {promo.cantidad} {etiquetaCantidad(unidad.nombre_unidad)} x {fmtPrecio(promo.precio)}
+          </div>
+        )}
 
         {esCombo && combo.descripcion && <p className="mob-detail-desc">{combo.descripcion}</p>}
         {esCombo && combo.ingredientes?.length > 0 && (
@@ -179,7 +188,7 @@ export function ProductoDetalleMobile() {
       <div className="mob-action-bar">
         <div className="mob-action-bar-total">
           <span>Total</span>
-          <span>{fmtPrecio(precioUnitario * cantidadDefault)}</span>
+          <span>{fmtPrecio(totalLinea)}</span>
         </div>
         <button type="button" className="mob-action-btn" onClick={agregarAlCarrito}>
           Agregar al carrito

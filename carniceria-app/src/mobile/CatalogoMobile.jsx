@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { useCarrito } from '../pages/tienda/CarritoContext'
 import { useTiendaCatalogo } from '../pages/tienda/useTiendaCatalogo'
 import { esStockBajo } from '../pages/tienda/stock'
+import { camposPromoDeUnidad, etiquetaCantidad, preciosDeUnidad, promoDeUnidad } from '../pages/tienda/precios'
+import { InputCantidad } from '../pages/tienda/InputCantidad'
 import { IconCarne, IconVerdura, IconGrilla, IconEtiqueta, IconCaja } from '../pages/tienda/iconos'
 import { TiendaHero } from '../pages/tienda/TiendaHero'
 import { TiendaTopbar } from '../pages/tienda/TiendaTopbar'
@@ -45,18 +47,23 @@ function vmProducto(p, items) {
   const unidad = p.unidades_venta_producto?.[0]
   if (!unidad) return null
   const multi = p.unidades_venta_producto.length > 1
-  const precioNormal = Number(unidad.precio_venta)
-  const promo = unidad.precio_promocional != null ? Number(unidad.precio_promocional) : null
+  const { cobrar, tachado, directa, descuento } = preciosDeUnidad(unidad)
   const bloqueado = esStockBajo(p)
   const clave = unidad.id
   const enCarrito = items.find((i) => i.clave === clave)
+  const promo = promoDeUnidad(unidad)
+  const etiqueta = etiquetaCantidad(unidad.nombre_unidad)
 
   return {
     ruta: `p-${p.id}`,
     nombre: p.nombre,
     imagen: p.imagen_url,
-    precio: fmtPrecio(promo ?? precioNormal),
-    precioViejo: promo != null ? fmtPrecio(precioNormal) : null,
+    precio: fmtPrecio(cobrar),
+    precioViejo: tachado !== null ? fmtPrecio(tachado) : null,
+    ofertaDirecta: directa,
+    descuento,
+    promo: promo && `Promo: ${promo.cantidad} ${etiqueta} x ${fmtPrecio(promo.precio)}`,
+    etiqueta,
     sufijo: sufijoUnidad(unidad.nombre_unidad),
     multi,
     bloqueado,
@@ -67,7 +74,8 @@ function vmProducto(p, items) {
       producto_nombre: p.nombre,
       unidad_venta_id: unidad.id,
       unidad_nombre: unidad.nombre_unidad,
-      precio_venta: promo ?? precioNormal,
+      precio_venta: cobrar,
+      ...camposPromoDeUnidad(unidad),
       imagen_url: p.imagen_url ?? null,
     },
     kg: esUnidadKg(unidad.nombre_unidad),
@@ -129,6 +137,11 @@ function BannerCategoria({ banner, verTodos }) {
 }
 
 function TarjetaProducto({ vm, onAbrir, onAgregar, onCambiarCantidad }) {
+  const [cantidad, setCantidad] = useState(1)
+  // Con varias presentaciones la cantidad se elige en el detalle, y los combos
+  // son siempre enteros: esos siguen con el botón solo.
+  const conInput = !vm.multi && !vm.item.combo_id
+
   return (
     <div className="mob-card">
       <button type="button" className="mob-card-imagen" onClick={onAbrir}>
@@ -141,11 +154,14 @@ function TarjetaProducto({ vm, onAbrir, onAgregar, onCambiarCantidad }) {
       </button>
       <div className="mob-card-body">
         <div className="mob-card-name">{vm.nombre}</div>
+        {vm.ofertaDirecta && <del className="mob-card-precio-viejo">{vm.precioViejo}</del>}
         <div className="mob-card-precio-fila">
-          <span className="mob-card-precio">{vm.precio}</span>
+          <span className={`mob-card-precio${vm.ofertaDirecta ? ' mob-card-precio-oferta' : ''}`}>{vm.precio}</span>
           <span className="mob-card-sufijo">{vm.sufijo}</span>
+          {vm.ofertaDirecta && vm.descuento > 0 && <span className="mob-card-descuento">-{vm.descuento}%</span>}
         </div>
-        {vm.precioViejo && <span className="mob-card-precio-viejo">{vm.precioViejo}</span>}
+        {vm.precioViejo && !vm.ofertaDirecta && <span className="mob-card-precio-viejo">{vm.precioViejo}</span>}
+        {vm.promo && <span className="mob-card-promo">{vm.promo}</span>}
 
         <div className="mob-card-accion">
           {vm.bloqueado ? (
@@ -161,9 +177,17 @@ function TarjetaProducto({ vm, onAbrir, onAgregar, onCambiarCantidad }) {
               </button>
             </div>
           ) : (
-            <button type="button" className="mob-add-btn" onClick={onAgregar}>
-              <span>+</span>Agregar
-            </button>
+            <>
+              {conInput && (
+                <label className="mob-card-cantidad">
+                  <InputCantidad value={cantidad} onChange={setCantidad} aria-label={`Cantidad de ${vm.nombre}`} />
+                  <span>{vm.etiqueta}</span>
+                </label>
+              )}
+              <button type="button" className="mob-add-btn" onClick={() => onAgregar(cantidad)}>
+                <span>+</span>Agregar
+              </button>
+            </>
           )}
         </div>
       </div>
@@ -191,12 +215,12 @@ export function CatalogoMobile() {
     navigate(`/tienda/producto/${vm.ruta}`)
   }
 
-  function agregar(vm) {
+  function agregar(vm, cantidad) {
     if (vm.multi) {
       abrir(vm)
       return
     }
-    agregarItem(vm.item, 1)
+    agregarItem(vm.item, vm.item.combo_id ? 1 : cantidad)
     avisar(`${vm.nombre} agregado`)
   }
 
@@ -359,7 +383,7 @@ export function CatalogoMobile() {
                       key={vm.ruta}
                       vm={vm}
                       onAbrir={() => abrir(vm)}
-                      onAgregar={() => agregar(vm)}
+                      onAgregar={(cantidad) => agregar(vm, cantidad)}
                       onCambiarCantidad={cambiarCantidad}
                     />
                   ))}

@@ -2,6 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { useCarrito } from './CarritoContext'
 import { TiendaHeader } from './TiendaHeader'
 import { formatoPrecio } from './formatoPrecio'
+import { InputCantidad } from './InputCantidad'
+import { promoAplicada, subtotalItem } from './precios'
 
 export function Carrito() {
   const { items, actualizarCantidad, quitarItem, totalCarrito } = useCarrito()
@@ -53,21 +55,30 @@ export function Carrito() {
                   <tr key={item.clave}>
                     <td>
                       {item.producto_nombre} ({item.unidad_nombre})
+                      {promoAplicada(item) && <div className="tienda-carrito-promo">Promo por cantidad aplicada</div>}
                     </td>
                     <td>
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={item.cantidad}
-                        onChange={(e) =>
-                          actualizarCantidad(item.clave, Math.max(1, Number(e.target.value)))
-                        }
-                      />
+                      {item.combo_id ? (
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={item.cantidad}
+                          onChange={(e) =>
+                            actualizarCantidad(item.clave, Math.max(1, Math.round(Number(e.target.value))))
+                          }
+                        />
+                      ) : (
+                        <InputCantidad
+                          value={item.cantidad}
+                          onChange={(cantidad) => actualizarCantidad(item.clave, cantidad)}
+                          aria-label={`Cantidad de ${item.producto_nombre}`}
+                        />
+                      )}
                     </td>
                     <td className="tienda-tabla-num">{formatoPrecio(item.precio_venta)}</td>
                     <td className="tienda-tabla-num tienda-tabla-subtotal">
-                      {formatoPrecio(item.cantidad * item.precio_venta)}
+                      {formatoPrecio(subtotalItem(item))}
                     </td>
                     <td>
                       <button

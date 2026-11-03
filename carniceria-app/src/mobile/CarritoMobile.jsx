@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { useCarrito } from '../pages/tienda/CarritoContext'
+import { promoAplicada, subtotalItem } from '../pages/tienda/precios'
 import { MobileScreenHeader } from './MobileScreenHeader'
 import { fmtPrecio, esUnidadKg } from './mobileFormato'
 import './mobile.css'
@@ -45,8 +46,9 @@ export function CarritoMobile() {
                     <div>
                       <div className="mob-cart-linea-nombre">{item.producto_nombre}</div>
                       <div className="mob-cart-linea-sub">{item.unidad_nombre}</div>
+                      {promoAplicada(item) && <div className="mob-cart-linea-promo">Promo por cantidad aplicada</div>}
                     </div>
-                    <div className="mob-cart-linea-total">{fmtPrecio(item.cantidad * item.precio_venta)}</div>
+                    <div className="mob-cart-linea-total">{fmtPrecio(subtotalItem(item))}</div>
                   </div>
                   <div className="mob-cart-linea-bottom">
                     <div className="mob-qty-stepper">

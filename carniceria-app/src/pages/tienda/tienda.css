@@ -783,11 +783,62 @@
 
 .tienda-card-unidad {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0;
   border-top: 1px solid var(--color-border);
-  gap: 0.75rem;
+  gap: 0.5rem 0.75rem;
+}
+
+/* Cantidad y botón de agregar, en su propia línea debajo del precio. */
+.tienda-card-compra {
+  display: flex;
+  align-items: center;
+  flex-basis: 100%;
+  gap: 0.5rem;
+}
+
+.tienda-card-cantidad {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.tienda-card-cantidad input {
+  width: 3.4rem;
+  padding: 0.35rem 0.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: 5px;
+  font: inherit;
+  color: var(--color-text);
+  background: #fff;
+}
+
+.tienda-card-compra .tienda-btn-agregar {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.tienda-carrito-promo {
+  color: var(--color-accent);
+  font-size: 0.8rem;
+}
+
+.tienda-card-promo-volumen {
+  display: inline-block;
+  margin-top: 0.3rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--color-accent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--color-accent) 10%, #fff);
+  color: var(--color-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .tienda-card-unidad:first-of-type {
@@ -813,6 +864,11 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: 0.2rem 0.5rem;
+}
+
+/* Oferta directa: el precio anterior en su propia línea, arriba del actual. */
+.tienda-card-precios-directa .tienda-card-precio-original {
+  flex-basis: 100%;
 }
 
 .tienda-card-precio-original {
@@ -1761,6 +1817,16 @@
 
 .tienda-card-fila .tienda-card-unidad {
   padding: 0.4rem 0;
+}
+
+/* En 200px no entran cantidad y botón en la misma línea. Si el botón empuja el
+   ancho, la tarjeta crece según la unidad y al pasar a "¡Agregado!". */
+.tienda-card-fila .tienda-card-compra {
+  flex-wrap: wrap;
+}
+
+.tienda-card-fila .tienda-card-compra .tienda-btn-agregar {
+  flex-basis: 100%;
 }
 
 .tienda-card-fila .tienda-card-unidad-nombre {

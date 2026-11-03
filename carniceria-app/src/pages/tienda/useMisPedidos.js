@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 import { useCarrito } from './CarritoContext'
+import { camposPromoDeUnidad, preciosDeUnidad } from './precios'
 
 const FILAS_POR_PAGINA = 5
 
@@ -54,7 +55,7 @@ export function useMisPedidos() {
       const { data: detalleData, error: errorDetalle } = await supabase
         .from('detalle_pedidos')
         .select(
-          'pedido_id, cantidad, precio_unitario, subtotal, producto_id, unidad_venta_id, combo_id, productos(nombre), combos(nombre), unidades_venta_producto:catalogo_unidades(nombre_unidad)',
+          'pedido_id, cantidad, precio_unitario, subtotal, producto_id, unidad_venta_id, combo_id, productos(nombre), combos(nombre), unidades_venta_producto:catalogo_unidades(*)',
         )
         .in('pedido_id', ids)
 
@@ -93,13 +94,18 @@ export function useMisPedidos() {
           Number(linea.cantidad),
         )
       } else {
+        // Precio de hoy, no el del pedido viejo: es el que va a cobrar
+        // crear_pedido_online, y precio_unitario ahora es un promedio cuando
+        // hubo promo por volumen.
+        const unidad = linea.unidades_venta_producto
         agregarItem(
           {
             producto_id: linea.producto_id,
             producto_nombre: linea.productos?.nombre ?? 'Producto',
             unidad_venta_id: linea.unidad_venta_id,
-            unidad_nombre: linea.unidades_venta_producto?.nombre_unidad ?? '',
-            precio_venta: Number(linea.precio_unitario),
+            unidad_nombre: unidad?.nombre_unidad ?? '',
+            precio_venta: unidad ? preciosDeUnidad(unidad).cobrar : Number(linea.precio_unitario),
+            ...(unidad ? camposPromoDeUnidad(unidad) : {}),
           },
           Number(linea.cantidad),
         )

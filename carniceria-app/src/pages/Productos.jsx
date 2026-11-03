@@ -48,12 +48,21 @@ function filaVacia() {
     costo_vigente: 0,
     precio_venta: 0,
     precio_promocional: '',
+    precio_anterior: '',
+    cantidad_promocion: '',
+    precio_promocion_volumen: '',
   }
 }
 
-// Vacío o 0 = sin promo: se guarda null (ver schema_precio_promocional.sql,
-// que además rechaza 0/negativos del lado de la base).
-function precioPromocionalParaGuardar(valor) {
+// Hasta 3 decimales: es el límite del check de schema_promocion_volumen.sql.
+function cantidadPromocionParaGuardar(valor) {
+  const numero = Math.round(Number(valor) * 1000) / 1000
+  return numero > 0 ? numero : null
+}
+
+// Vacío o 0 = sin promo u oferta: se guarda null (ver schema_precio_promocional.sql
+// y schema_precio_anterior.sql, que además rechazan 0/negativos del lado de la base).
+function precioOpcionalParaGuardar(valor) {
   const numero = Number(valor)
   return numero > 0 ? numero : null
 }
@@ -220,6 +229,9 @@ export function Productos() {
         costo_vigente: u.costo_vigente,
         precio_venta: u.precio_venta,
         precio_promocional: u.precio_promocional ?? '',
+        precio_anterior: u.precio_anterior ?? '',
+        cantidad_promocion: u.cantidad_promocion ?? '',
+        precio_promocion_volumen: u.precio_promocion_volumen ?? '',
       })),
     )
     setUnidadesEliminadas([])
@@ -266,7 +278,7 @@ export function Productos() {
     }
 
     const promoInvalida = unidadesValidas.find((u) => {
-      const promo = precioPromocionalParaGuardar(u.precio_promocional)
+      const promo = precioOpcionalParaGuardar(u.precio_promocional)
       return promo !== null && promo >= Number(u.precio_venta)
     })
 
@@ -274,6 +286,63 @@ export function Productos() {
       setMensaje({
         tipo: 'error',
         texto: `El precio promocional de "${promoInvalida.nombre_unidad}" tiene que ser menor que su precio normal.`,
+      })
+      return
+    }
+
+    const anteriorInvalido = unidadesValidas.find((u) => {
+      const anterior = precioOpcionalParaGuardar(u.precio_anterior)
+      return anterior !== null && anterior <= Number(u.precio_venta)
+    })
+
+    if (anteriorInvalido) {
+      setMensaje({
+        tipo: 'error',
+        texto: `El precio anterior de "${anteriorInvalido.nombre_unidad}" tiene que ser mayor que su precio actual.`,
+      })
+      return
+    }
+
+    // Se cobra la promo, así que el precio anterior nunca se mostraría.
+    const ofertaDoble = unidadesValidas.find(
+      (u) =>
+        precioOpcionalParaGuardar(u.precio_promocional) !== null &&
+        precioOpcionalParaGuardar(u.precio_anterior) !== null,
+    )
+
+    if (ofertaDoble) {
+      setMensaje({
+        tipo: 'error',
+        texto: `"${ofertaDoble.nombre_unidad}" tiene precio promocional y precio anterior: dejá solo uno de los dos.`,
+      })
+      return
+    }
+
+    const volumenIncompleto = unidadesValidas.find(
+      (u) =>
+        (cantidadPromocionParaGuardar(u.cantidad_promocion) === null) !==
+        (precioOpcionalParaGuardar(u.precio_promocion_volumen) === null),
+    )
+
+    if (volumenIncompleto) {
+      setMensaje({
+        tipo: 'error',
+        texto: `La promo por cantidad de "${volumenIncompleto.nombre_unidad}" necesita cantidad y precio.`,
+      })
+      return
+    }
+
+    // Comparado con lo que se cobra hoy por unidad, igual que crear_pedido_online.
+    const volumenSinAhorro = unidadesValidas.find((u) => {
+      const cantidad = cantidadPromocionParaGuardar(u.cantidad_promocion)
+      const precioBase = precioOpcionalParaGuardar(u.precio_promocional) ?? Number(u.precio_venta)
+      return cantidad !== null && precioOpcionalParaGuardar(u.precio_promocion_volumen) >= cantidad * precioBase
+    })
+
+    if (volumenSinAhorro) {
+      setMensaje({
+        tipo: 'error',
+        texto: `La promo por cantidad de "${volumenSinAhorro.nombre_unidad}" tiene que salir menos que comprar esa cantidad suelta.`,
       })
       return
     }
@@ -332,7 +401,10 @@ export function Productos() {
             .insert(
               nuevas.map(({ id, ...u }) => ({
                 ...u,
-                precio_promocional: precioPromocionalParaGuardar(u.precio_promocional),
+                precio_promocional: precioOpcionalParaGuardar(u.precio_promocional),
+                precio_anterior: precioOpcionalParaGuardar(u.precio_anterior),
+                cantidad_promocion: cantidadPromocionParaGuardar(u.cantidad_promocion),
+                precio_promocion_volumen: precioOpcionalParaGuardar(u.precio_promocion_volumen),
                 producto_id: editandoId,
               })),
             ),
@@ -348,7 +420,10 @@ export function Productos() {
               factor_conversion_base: Number(u.factor_conversion_base),
               costo_vigente: Number(u.costo_vigente),
               precio_venta: Number(u.precio_venta),
-              precio_promocional: precioPromocionalParaGuardar(u.precio_promocional),
+              precio_promocional: precioOpcionalParaGuardar(u.precio_promocional),
+              precio_anterior: precioOpcionalParaGuardar(u.precio_anterior),
+              cantidad_promocion: cantidadPromocionParaGuardar(u.cantidad_promocion),
+              precio_promocion_volumen: precioOpcionalParaGuardar(u.precio_promocion_volumen),
             })
             .eq('id', u.id),
         )
@@ -404,7 +479,10 @@ export function Productos() {
         factor_conversion_base: Number(u.factor_conversion_base),
         costo_vigente: Number(u.costo_vigente),
         precio_venta: Number(u.precio_venta),
-        precio_promocional: precioPromocionalParaGuardar(u.precio_promocional),
+        precio_promocional: precioOpcionalParaGuardar(u.precio_promocional),
+        precio_anterior: precioOpcionalParaGuardar(u.precio_anterior),
+        cantidad_promocion: cantidadPromocionParaGuardar(u.cantidad_promocion),
+        precio_promocion_volumen: precioOpcionalParaGuardar(u.precio_promocion_volumen),
         producto_id: producto.id,
       })),
     )
@@ -607,6 +685,9 @@ export function Productos() {
                   <th>Factor</th>
                   <th>Precio</th>
                   <th>Precio Promocional (Opcional)</th>
+                  <th>Precio Anterior (Opcional)</th>
+                  <th>Promo: Cantidad (Opcional)</th>
+                  <th>Promo: Precio Total (Opcional)</th>
                   <th></th>
                 </tr>
               </thead>
@@ -658,6 +739,39 @@ export function Productos() {
                       />
                     </td>
                     <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="Sin oferta"
+                        value={u.precio_anterior}
+                        onChange={(e) => actualizarFilaUnidad(i, 'precio_anterior', e.target.value)}
+                        style={{ width: 110 }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        placeholder="Ej: 2"
+                        value={u.cantidad_promocion}
+                        onChange={(e) => actualizarFilaUnidad(i, 'cantidad_promocion', e.target.value)}
+                        style={{ width: 90 }}
+                      />
+                    </td>
+                    <td>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        placeholder="Sin promo"
+                        value={u.precio_promocion_volumen}
+                        onChange={(e) => actualizarFilaUnidad(i, 'precio_promocion_volumen', e.target.value)}
+                        style={{ width: 110 }}
+                      />
+                    </td>
+                    <td>
                       <button
                         type="button"
                         className="staff-btn staff-btn-secundario"
@@ -681,6 +795,15 @@ export function Productos() {
             <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
               Precio promocional: si dejás este campo vacío, el producto se vende a su precio
               normal. Si le ponés un precio, aparecerá automáticamente en la sección Promociones.
+            </p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+              Precio anterior: para una oferta directa, cargá el precio de antes en este campo y el
+              rebajado en "Precio". Se cobra el de "Precio" y el anterior se muestra tachado en la
+              tienda. Para terminar la oferta, volvé a subir "Precio" y vaciá este campo.
+            </p>
+            <p style={{ fontSize: '0.8rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+              Promo por cantidad: con cantidad 2 y precio total $3999, cada 2 se cobran $3999 y lo que
+              sobra va al precio normal. Se aplica solo en la tienda online, no en la caja.
             </p>
 
             {mensaje && (
@@ -759,6 +882,9 @@ export function Productos() {
                         <div key={unidad.id}>
                           {unidad.nombre_unidad} — ${unidad.precio_venta}
                           {unidad.precio_promocional != null && ` (promo $${unidad.precio_promocional})`}
+                          {unidad.precio_anterior != null && ` (antes $${unidad.precio_anterior})`}
+                          {unidad.cantidad_promocion != null &&
+                            ` (${unidad.cantidad_promocion} x $${unidad.precio_promocion_volumen})`}
                         </div>
                       ))}
                     </td>

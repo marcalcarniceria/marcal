@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useCheckout } from '../pages/tienda/useCheckout'
+import { subtotalItem } from '../pages/tienda/precios'
 import { MobileScreenHeader } from './MobileScreenHeader'
 import { fmtPrecio } from './mobileFormato'
 import './mobile.css'
@@ -239,7 +240,7 @@ export function CheckoutMobile() {
                   <span>
                     {i.producto_nombre} <span className="mob-muted">· {i.cantidad}</span>
                   </span>
-                  <span>{fmtPrecio(i.cantidad * i.precio_venta)}</span>
+                  <span>{fmtPrecio(subtotalItem(i))}</span>
                 </div>
               ))}
             </div>
