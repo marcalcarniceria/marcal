@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { ProductoCard } from './ProductoCard'
 import { Revelar, RevelarGrupo, RevelarItem } from './Revelar'
+import { VerTodosModal } from './VerTodosModal'
 
 // tono: 'carniceria' | 'verduleria' | ... (solo cambia el color de acentos).
-// El botón "Ver todos" es solo visual por ahora: sin onClick a propósito.
 // Icono/titulo/subtitulo son opcionales: las imágenes de Carnicería,
 // Verdulería y Más Productos ya traen el texto dibujado; las de
 // Promociones y Combos son solo fondo, así que se superpone en HTML.
+// tituloModal es independiente de `titulo`: ese es el rótulo visual que
+// se superpone a la imagen (no todos los bloques lo tienen), mientras que
+// tituloModal siempre se manda, para el título del modal "Ver todos".
 // Card: componente de tarjeta para cada elemento de `productos` (por
 // defecto ProductoCard; el bloque de Combos pasa ComboCard). Recibe el
 // elemento en la prop `item` vía el adaptador de abajo.
@@ -18,10 +21,12 @@ export function CategoriaBloque({
   Icono,
   titulo,
   subtitulo,
+  tituloModal,
   productos,
   agregarItem,
   Card,
 }) {
+  const [modalAbierto, setModalAbierto] = useState(false)
   const filaRef = useRef(null)
   // desborda: la fila no entra entera (reserva el carril de la flecha).
   // alFinal: ya se scrolleó hasta el último producto (oculta la flecha).
@@ -67,9 +72,15 @@ export function CategoriaBloque({
             </div>
           </div>
         )}
-        <button type="button" className="tienda-categoria-vertodos">
-          Ver todos →
-        </button>
+        {productos.length > 0 && (
+          <button
+            type="button"
+            className="tienda-categoria-vertodos"
+            onClick={() => setModalAbierto(true)}
+          >
+            Ver todos →
+          </button>
+        )}
       </Revelar>
 
       <div className={`tienda-categoria-productos${estado.desborda ? ' con-flecha' : ''}`}>
@@ -101,6 +112,16 @@ export function CategoriaBloque({
           </>
         )}
       </div>
+
+      {modalAbierto && (
+        <VerTodosModal
+          titulo={tituloModal ?? titulo ?? 'Productos'}
+          productos={productos}
+          Card={Card}
+          agregarItem={agregarItem}
+          onCerrar={() => setModalAbierto(false)}
+        />
+      )}
     </div>
   )
 }

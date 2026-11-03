@@ -222,7 +222,7 @@ export function Productos() {
     setStockMinimo(String(producto.stock_minimo ?? ''))
     setCategoria(producto.categoria ?? '')
     setUnidades(
-      producto.unidades_venta_producto.map((u) => ({
+      (producto.unidades_venta_producto ?? []).map((u) => ({
         id: u.id,
         nombre_unidad: u.nombre_unidad,
         factor_conversion_base: u.factor_conversion_base,

@@ -528,6 +528,106 @@
   border-bottom-color: var(--color-primario);
 }
 
+/* Modal "Ver todos" de un bloque de categoría -- misma base que el modal
+   de acceso (.tienda-modal-overlay/.tienda-modal), pero más ancho y con
+   su propio scroll interno en vez de crecer con el contenido. */
+.tienda-vertodos-overlay {
+  z-index: 60;
+}
+
+.tienda-vertodos-modal {
+  max-width: 1200px;
+  width: 100%;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.tienda-vertodos-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-right: 1.75rem;
+}
+
+.tienda-vertodos-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.tienda-vertodos-buscador {
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+}
+
+.tienda-vertodos-buscador:focus {
+  outline: 2px solid var(--color-primario-oscuro);
+  outline-offset: 1px;
+}
+
+.tienda-vertodos-body {
+  margin-top: 1.25rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.tienda-vertodos-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .tienda-vertodos-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .tienda-vertodos-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1440px) {
+  .tienda-vertodos-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+/* Celular: el modal ocupa toda la pantalla en vez de quedar como un
+   recuadro chico flotando. */
+@media (max-width: 767px) {
+  .tienda-vertodos-overlay {
+    padding: 0;
+  }
+
+  .tienda-vertodos-modal {
+    max-width: none;
+    max-height: none;
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    padding: 1rem 1rem 1.25rem;
+  }
+
+  .tienda-vertodos-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+}
+
 /* Contenido */
 .tienda-contenido {
   max-width: 1280px;
