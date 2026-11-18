@@ -75,6 +75,7 @@ export function Productos() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filtro, setFiltro] = useState('todos')
+  const [filtroCategoria, setFiltroCategoria] = useState('Todas')
   const [busqueda, setBusqueda] = useState('')
   const [pagina, setPagina] = useState(0)
 
@@ -137,8 +138,17 @@ export function Productos() {
     fetchProductos()
   }, [])
 
+  // Solo las categorías que algún producto usa; los sin categoría (null) no
+  // tienen opción propia y se ven en "Todas".
+  const categoriasEnUso = useMemo(
+    () => [...new Set(productos.map((p) => p.categoria).filter((c) => c != null))].sort(),
+    [productos],
+  )
+
   const productosFiltrados = useMemo(() => {
     let lista = productos
+    if (filtroCategoria !== 'Todas') lista = lista.filter((p) => p.categoria === filtroCategoria)
+
     switch (filtro) {
       case 'activos':
         lista = lista.filter((p) => p.activo !== false)
@@ -157,11 +167,11 @@ export function Productos() {
     if (buscado) lista = lista.filter((p) => p.nombre.toLowerCase().includes(buscado))
 
     return lista
-  }, [productos, filtro, busqueda])
+  }, [productos, filtro, filtroCategoria, busqueda])
 
   useEffect(() => {
     setPagina(0)
-  }, [filtro, busqueda])
+  }, [filtro, filtroCategoria, busqueda])
 
   const totalFilas = productosFiltrados.length
   const haySiguiente = (pagina + 1) * FILAS_POR_PAGINA < totalFilas
@@ -841,12 +851,24 @@ export function Productos() {
                 {f.etiqueta}
               </button>
             ))}
+            <select
+              value={filtroCategoria}
+              onChange={(e) => setFiltroCategoria(e.target.value)}
+              aria-label="Filtrar por categoría"
+              style={{ marginLeft: 'auto' }}
+            >
+              <option value="Todas">Todas las categorías</option>
+              {categoriasEnUso.map((valor) => (
+                <option key={valor} value={valor}>
+                  {CATEGORIAS.find((c) => c.valor === valor)?.etiqueta ?? valor}
+                </option>
+              ))}
+            </select>
             <input
               type="text"
               placeholder="Buscar por nombre..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              style={{ marginLeft: 'auto' }}
             />
           </div>
 
